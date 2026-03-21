@@ -20,13 +20,28 @@ $client = ClientFactory::create('ВАШ_ТОКЕН_БОТА');
 
 ```php
 use App\Component\Max\ClientFactory;
-use App\Component\Max\Contracts\LoggerInterface;
 
-// $logger — объект, реализующий LoggerInterface
+// $logger — объект, реализующий LoggerInterface (4 метода: debug, info, warning, error)
 $client = ClientFactory::create('ВАШ_ТОКЕН', $logger);
 ```
 
-### Вариант 3: Из INI-файла
+> Подробные примеры логгеров (файловый, PSR-3/Monolog, ConfigBuilder) — см. [Расширенные возможности](06-advanced-features.md#подключение-логгера).
+
+### Вариант 3: С кастомным HTTP-клиентом
+
+```php
+use App\Component\Max\ClientFactory;
+
+// $httpClient — объект, реализующий HttpClientInterface (3 метода: request, getLastStatusCode, getBaseUrl)
+$client = ClientFactory::create('ВАШ_ТОКЕН', null, $httpClient);
+
+// С логгером и кастомным HTTP-клиентом:
+$client = ClientFactory::create('ВАШ_ТОКЕН', $logger, $httpClient);
+```
+
+> Примеры адаптеров (Guzzle, мок-клиент для тестов) — см. [Расширенные возможности](06-advanced-features.md#подключение-кастомного-http-клиента).
+
+### Вариант 4: Из INI-файла
 
 ```ini
 ; cfg/config.ini
@@ -50,7 +65,7 @@ $client = ClientFactory::createFromIni();
 $client = ClientFactory::createFromIni('/path/to/config.ini');
 ```
 
-### Вариант 4: Из переменных окружения (12-Factor App)
+### Вариант 5: Из переменных окружения (12-Factor App)
 
 ```php
 use App\Component\Max\ClientFactory;
@@ -61,7 +76,7 @@ use App\Component\Max\ClientFactory;
 $client = ClientFactory::createFromEnvironment();
 ```
 
-### Вариант 5: Через ConfigBuilder (максимальная гибкость)
+### Вариант 6: Через ConfigBuilder (максимальная гибкость)
 
 ```php
 use App\Component\Max\ConfigBuilder;
@@ -78,6 +93,9 @@ $config = ConfigBuilder::create('TOKEN')
     ->build();
 
 $client = ClientFactory::createFromConfig($config);
+
+// С кастомным HTTP-клиентом:
+$client = ClientFactory::createFromConfig($config, $httpClient);
 ```
 
 ## Проверка подключения

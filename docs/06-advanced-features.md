@@ -177,22 +177,276 @@ $keyboard = KeyboardBuilder::build(array(
 // - Максимум 7 кнопок в ряду
 ```
 
-## Конфигурация из переменных окружения
+## Подключение логгера
 
-```bash
-export MAX_BOT_TOKEN="your_token_here"
-export MAX_BOT_TIMEOUT=60
-export MAX_BOT_RETRIES=5
-export MAX_BOT_RATE_LIMIT=20
-export MAX_BOT_VERIFY_SSL=true
-export MAX_BOT_LOG_REQUESTS=true
-export MAX_BOT_APP_NAME="MyBot"
-```
+SDK принимает любой логгер, реализующий `App\Component\Max\Contracts\LoggerInterface` — 4 метода:
 
 ```php
-use App\Component\Max\ClientFactory;
+interface LoggerInterface
+{
+    public function debug($message, array $context = array());
+    public function info($message, array $context = array());
+    public function warning($message, array $context = array());
+    public function error($message, array $context = array());
+}
+```
 
-$client = ClientFactory::createFromEnvironment();
+### Вариант 1: Простой файловый логгер
+
+```php
+use App\Component\Max\Contracts\LoggerInterface;
+
+class FileLogger implements LoggerInterface
+{
+    private $file;
+
+    public function __construct($path)
+    {
+        $this->file = $path;
+    }
+
+    public function debug($message, array $context = array())
+    {
+        $this->write('DEBUG', $message, $context);
+    }
+
+    public function info($message, array $context = array())
+    {
+        $this->write('INFO', $message, $context);
+    }
+
+    public function warning($message, array $context = array())
+    {
+        $this->write('WARNING', $message, $context);
+    }
+
+    public function error($message, array $context = array())
+    {
+        $this->write('ERROR', $message, $context);
+    }
+
+    private function write($level, $message, array $context)
+    {
+        $line = date('Y-m-d H:i:s') . " [{$level}] {$message}";
+        if (!empty($context)) {
+            $line .= ' ' . json_encode($context, JSON_UNESCAPED_UNICODE);
+        }
+        file_put_contents($this->file, $line . "\n", FILE_APPEND);
+    }
+}
+
+// Использование:
+$logger = new FileLogger('/var/log/max-bot.log');
+$client = ClientFactory::create('TOKEN', $logger);
+```
+
+### Вариант 2: PSR-3 адаптер (Monolog, etc.)
+
+Если у вас уже есть PSR-3 логгер (Monolog, Symfony Logger и др.):
+
+```php
+use App\Component\Max\Contracts\LoggerInterface;
+use Psr\Log\LoggerInterface as PsrLoggerInterface;
+
+class Psr3Adapter implements LoggerInterface
+{
+    private $logger;
+
+    public function __construct(PsrLoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    public function debug($message, array $context = array())
+    {
+        $this->logger->debug($message, $context);
+    }
+
+    public function info($message, array $context = array())
+    {
+        $this->logger->info($message, $context);
+    }
+
+    public function warning($message, array $context = array())
+    {
+        $this->logger->warning($message, $context);
+    }
+
+    public function error($message, array $context = array())
+    {
+        $this->logger->error($message, $context);
+    }
+}
+
+// Monolog:
+$monolog = new \Monolog\Logger('max-bot');
+$monolog->pushHandler(new \Monolog\Handler\StreamHandler('/var/log/max-bot.log'));
+
+$logger = new Psr3Adapter($monolog);
+$client = ClientFactory::create('TOKEN', $logger);
+```
+
+### Вариант 3: Через ConfigBuilder
+
+```php
+$config = ConfigBuilder::create('TOKEN')
+    ->withLogger($logger)
+    ->withLogRequests(true)   // Логировать все HTTP-запросы
+    ->withAppName('МойБот')   // Префикс в логах: "МойБот: ..."
+    ->build();
+
+$client = ClientFactory::createFromConfig($config);
+```
+
+### Вариант 4: Null-логгер (отключить логирование)
+
+Если логгер не передан, SDK **не логирует** ничего — это поведение по умолчанию.
+
+```php
+// Без логирования:
+$client = ClientFactory::create('TOKEN');
+
+// Или явно:
+$config = ConfigBuilder::create('TOKEN')
+    ->withLogRequests(false)
+    ->build();
+```
+
+## Подключение кастомного HTTP-клиента
+
+По умолчанию SDK использует встроенный `CurlHttpClient`. Любой метод `ClientFactory` принимает кастомный HTTP-клиент, реализующий `HttpClientInterface`:
+
+```php
+interface HttpClientInterface
+{
+    /**
+     * @param string $method  HTTP-метод (GET, POST, PUT, PATCH, DELETE).
+     * @param string $url     URL или путь эндпоинта.
+     * @param array  $options Опции: headers, json, query, multipart.
+     * @return array ['status_code' => int, 'body' => string]
+     */
+    public function request($method, $url, array $options = array());
+
+    /** @return int */
+    public function getLastStatusCode();
+
+    /** @return string */
+    public function getBaseUrl();
+}
+```
+
+### Пример: адаптер для Guzzle
+
+```php
+use App\Component\Max\Contracts\HttpClientInterface;
+use GuzzleHttp\Client as GuzzleClient;
+
+class GuzzleAdapter implements HttpClientInterface
+{
+    private $guzzle;
+    private $baseUrl;
+    private $lastStatusCode = 0;
+
+    public function __construct($token, $baseUrl = 'https://platform-api.max.ru/api')
+    {
+        $this->baseUrl = $baseUrl;
+        $this->guzzle = new GuzzleClient(array(
+            'base_uri' => $baseUrl,
+            'headers'  => array(
+                'Authorization' => 'Bearer ' . $token,
+                'Content-Type'  => 'application/json',
+            ),
+        ));
+    }
+
+    public function request($method, $url, array $options = array())
+    {
+        $guzzleOptions = array();
+
+        if (isset($options['json'])) {
+            $guzzleOptions['json'] = $options['json'];
+        }
+        if (isset($options['query'])) {
+            $guzzleOptions['query'] = $options['query'];
+        }
+
+        $response = $this->guzzle->request($method, $url, $guzzleOptions);
+        $this->lastStatusCode = $response->getStatusCode();
+
+        return array(
+            'status_code' => $this->lastStatusCode,
+            'body'        => (string) $response->getBody(),
+        );
+    }
+
+    public function getLastStatusCode()
+    {
+        return $this->lastStatusCode;
+    }
+
+    public function getBaseUrl()
+    {
+        return $this->baseUrl;
+    }
+}
+
+// Использование:
+$httpClient = new GuzzleAdapter('TOKEN');
+$client = ClientFactory::create('TOKEN', null, $httpClient);
+
+// С логгером и кастомным HTTP:
+$client = ClientFactory::create('TOKEN', $logger, $httpClient);
+
+// Через Config:
+$client = ClientFactory::createFromConfig($config, $httpClient);
+```
+
+### Мок-клиент для тестирования
+
+```php
+class MockHttpClient implements HttpClientInterface
+{
+    private $responses = array();
+    private $lastStatusCode = 200;
+
+    public function addResponse($method, $url, $statusCode, $body)
+    {
+        $key = $method . ':' . $url;
+        $this->responses[$key] = array(
+            'status_code' => $statusCode,
+            'body'        => $body,
+        );
+    }
+
+    public function request($method, $url, array $options = array())
+    {
+        $key = $method . ':' . $url;
+        if (isset($this->responses[$key])) {
+            $this->lastStatusCode = $this->responses[$key]['status_code'];
+            return $this->responses[$key];
+        }
+        $this->lastStatusCode = 200;
+        return array('status_code' => 200, 'body' => '{}');
+    }
+
+    public function getLastStatusCode()
+    {
+        return $this->lastStatusCode;
+    }
+
+    public function getBaseUrl()
+    {
+        return 'https://mock-api.test';
+    }
+}
+
+// В тестах:
+$mock = new MockHttpClient();
+$mock->addResponse('GET', '/me', 200, '{"user_id":1,"name":"TestBot","is_bot":true}');
+$client = ClientFactory::create('test-token', null, $mock);
+
+$me = $client->bot()->getMe();
+// $me->getName() === 'TestBot'
 ```
 
 ## Дополнительные ресурсы
