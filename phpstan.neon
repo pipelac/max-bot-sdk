@@ -1,0 +1,8 @@
+parameters:
+    level: 6
+    paths:
+        - src
+    bootstrapFiles:
+        - vendor/autoload.php
+    # PHP 5.6 совместимость — указываем целевую версию
+    phpVersion: 50600

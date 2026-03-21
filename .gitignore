@@ -1,0 +1,24 @@
+# Зависимости
+/vendor/
+composer.lock
+
+# Конфигурация с секретами
+/cfg/config.ini
+
+# Кеш и build
+/.phpunit.result.cache
+/.phpunit.cache/
+/.php-cs-fixer.cache
+/build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,65 @@
+# Contributing to Max Bot SDK
+
+Спасибо за интерес к проекту! Ниже описан процесс внесения изменений.
+
+## Требования к окружению
+
+- **PHP** 5.6+
+- **Extensions:** `json`, `mbstring`, `curl`
+- **Composer** для управления зависимостями
+
+## Установка
+
+```bash
+git clone <repository-url>
+cd Max
+composer install
+```
+
+## Код-стайл
+
+Проект следует **PSR-2** с синтаксисом `array()` (PHP 5.6 совместимость).
+
+```bash
+# Проверка стиля
+vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff
+
+# Автоматическое исправление
+vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php
+```
+
+## Тестирование
+
+```bash
+# Запуск всех тестов
+vendor/bin/phpunit --configuration phpunit.xml.dist
+
+# С покрытием (требуется Xdebug)
+vendor/bin/phpunit --configuration phpunit.xml.dist --coverage-html build/coverage
+```
+
+## Статический анализ
+
+```bash
+vendor/bin/phpstan analyse --configuration phpstan.neon
+```
+
+## Pull Request Checklist
+
+- [ ] Все тесты проходят (`vendor/bin/phpunit`)
+- [ ] PHPStan не выдаёт ошибок
+- [ ] Код-стайл проверен (`php-cs-fixer --dry-run`)
+- [ ] PHPDoc обновлён для новых/изменённых публичных методов
+- [ ] Новые классы помечены `final` (если не предназначены для наследования)
+- [ ] Новые leaf-exceptions наследуют `MaxException`
+- [ ] DTO следуют паттерну: `private __construct` + `fromArray()` + `toArray()`
+
+## Архитектурные принципы
+
+Подробный список требований: [docs/REQUIREMENTS_SENIOR_PROD.md](docs/REQUIREMENTS_SENIOR_PROD.md)
+
+- **Immutability** — Config и DTO без setters
+- **DI** — зависимости через конструктор
+- **Final by default** — все leaf-классы `final`
+- **PSR-2** — единый стиль кода
+- **PHP 5.6 compat** — `array()`, без return type declarations
