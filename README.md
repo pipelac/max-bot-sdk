@@ -2,12 +2,37 @@
 
 [![PHP](https://img.shields.io/badge/PHP-5.6%2B-blue.svg)](https://php.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](https://github.com/pipelac/max-bot-sdk/releases/tag/v1.0.0)
 
-PHP SDK для работы с [MAX Bot API](https://dev.max.ru/docs-api) — мессенджером MAX.
+PHP SDK для создания ботов в мессенджере **MAX** через официальный [MAX Bot API](https://dev.max.ru/docs-api).
 
 **Версия:** 1.0.0 | **PHP:** ≥ 5.6 | **Лицензия:** MIT
 
-## Возможности
+---
+
+## О мессенджере MAX
+
+**[MAX](https://max.ru)** — российский мессенджер и цифровая платформа, разработанный компанией **VK**. Позиционируется как национальный мессенджер России и входит в список программ, обязательных для предустановки на электронные устройства на территории РФ.
+
+**Возможности MAX:**
+- 💬 Личные и групповые чаты
+- 📞 Голосовые и видеозвонки
+- 📢 Каналы и сообщества
+- 🤖 Платформа ботов (Bot API)
+- 🔐 Шифрование переписок, хранение данных на территории России
+- 🏛️ Интеграция с государственными сервисами
+
+**Официальные ресурсы:**
+
+- 🌐 [max.ru](https://max.ru) — официальный сайт
+- 📖 [dev.max.ru/docs-api](https://dev.max.ru/docs-api) — документация Bot API
+- 📱 [Google Play](https://play.google.com/store/apps/details?id=ru.ok.max) — Android
+- 🍎 [App Store](https://apps.apple.com/ru/app/max/id6504507395) — iOS
+- 🖥️ [max.ru](https://max.ru) — Desktop (Windows / macOS)
+
+---
+
+## Что умеет этот SDK
 
 - 🏗️ **Модульная архитектура** — 7 ресурсов (Bot, Chats, Messages, Members, Subscriptions, Uploads, Callbacks)
 - 📦 **Типизированные DTO** — `User`, `Chat`, `Message`, `Update`, `PaginatedResult` и др. вместо сырых массивов
@@ -15,6 +40,7 @@ PHP SDK для работы с [MAX Bot API](https://dev.max.ru/docs-api) — м
 - ⌨️ **Keyboard Builder** — построение inline-клавиатур с валидацией лимитов MAX API
 - 🔐 **Webhook обработка** — парсинг обновлений и верификация секрета
 - ⚙️ **Гибкая конфигурация** — из кода, INI-файла, ENV-переменных или через ConfigBuilder
+- 🔌 **Инъекция зависимостей** — подключайте свой HTTP-клиент (Guzzle и др.) и любой PSR-3 логгер
 - 🛡️ **Безопасность** — маскирование токенов в логах, валидация входных данных
 
 ## Требования
