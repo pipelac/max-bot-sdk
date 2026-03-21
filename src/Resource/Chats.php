@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Component\Max\Resource;
+namespace MaxBotSdk\Resource;
 
-use App\Component\Max\DTO\ActionResult;
-use App\Component\Max\DTO\Chat;
-use App\Component\Max\DTO\Message;
-use App\Component\Max\DTO\PaginatedResult;
-use App\Component\Max\Utils\InputValidator;
+use MaxBotSdk\DTO\ActionResult;
+use MaxBotSdk\DTO\Chat;
+use MaxBotSdk\DTO\Message;
+use MaxBotSdk\DTO\PaginatedResult;
+use MaxBotSdk\Utils\InputValidator;
 
 /**
  * Ресурс: управление чатами MAX Bot API.
@@ -21,11 +21,11 @@ final class Chats extends ResourceAbstract
      * @param int|null $count  Количество чатов.
      * @param int|null $marker Маркер для пагинации.
      * @return PaginatedResult Коллекция Chat DTO.
-     * @throws \App\Component\Max\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxApiException
      */
     public function getChats($count = null, $marker = null)
     {
-        $query = array();
+        $query = [];
         if ($count !== null) {
             $query['count'] = (int) $count;
         }
@@ -42,8 +42,8 @@ final class Chats extends ResourceAbstract
      *
      * @param int $chatId ID чата.
      * @return Chat
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function getChat($chatId)
     {
@@ -58,8 +58,8 @@ final class Chats extends ResourceAbstract
      * @param int   $chatId   ID чата.
      * @param array $chatData Данные для обновления (title, description, ...).
      * @return Chat
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function editChat($chatId, array $chatData)
     {
@@ -73,8 +73,8 @@ final class Chats extends ResourceAbstract
      *
      * @param int $chatId ID чата.
      * @return ActionResult
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function deleteChat($chatId)
     {
@@ -89,14 +89,14 @@ final class Chats extends ResourceAbstract
      * @param int    $chatId ID чата.
      * @param string $action Тип действия.
      * @return ActionResult
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function sendAction($chatId, $action)
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         InputValidator::validateNotEmpty($action, 'Action');
-        $data = $this->post('/chats/' . $chatId . '/actions', array('action' => $action));
+        $data = $this->post('/chats/' . $chatId . '/actions', ['action' => $action]);
         return ActionResult::fromArray($data);
     }
 
@@ -106,14 +106,14 @@ final class Chats extends ResourceAbstract
      * @param int    $chatId    ID чата.
      * @param string $messageId ID сообщения.
      * @return ActionResult
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function pinMessage($chatId, $messageId)
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         InputValidator::validateNotEmpty($messageId, 'Message ID');
-        $data = $this->put('/chats/' . $chatId . '/pin', array('message_id' => $messageId));
+        $data = $this->put('/chats/' . $chatId . '/pin', ['message_id' => $messageId]);
         return ActionResult::fromArray($data);
     }
 
@@ -122,8 +122,8 @@ final class Chats extends ResourceAbstract
      *
      * @param int $chatId ID чата.
      * @return ActionResult
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function unpinMessage($chatId)
     {
@@ -137,8 +137,8 @@ final class Chats extends ResourceAbstract
      *
      * @param int $chatId ID чата.
      * @return Message|null
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function getPinnedMessage($chatId)
     {

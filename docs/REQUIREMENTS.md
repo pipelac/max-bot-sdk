@@ -1,9 +1,4 @@
-# Требования Senior+ Production PHP 5.6+ к SDK-проекту
-
-Полный чеклист для оценки PHP SDK-проектов на соответствие senior+ production уровню.
-**Аудит:** 2026-03-21 | **Тесты:** 214 ✅ (430 assertions) | **Итоговая оценка: 10/10**
-
----
+# Требования к SDK-проекту
 
 ## 1. Архитектура и SOLID
 
@@ -48,7 +43,7 @@
 - [x] `@return` типы на всех методах
   > Проверено: `Client`, `Config`, `ConfigBuilder`, `CurlHttpClient`, все DTO, все Resources.
 - [x] `@throws` с FQCN (Fully Qualified Class Name)
-  > `@throws \App\Component\Max\Exception\MaxApiException`, `MaxConnectionException`, и т.д.
+  > `@throws \MaxBotSdk\Exception\MaxApiException`, `MaxConnectionException`, и т.д.
 - [x] `@param` описания на всех параметрах
   > Все публичные и приватные методы документированы.
 - [x] `@var` на всех свойствах класса
@@ -152,17 +147,17 @@
 ## 9. Инфраструктура и DX (Developer Experience)
 
 - [x] `composer.json` с PSR-4 autoload и scripts
-  > `"App\\Component\\Max\\": "src/"`, scripts: `test`, `phpstan`, `cs-check`, `cs-fix`.
+  > `"MaxBotSdk\\": "src/"`, scripts: `test`, `phpstan`, `cs-check`, `cs-fix`.
 - [x] Composer scripts: `test`, `analyse`, `cs-check`, `cs-fix`
   > `"test"`, `"phpstan"`, `"cs-check"`, `"cs-fix"` в `composer.json`.
 - [x] PHPStan — уровень ≥5
-  > `phpstan.neon`: `level: 5`, paths: `src/`.
+  > `phpstan.neon`: `level: 6`, paths: `src/`.
 - [x] PHP-CS-Fixer — актуальная версия (v3+) с `.php-cs-fixer.dist.php`
   > `.php-cs-fixer.dist.php` с PSR-2 правилами.
 - [x] PHPUnit — актуальная версия с современной XML-схемой
   > PHPUnit 9.6.34, `phpunit.xml.dist` с XML schema.
-- [x] CI/CD — GitHub Actions с матрицей PHP версий (5.6, 7.0, 7.2, 7.4, 8.0, 8.1, 8.2, 8.3)
-  > `.github/workflows/ci.yml` — 8 PHP версий, `fail-fast: false`.
+- [x] CI/CD — GitHub Actions с матрицей PHP версий (7.3, 7.4, 8.0, 8.1, 8.2, 8.3)
+  > `.github/workflows/ci.yml` — 6 PHP версий, `fail-fast: false`.
 - [x] CI — отдельные jobs для тестов, статического анализа, code style
   > 3 jobs: `phpunit`, `phpstan`, `code-style`.
 - [x] `.gitignore` — vendor, coverage, cache, IDE, OS
@@ -208,14 +203,14 @@
 
 - [x] Единый стиль кода (PSR-2/PSR-12)
   > PSR-2 с PHP-CS-Fixer. Проверяется в CI.
-- [x] Short array syntax `[]` вместо `array()` (или `array()` для PHP 5.4 совместимости)
-  > `array()` — осознанный выбор для PHP 5.6 совместимости. Единообразно.
+- [x] Short array syntax `[]` вместо `array()`
+  > `[]` — единообразно во всём проекте. PHP 5.4+ совместимость.
 - [x] Упорядоченные `use`-импорты
   > Алфавитный порядок во всех файлах.
 - [x] Отсутствие неиспользуемых импортов
   > Проверено по всем 44 файлам.
 - [x] Trailing comma в multiline arrays
-  > N/A — `array()` синтаксис, trailing comma не применяется.
+  > Trailing comma используется в multiline arrays где уместно.
 - [x] Именованные константы вместо magic numbers
   > `Config::DEFAULT_TIMEOUT = 30`, `MIN_TIMEOUT = 1`, `MAX_TIMEOUT = 300`, `DEFAULT_RETRIES = 3`, `MAX_RETRIES = 10`.
 - [x] Единый стиль конкатенации строк (пробелы вокруг `.`)
@@ -245,23 +240,3 @@
 - [x] Temp file cleanup — автоматическая очистка временных файлов
   > `$this->tempFiles[]` tracking + `cleanupTempFiles()` в `finally`.
 
----
-
-## Итого
-
-- **1. Архитектура и SOLID** — 10/10 ✅
-- **2. Контракты** — 5/5 ✅
-- **3. Типизация и PHPDoc** — 6/6 ✅
-- **4. Обработка ошибок** — 9/9 ✅
-- **5. DTO / Value Objects** — 7/7 ✅
-- **6. Безопасность** — 7/7 ✅
-- **7. Производительность** — 6/6 ✅
-- **8. Тестирование** — 10/10 ✅
-- **9. Инфраструктура / DX** — 10/10 ✅
-- **10. Документация** — 7/7 ✅
-- **11. Единый язык** — 6/6 ✅
-- **12. Code Style** — 7/7 ✅
-- **13. Версионирование** — 4/4 ✅
-- **14. Robustness** — 5/5 ✅
-
-> **ИТОГО: 99/99 — ✅ 100%**

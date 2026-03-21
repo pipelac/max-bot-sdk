@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Результат загрузки файла.
@@ -40,7 +40,7 @@ final class UploadResult extends AbstractDto
      */
     public static function fromUrl($url)
     {
-        return new self(array('url' => $url));
+        return new self(['url' => $url]);
     }
 
     /**
@@ -51,7 +51,7 @@ final class UploadResult extends AbstractDto
      */
     public static function fromToken($token)
     {
-        return new self(array('token' => $token));
+        return new self(['token' => $token]);
     }
 
     /** @return string */
@@ -71,9 +71,9 @@ final class UploadResult extends AbstractDto
      */
     public function toArray()
     {
-        return array(
+        return [
             'url'   => $this->url,
             'token' => $this->token,
-        );
+        ];
     }
 }

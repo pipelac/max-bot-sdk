@@ -32,8 +32,8 @@
 
 Convenience-методы:
 
-- `Messages::sendTextMessage($chatId, $text, $format)` — быстрая отправка текста
-- `Messages::sendMessageWithKeyboard($chatId, $text, $keyboard, $format)` — отправка с inline-клавиатурой
+- `Messages::sendText($text, $chatId, $format)` — быстрая отправка текста
+- `Messages::sendTextWithKeyboard($text, $chatId, $rows)` — отправка с inline-клавиатурой
 
 ### DTO (Data Transfer Objects)
 
@@ -60,5 +60,5 @@ Convenience-методы:
 - `composer.json` — PSR-4 autoload, PHP 5.6+
 - PHPStan level 6 с целевой версией PHP 5.6
 - PHPUnit тесты (214 тестов, 430 assertions)
-- CI/CD: GitHub Actions (PHP 5.6/7.0/7.2/7.4/8.0/8.1/8.2/8.3)
+- CI/CD: GitHub Actions (PHP 7.3/7.4/8.0/8.1/8.2/8.3)
 - `.php-cs-fixer.dist.php`, `.editorconfig`, `phpstan.neon`

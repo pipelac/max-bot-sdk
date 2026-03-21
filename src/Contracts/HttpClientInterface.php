@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\Contracts;
+namespace MaxBotSdk\Contracts;
 
 /**
  * Интерфейс HTTP-клиента для MAX Bot API.
@@ -20,7 +20,7 @@ interface HttpClientInterface
      * @param array  $options Опции запроса (headers, json, query, multipart).
      * @return array Ассоциативный массив с ключами 'status_code' и 'body'.
      */
-    public function request($method, $url, array $options = array());
+    public function request($method, $url, array $options = []);
 
     /**
      * Возвращает код последнего HTTP-ответа.

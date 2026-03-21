@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Результат Long Polling (обновления + маркер).
@@ -30,10 +30,10 @@ final class UpdatesResult extends AbstractDto implements \Countable, \IteratorAg
      */
     public static function fromArray(array $data)
     {
-        $updates = array();
+        $updates = [];
         $rawUpdates = isset($data['updates']) && is_array($data['updates'])
             ? $data['updates']
-            : array();
+            : [];
         foreach ($rawUpdates as $raw) {
             if (is_array($raw)) {
                 $updates[] = Update::fromArray($raw);
@@ -94,14 +94,14 @@ final class UpdatesResult extends AbstractDto implements \Countable, \IteratorAg
      */
     public function toArray()
     {
-        $updates = array();
+        $updates = [];
         foreach ($this->updates as $update) {
             $updates[] = $update->toArray();
         }
 
-        return array(
+        return [
             'updates' => $updates,
             'marker'  => $this->marker,
-        );
+        ];
     }
 }

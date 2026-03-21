@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Component\Max;
+namespace MaxBotSdk;
 
-use App\Component\Max\Contracts\ClientInterface;
-use App\Component\Max\Contracts\ConfigInterface;
-use App\Component\Max\Contracts\HttpClientInterface;
-use App\Component\Max\Contracts\LoggerInterface;
-use App\Component\Max\Http\CurlHttpClient;
-use App\Component\Max\Http\RetryHandler;
+use MaxBotSdk\Contracts\ConfigInterface;
+use MaxBotSdk\Contracts\HttpClientInterface;
+use MaxBotSdk\Contracts\LoggerInterface;
+use MaxBotSdk\Http\CurlHttpClient;
+use MaxBotSdk\Http\RetryHandler;
 
 /**
  * Фабрика для создания экземпляров Client.

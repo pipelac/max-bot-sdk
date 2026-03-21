@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Component\Max\Resource;
+namespace MaxBotSdk\Resource;
 
-use App\Component\Max\DTO\ActionResult;
-use App\Component\Max\Utils\InputValidator;
+use MaxBotSdk\DTO\ActionResult;
+use MaxBotSdk\Utils\InputValidator;
 
 /**
  * Ресурс: обработка callback-ов (нажатия inline-кнопок).
@@ -19,14 +19,14 @@ final class Callbacks extends ResourceAbstract
      * @param array|null  $message      Обновлённое сообщение или null.
      * @param string|null $notification Одноразовое уведомление.
      * @return ActionResult
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function answerCallback($callbackId, array $message = null, $notification = null)
     {
         InputValidator::validateCallbackId($callbackId);
 
-        $payload = array();
+        $payload = [];
         if ($message !== null) {
             $payload['message'] = $message;
         }
@@ -34,7 +34,7 @@ final class Callbacks extends ResourceAbstract
             $payload['notification'] = $notification;
         }
 
-        $data = $this->post('/answers', $payload, array('callback_id' => $callbackId));
+        $data = $this->post('/answers', $payload, ['callback_id' => $callbackId]);
         return ActionResult::fromArray($data);
     }
 }

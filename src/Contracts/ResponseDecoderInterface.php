@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Component\Max\Contracts;
+namespace MaxBotSdk\Contracts;
 
-use App\Component\Max\Exception\MaxApiException;
+use MaxBotSdk\Exception\MaxApiException;
 
 /**
  * Интерфейс декодера ответов MAX Bot API.

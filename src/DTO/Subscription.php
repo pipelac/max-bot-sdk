@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Объект подписки (webhook).
@@ -69,11 +69,11 @@ final class Subscription extends AbstractDto
      */
     public function toArray()
     {
-        return array(
+        return [
             'url'          => $this->url,
             'time'         => $this->time,
             'update_types' => $this->updateTypes,
             'version'      => $this->version,
-        );
+        ];
     }
 }

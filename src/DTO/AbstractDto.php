@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Базовый абстрактный класс для всех DTO MAX Bot API.
@@ -15,10 +15,20 @@ abstract class AbstractDto
     /**
      * Создать DTO из массива данных API.
      *
+     * Каждый дочерний класс ДОЛЖЕН переопределить этот метод.
+     * Базовая реализация вместо abstract static — для совместимости с PHP 5.6,
+     * который не поддерживает `abstract static`.
+     *
      * @param array $data Данные из ответа API.
      * @return static
+     * @throws \BadMethodCallException Если дочерний класс не переопределил метод.
      */
-    abstract public static function fromArray(array $data);
+    public static function fromArray(array $data)
+    {
+        throw new \BadMethodCallException(
+            sprintf('Класс %s должен переопределить метод fromArray().', get_called_class())
+        );
+    }
 
     /**
      * Сериализовать DTO обратно в массив.
@@ -98,7 +108,7 @@ abstract class AbstractDto
      * @param array  $default Значение по умолчанию.
      * @return array
      */
-    protected static function getArray(array $data, $key, array $default = array())
+    protected static function getArray(array $data, $key, array $default = [])
     {
         return isset($data[$key]) && is_array($data[$key]) ? $data[$key] : $default;
     }

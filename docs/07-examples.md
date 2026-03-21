@@ -8,12 +8,11 @@
 
 Минимальный бот, который отвечает на каждое сообщение тем же текстом.
 
-```php
-<?php
+```php<?php
 require_once 'vendor/autoload.php';
 
-use App\Component\Max\ClientFactory;
-use App\Component\Max\Utils\WebhookHandler;
+use MaxBotSdk\ClientFactory;
+use MaxBotSdk\Utils\WebhookHandler;
 
 // --- Инициализация ---
 $client = ClientFactory::create('ВАШ_ТОКЕН');
@@ -44,7 +43,7 @@ if ($update->getUpdateType() === 'message_created') {
 
     if ($text !== null && $chatId !== null) {
         $client->messages()->sendMessage(
-            array('text' => 'Вы написали: ' . $text),
+            ['text' => 'Вы написали: ' . $text],
             null,
             $chatId
         );
@@ -60,13 +59,12 @@ http_response_code(200);
 
 Бот обрабатывает текстовые команды и нажатия inline-кнопок.
 
-```php
-<?php
+```php<?php
 require_once 'vendor/autoload.php';
 
-use App\Component\Max\ClientFactory;
-use App\Component\Max\Utils\KeyboardBuilder;
-use App\Component\Max\Utils\WebhookHandler;
+use MaxBotSdk\ClientFactory;
+use MaxBotSdk\Utils\KeyboardBuilder;
+use MaxBotSdk\Utils\WebhookHandler;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН');
 $handler = new WebhookHandler();
@@ -91,7 +89,7 @@ switch ($update->getUpdateType()) {
         $chatId = $update->getChatId();
         if ($chatId !== null) {
             $client->messages()->sendMessage(
-                array('text' => '👋 Добро пожаловать! Напишите /help для списка команд.'),
+                ['text' => '👋 Добро пожаловать! Напишите /help для списка команд.'],
                 null,
                 $chatId
             );
@@ -119,49 +117,49 @@ function handleCommand($client, $update)
     switch ($text) {
         case '/start':
         case '/help':
-            $client->messages()->sendMessage(array(
+            $client->messages()->sendMessage([
                 'text' => "📋 **Доступные команды:**\n\n"
                     . "/help — показать справку\n"
                     . "/menu — главное меню\n"
                     . "/info — информация о боте",
                 'format' => 'markdown',
-            ), null, $chatId);
+            ], null, $chatId);
             break;
 
         case '/menu':
-            $keyboard = KeyboardBuilder::build(array(
-                array(
-                    array('type' => 'callback', 'text' => '📊 Статистика', 'payload' => 'stats'),
-                    array('type' => 'callback', 'text' => '⚙️ Настройки', 'payload' => 'settings'),
+            $keyboard = KeyboardBuilder::build([
+                [
+                    ['type' => 'callback', 'text' => '📊 Статистика', 'payload' => 'stats'),
+                    ['type' => 'callback', 'text' => '⚙️ Настройки', 'payload' => 'settings'),
                 ),
-                array(
-                    array('type' => 'callback', 'text' => 'ℹ️ О боте', 'payload' => 'about'),
+                [
+                    ['type' => 'callback', 'text' => 'ℹ️ О боте', 'payload' => 'about'),
                 ),
-                array(
-                    array('type' => 'link', 'text' => '📖 Документация', 'url' => 'https://dev.max.ru/docs-api'),
+                [
+                    ['type' => 'link', 'text' => '📖 Документация', 'url' => 'https://dev.max.ru/docs-api'),
                 ),
-            ));
+            ]);
 
-            $client->messages()->sendMessage(array(
+            $client->messages()->sendMessage([
                 'text'        => '🏠 **Главное меню**',
                 'format'      => 'markdown',
-                'attachments' => array($keyboard),
-            ), null, $chatId);
+                'attachments' => [$keyboard),
+            ], null, $chatId);
             break;
 
         case '/info':
             $me = $client->bot()->getMe();
-            $client->messages()->sendMessage(array(
+            $client->messages()->sendMessage([
                 'text' => '🤖 Бот: ' . $me->getName() . "\n"
                     . '👤 Username: @' . $me->getUsername() . "\n"
                     . '🆔 ID: ' . $me->getUserId(),
-            ), null, $chatId);
+            ], null, $chatId);
             break;
 
         default:
             if (strpos($text, '/') === 0) {
                 $client->messages()->sendMessage(
-                    array('text' => '❓ Неизвестная команда. Напишите /help'),
+                    ['text' => '❓ Неизвестная команда. Напишите /help'],
                     null,
                     $chatId
                 );
@@ -184,29 +182,29 @@ function handleCallback($client, $update)
         case 'stats':
             $client->callbacks()->answerCallback(
                 $callbackId,
-                array('text' => '📊 Статистика пока недоступна.'),
+                ['text' => '📊 Статистика пока недоступна.'],
                 'Загрузка статистики...'
             );
             break;
 
         case 'settings':
             // Обновить сообщение на меню настроек
-            $settingsKeyboard = KeyboardBuilder::build(array(
-                array(
-                    array('type' => 'callback', 'text' => '🔔 Уведомления', 'payload' => 'notif_toggle'),
-                    array('type' => 'callback', 'text' => '🌐 Язык', 'payload' => 'lang_select'),
+            $settingsKeyboard = KeyboardBuilder::build([
+                [
+                    ['type' => 'callback', 'text' => '🔔 Уведомления', 'payload' => 'notif_toggle'),
+                    ['type' => 'callback', 'text' => '🌐 Язык', 'payload' => 'lang_select'),
                 ),
-                array(
-                    array('type' => 'callback', 'text' => '◀️ Назад', 'payload' => 'back_to_menu'),
+                [
+                    ['type' => 'callback', 'text' => '◀️ Назад', 'payload' => 'back_to_menu'),
                 ),
-            ));
+            ]);
 
             $client->callbacks()->answerCallback(
                 $callbackId,
-                array(
+                [
                     'text'        => '⚙️ **Настройки**',
-                    'attachments' => array($settingsKeyboard),
-                )
+                    'attachments' => [$settingsKeyboard),
+                ]
             );
             break;
 
@@ -227,12 +225,11 @@ function handleCallback($client, $update)
 
 Полный цикл: загрузка файла на сервер MAX → отправка в чат.
 
-```php
-<?php
+```php<?php
 require_once 'vendor/autoload.php';
 
-use App\Component\Max\ClientFactory;
-use App\Component\Max\Exception\MaxFileException;
+use MaxBotSdk\ClientFactory;
+use MaxBotSdk\Exception\MaxFileException;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН');
 $chatId = 12345;
@@ -243,15 +240,15 @@ try {
     // uploadFile() объединяет getUploadUrl() + uploadFileToUrl()
     $token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');
 
-    $client->messages()->sendMessage(array(
+    $client->messages()->sendMessage([
         'text'        => '📷 Вот ваше фото!',
-        'attachments' => array(
-            array(
+        'attachments' => [
+            [
                 'type'    => 'image',
-                'payload' => array('token' => $token),
+                'payload' => ['token' => $token),
             ),
         ),
-    ), null, $chatId);
+    ], null, $chatId);
 
 } catch (MaxFileException $e) {
     echo 'Ошибка загрузки: ' . $e->getMessage();
@@ -269,15 +266,15 @@ try {
     $videoToken = $fileResult->getToken();
 
     // Шаг 3: Отправить с вложением
-    $client->messages()->sendMessage(array(
+    $client->messages()->sendMessage([
         'text'        => '🎬 Видео загружено!',
-        'attachments' => array(
-            array(
+        'attachments' => [
+            [
                 'type'    => 'video',
-                'payload' => array('token' => $videoToken),
+                'payload' => ['token' => $videoToken),
             ),
         ),
-    ), null, $chatId);
+    ], null, $chatId);
 
 } catch (MaxFileException $e) {
     echo 'Ошибка: ' . $e->getMessage();
@@ -292,13 +289,13 @@ $audioToken = $client->uploads()->uploadFile('audio', '/path/to/music.mp3');
 $docToken = $client->uploads()->uploadFile('file', '/path/to/report.pdf');
 
 // Отправка нескольких вложений
-$client->messages()->sendMessage(array(
+$client->messages()->sendMessage([
     'text'        => '📎 Файлы:',
-    'attachments' => array(
-        array('type' => 'audio', 'payload' => array('token' => $audioToken)),
-        array('type' => 'file',  'payload' => array('token' => $docToken)),
+    'attachments' => [
+        ['type' => 'audio', 'payload' => ['token' => $audioToken)),
+        ['type' => 'file',  'payload' => ['token' => $docToken)),
     ),
-), null, $chatId);
+], null, $chatId);
 ```
 
 ---
@@ -307,13 +304,12 @@ $client->messages()->sendMessage(array(
 
 Для разработки и тестирования — без webhook.
 
-```php
-<?php
+```php<?php
 require_once 'vendor/autoload.php';
 
-use App\Component\Max\ClientFactory;
-use App\Component\Max\Exception\MaxApiException;
-use App\Component\Max\Exception\MaxConnectionException;
+use MaxBotSdk\ClientFactory;
+use MaxBotSdk\Exception\MaxApiException;
+use MaxBotSdk\Exception\MaxConnectionException;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН');
 
@@ -331,7 +327,7 @@ while (true) {
             100,     // limit
             30,      // timeout
             $marker, // маркер
-            array('message_created', 'message_callback') // фильтр типов
+            ['message_created', 'message_callback'] // фильтр типов
         );
 
         foreach ($result->getUpdates() as $update) {
@@ -367,7 +363,7 @@ function processUpdate($client, $update)
             if ($text !== null && $chatId !== null) {
                 // Эхо-ответ
                 $client->messages()->sendMessage(
-                    array('text' => '🔁 ' . $text),
+                    ['text' => '🔁 ' . $text],
                     null,
                     $chatId
                 );
@@ -397,12 +393,11 @@ function processUpdate($client, $update)
 
 Перебирает все чаты бота и отправляет объявление.
 
-```php
-<?php
+```php<?php
 require_once 'vendor/autoload.php';
 
-use App\Component\Max\ClientFactory;
-use App\Component\Max\Exception\MaxApiException;
+use MaxBotSdk\ClientFactory;
+use MaxBotSdk\Exception\MaxApiException;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН');
 
@@ -419,10 +414,10 @@ do {
 
     foreach ($result->getItems() as $chat) {
         try {
-            $client->messages()->sendMessage(array(
+            $client->messages()->sendMessage([
                 'text'   => $announcement,
                 'format' => 'markdown',
-            ), null, $chat->getChatId());
+            ], null, $chat->getChatId());
 
             $sent++;
             echo '✅ Отправлено в: ' . $chat->getTitle() . "\n";
@@ -447,17 +442,16 @@ echo "\nИтого: отправлено {$sent}, ошибок {$failed}\n";
 
 Паттерн надёжной обработки с каскадным перехватом.
 
-```php
-<?php
+```php<?php
 require_once 'vendor/autoload.php';
 
-use App\Component\Max\ConfigBuilder;
-use App\Component\Max\ClientFactory;
-use App\Component\Max\Exception\MaxApiException;
-use App\Component\Max\Exception\MaxConnectionException;
-use App\Component\Max\Exception\MaxFileException;
-use App\Component\Max\Exception\MaxValidationException;
-use App\Component\Max\Exception\MaxException;
+use MaxBotSdk\ConfigBuilder;
+use MaxBotSdk\ClientFactory;
+use MaxBotSdk\Exception\MaxApiException;
+use MaxBotSdk\Exception\MaxConnectionException;
+use MaxBotSdk\Exception\MaxFileException;
+use MaxBotSdk\Exception\MaxValidationException;
+use MaxBotSdk\Exception\MaxException;
 
 // Конфигурация с увеличенным retry
 $config = ConfigBuilder::create('ВАШ_ТОКЕН')
@@ -480,7 +474,7 @@ function sendSafely($client, $chatId, $text)
 {
     try {
         $client->messages()->sendMessage(
-            array('text' => $text),
+            ['text' => $text],
             null,
             $chatId
         );
@@ -526,11 +520,10 @@ echo $success ? 'Отправлено' : 'Ошибка отправки';
 
 Управление участниками, админами, закреплёнными сообщениями.
 
-```php
-<?php
+```php<?php
 require_once 'vendor/autoload.php';
 
-use App\Component\Max\ClientFactory;
+use MaxBotSdk\ClientFactory;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН');
 $chatId = 12345;
@@ -539,7 +532,7 @@ $chatId = 12345;
 $chat = $client->chats()->getChat($chatId);
 echo 'Чат: ' . $chat->getTitle() . "\n";
 echo 'Тип: ' . $chat->getType() . "\n";
-echo 'Участников: ' . $chat->getMembersCount() . "\n";
+echo 'Участников: ' . $chat->getParticipantsCount() . "\n";
 
 // --- Список участников (с пагинацией) ---
 $marker = null;
@@ -566,7 +559,7 @@ foreach ($admins->getItems() as $admin) {
 $client->members()->removeAdmin($chatId, $userId);
 
 // --- Добавить/удалить участников ---
-$client->members()->addMembers($chatId, array($userId1, $userId2));
+$client->members()->addMembers($chatId, [$userId1, $userId2]);
 $client->members()->removeMember($chatId, $userId3);
 
 // --- Закреплённые сообщения ---
@@ -589,10 +582,10 @@ $client->chats()->unpinMessage($chatId);
 $client->chats()->sendAction($chatId, 'typing_on');
 
 // Редактировать чат
-$client->chats()->editChat($chatId, array(
+$client->chats()->editChat($chatId, [
     'title'       => '🏠 Обновлённое название',
     'description' => 'Описание обновлено через SDK',
-));
+]);
 
 // --- Покинуть чат ---
 $client->members()->leaveChat($chatId);

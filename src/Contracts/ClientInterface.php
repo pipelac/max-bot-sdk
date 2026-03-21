@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\Contracts;
+namespace MaxBotSdk\Contracts;
 
 /**
  * Интерфейс клиента MAX Bot API.
@@ -19,7 +19,7 @@ interface ClientInterface
      * @param array  $query    Параметры query string.
      * @return array Декодированный ответ API.
      */
-    public function get($endpoint, array $query = array());
+    public function get($endpoint, array $query = []);
 
     /**
      * Выполняет POST-запрос к MAX Bot API.
@@ -29,7 +29,7 @@ interface ClientInterface
      * @param array      $query    Параметры query string.
      * @return array Декодированный ответ API.
      */
-    public function post($endpoint, array $json = null, array $query = array());
+    public function post($endpoint, array $json = null, array $query = []);
 
     /**
      * Выполняет PUT-запрос к MAX Bot API.
@@ -39,7 +39,7 @@ interface ClientInterface
      * @param array      $query    Параметры query string.
      * @return array Декодированный ответ API.
      */
-    public function put($endpoint, array $json = null, array $query = array());
+    public function put($endpoint, array $json = null, array $query = []);
 
     /**
      * Выполняет PATCH-запрос к MAX Bot API.
@@ -49,7 +49,7 @@ interface ClientInterface
      * @param array      $query    Параметры query string.
      * @return array Декодированный ответ API.
      */
-    public function patch($endpoint, array $json = null, array $query = array());
+    public function patch($endpoint, array $json = null, array $query = []);
 
     /**
      * Выполняет DELETE-запрос к MAX Bot API.
@@ -58,7 +58,7 @@ interface ClientInterface
      * @param array  $query    Параметры query string.
      * @return array Декодированный ответ API.
      */
-    public function delete($endpoint, array $query = array());
+    public function delete($endpoint, array $query = []);
 
     /**
      * Получает экземпляр HTTP-клиента.

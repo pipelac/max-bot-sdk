@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\Contracts;
+namespace MaxBotSdk\Contracts;
 
 /**
  * Интерфейс логгера (PSR-3 совместимый для PHP 5.6).
@@ -16,26 +16,26 @@ interface LoggerInterface
      * @param array  $context
      * @return void
      */
-    public function debug($message, array $context = array());
+    public function debug($message, array $context = []);
 
     /**
      * @param string $message
      * @param array  $context
      * @return void
      */
-    public function info($message, array $context = array());
+    public function info($message, array $context = []);
 
     /**
      * @param string $message
      * @param array  $context
      * @return void
      */
-    public function warning($message, array $context = array());
+    public function warning($message, array $context = []);
 
     /**
      * @param string $message
      * @param array  $context
      * @return void
      */
-    public function error($message, array $context = array());
+    public function error($message, array $context = []);
 }

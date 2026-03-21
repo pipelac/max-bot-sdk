@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Component\Max\Tests\Helper;
+namespace MaxBotSdk\Tests\Helper;
 
-use App\Component\Max\Contracts\HttpClientInterface;
+use MaxBotSdk\Contracts\HttpClientInterface;
 
 /**
  * Мок HTTP-клиента для тестирования MAX SDK.
@@ -13,10 +13,10 @@ use App\Component\Max\Contracts\HttpClientInterface;
 class MockHttpClient implements HttpClientInterface
 {
     /** @var array Очередь ответов. */
-    private $responses = array();
+    private $responses = [];
 
     /** @var array История запросов. */
-    private $requests = array();
+    private $requests = [];
 
     /** @var int Индекс текущего ответа. */
     private $currentResponseIndex = 0;
@@ -33,10 +33,10 @@ class MockHttpClient implements HttpClientInterface
      */
     public function setResponse($statusCode, $body = '{}')
     {
-        $this->responses[] = array(
+        $this->responses[] = [
             'status_code' => $statusCode,
             'body'        => $body,
-        );
+        ];
         return $this;
     }
 
@@ -66,30 +66,30 @@ class MockHttpClient implements HttpClientInterface
      */
     public function reset()
     {
-        $this->requests = array();
-        $this->responses = array();
+        $this->requests = [];
+        $this->responses = [];
         $this->currentResponseIndex = 0;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function request($method, $url, array $options = array())
+    public function request($method, $url, array $options = [])
     {
-        $this->requests[] = array(
+        $this->requests[] = [
             'method'  => $method,
             'url'     => $url,
             'options' => $options,
-        );
+        ];
 
         if (isset($this->responses[$this->currentResponseIndex])) {
             $response = $this->responses[$this->currentResponseIndex];
             $this->currentResponseIndex++;
         } else {
-            $response = array(
+            $response = [
                 'status_code' => 200,
                 'body'        => '{}',
-            );
+            ];
         }
 
         $this->lastStatusCode = $response['status_code'];

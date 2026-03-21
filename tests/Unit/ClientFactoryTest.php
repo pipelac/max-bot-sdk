@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Component\Max\Tests\Unit;
+namespace MaxBotSdk\Tests\Unit;
 
-use App\Component\Max\Client;
-use App\Component\Max\ClientFactory;
-use App\Component\Max\Config;
-use App\Component\Max\ConfigBuilder;
+use MaxBotSdk\Client;
+use MaxBotSdk\ClientFactory;
+use MaxBotSdk\Config;
+use MaxBotSdk\ConfigBuilder;
 use PHPUnit\Framework\TestCase;
 
 /**

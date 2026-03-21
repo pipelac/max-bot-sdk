@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Component\Max\Tests\Unit;
+namespace MaxBotSdk\Tests\Unit;
 
-use App\Component\Max\Utils\InputValidator;
-use App\Component\Max\Exception\MaxValidationException;
+use MaxBotSdk\Exception\MaxValidationException;
+use MaxBotSdk\Utils\InputValidator;
 use PHPUnit\Framework\TestCase;
 
 /**

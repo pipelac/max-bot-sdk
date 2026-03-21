@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Component\Max\Utils;
+namespace MaxBotSdk\Utils;
 
-use App\Component\Max\Exception\MaxValidationException;
+use MaxBotSdk\Exception\MaxValidationException;
 
 /**
  * Построитель inline-клавиатур для MAX Bot API.
@@ -64,9 +64,9 @@ final class KeyboardBuilder
             );
         }
 
-        return array(
+        return [
             'type'    => 'inline_keyboard',
-            'payload' => array('buttons' => $rows),
-        );
+            'payload' => ['buttons' => $rows],
+        ];
     }
 }

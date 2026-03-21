@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Component\Max\Tests\Unit;
+namespace MaxBotSdk\Tests\Unit;
 
-use App\Component\Max\Config;
-use App\Component\Max\Contracts\ConfigInterface;
-use App\Component\Max\Contracts\LoggerInterface;
-use App\Component\Max\Exception\MaxConfigException;
+use MaxBotSdk\Config;
+use MaxBotSdk\Contracts\ConfigInterface;
+use MaxBotSdk\Contracts\LoggerInterface;
+use MaxBotSdk\Exception\MaxConfigException;
 use PHPUnit\Framework\TestCase;
 
 /**

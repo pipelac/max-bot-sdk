@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Component\Max;
+namespace MaxBotSdk;
 
-use App\Component\Max\Contracts\LoggerInterface;
-use App\Component\Max\Contracts\ResponseDecoderInterface;
-use App\Component\Max\Exception\MaxApiException;
+use MaxBotSdk\Contracts\LoggerInterface;
+use MaxBotSdk\Contracts\ResponseDecoderInterface;
+use MaxBotSdk\Exception\MaxApiException;
 
 /**
  * Декодер ответов MAX Bot API.
@@ -19,14 +19,14 @@ final class ResponseDecoder implements ResponseDecoderInterface
     /**
      * @var array Маппинг HTTP-кодов на описания ошибок.
      */
-    private static $errorMessages = array(
+    private static $errorMessages = [
         400 => 'Недействительный запрос',
         401 => 'Ошибка аутентификации (неверный токен)',
         404 => 'Ресурс не найден',
         405 => 'Метод не допускается',
         429 => 'Превышено количество запросов (rate limit)',
         503 => 'Сервис недоступен',
-    );
+    ];
 
     /** @var LoggerInterface|null */
     private $logger;
@@ -57,17 +57,17 @@ final class ResponseDecoder implements ResponseDecoderInterface
 
         // HTTP 204 No Content — пустой успешный ответ
         if ($statusCode === 204 || trim($body) === '') {
-            return array();
+            return [];
         }
 
         $decoded = json_decode($body, true);
         if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
             if ($this->logger !== null) {
-                $this->logger->error('MaxBot: Некорректный JSON в ответе', array(
+                $this->logger->error('MaxBot: Некорректный JSON в ответе', [
                     'method'   => $method,
                     'endpoint' => $endpoint,
                     'status'   => $statusCode,
-                ));
+                ]);
             }
             throw new MaxApiException(
                 sprintf('Некорректный JSON [%s %s]', $method, $endpoint),
@@ -75,7 +75,7 @@ final class ResponseDecoder implements ResponseDecoderInterface
             );
         }
 
-        return is_array($decoded) ? $decoded : array();
+        return is_array($decoded) ? $decoded : [];
     }
 
     /**
@@ -107,18 +107,20 @@ final class ResponseDecoder implements ResponseDecoderInterface
         }
 
         if ($this->logger !== null) {
-            $this->logger->error('MaxBot: API вернул ошибку', array(
+            $this->logger->error('MaxBot: API вернул ошибку', [
                 'method'      => $method,
                 'endpoint'    => $endpoint,
                 'status_code' => $statusCode,
                 'description' => $description,
                 'error_code'  => $errorCode,
-            ));
+            ]);
         }
 
         throw new MaxApiException(
             sprintf('%s [%s %s, код: %d]', $errorMsg, $method, $endpoint, $statusCode),
-            $statusCode, $description, $errorCode
+            $statusCode,
+            $description,
+            $errorCode
         );
     }
 }

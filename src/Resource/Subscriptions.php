@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Component\Max\Resource;
+namespace MaxBotSdk\Resource;
 
-use App\Component\Max\DTO\ActionResult;
-use App\Component\Max\DTO\Subscription;
-use App\Component\Max\DTO\Update;
-use App\Component\Max\DTO\UpdatesResult;
-use App\Component\Max\Utils\InputValidator;
+use MaxBotSdk\DTO\ActionResult;
+use MaxBotSdk\DTO\Subscription;
+use MaxBotSdk\DTO\UpdatesResult;
+use MaxBotSdk\Utils\InputValidator;
 
 /**
  * Ресурс: подписки (webhook/long-polling) MAX Bot API.
@@ -23,13 +22,13 @@ final class Subscriptions extends ResourceAbstract
      * @param string|null $version     Версия API.
      * @param string|null $secret      Секретный ключ для верификации webhook-запросов.
      * @return Subscription
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function subscribe($url, array $updateTypes = null, $version = null, $secret = null)
     {
         InputValidator::validateWebhookUrl($url);
-        $payload = array('url' => $url);
+        $payload = ['url' => $url];
         if ($updateTypes !== null) {
             $payload['update_types'] = $updateTypes;
         }
@@ -48,16 +47,16 @@ final class Subscriptions extends ResourceAbstract
      * Получить текущие подписки.
      *
      * @return Subscription[]
-     * @throws \App\Component\Max\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxApiException
      */
     public function getSubscriptions()
     {
         $data = $this->get('/subscriptions');
-        $subscriptions = array();
+        $subscriptions = [];
 
         $rawSubs = isset($data['subscriptions']) && is_array($data['subscriptions'])
             ? $data['subscriptions']
-            : array();
+            : [];
 
         foreach ($rawSubs as $raw) {
             if (is_array($raw)) {
@@ -73,13 +72,13 @@ final class Subscriptions extends ResourceAbstract
      *
      * @param string $url URL webhook для удаления.
      * @return ActionResult
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function unsubscribe($url)
     {
         InputValidator::validateWebhookUrl($url);
-        $data = $this->delete('/subscriptions', array('url' => $url));
+        $data = $this->delete('/subscriptions', ['url' => $url]);
         return ActionResult::fromArray($data);
     }
 
@@ -91,11 +90,11 @@ final class Subscriptions extends ResourceAbstract
      * @param int|null $marker  Маркер для получения следующей порции.
      * @param array|null $types Типы обновлений.
      * @return UpdatesResult
-     * @throws \App\Component\Max\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxApiException
      */
     public function getUpdates($limit = null, $timeout = null, $marker = null, array $types = null)
     {
-        $query = array();
+        $query = [];
         if ($limit !== null) {
             $query['limit'] = (int) $limit;
         }

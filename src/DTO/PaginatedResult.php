@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Результат с пагинацией (для чатов, участников, сообщений и т.д.).
@@ -50,14 +50,14 @@ final class PaginatedResult extends AbstractDto implements \Countable, \Iterator
      */
     public static function fromApiResponse(array $data, $itemsKey = 'items', $itemClass = null)
     {
-        $rawItems = isset($data[$itemsKey]) && is_array($data[$itemsKey]) ? $data[$itemsKey] : array();
+        $rawItems = isset($data[$itemsKey]) && is_array($data[$itemsKey]) ? $data[$itemsKey] : [];
         $marker = isset($data['marker']) ? $data['marker'] : null;
 
-        $items = array();
+        $items = [];
         if ($itemClass !== null && method_exists($itemClass, 'fromArray')) {
             foreach ($rawItems as $raw) {
                 if (is_array($raw)) {
-                    $items[] = call_user_func(array($itemClass, 'fromArray'), $raw);
+                    $items[] = call_user_func([$itemClass, 'fromArray'], $raw);
                 }
             }
         } else {
@@ -118,7 +118,7 @@ final class PaginatedResult extends AbstractDto implements \Countable, \Iterator
      */
     public function toArray()
     {
-        $result = array();
+        $result = [];
         foreach ($this->items as $item) {
             if (is_object($item) && method_exists($item, 'toArray')) {
                 $result[] = $item->toArray();
@@ -127,9 +127,9 @@ final class PaginatedResult extends AbstractDto implements \Countable, \Iterator
             }
         }
 
-        return array(
+        return [
             'items'  => $result,
             'marker' => $this->marker,
-        );
+        ];
     }
 }

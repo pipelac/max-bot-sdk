@@ -3,23 +3,21 @@
 ## Установка
 
 ```bash
-composer require app/max-bot-sdk
+composer require pipelac/max-bot-sdk
 ```
 
 ## Создание клиента
 
 ### Вариант 1: С токеном напрямую
 
-```php
-use App\Component\Max\ClientFactory;
+```phpuse MaxBotSdk\ClientFactory;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН_БОТА');
 ```
 
 ### Вариант 2: С логгером
 
-```php
-use App\Component\Max\ClientFactory;
+```phpuse MaxBotSdk\ClientFactory;
 
 // $logger — объект, реализующий LoggerInterface (4 метода: debug, info, warning, error)
 $client = ClientFactory::create('ВАШ_ТОКЕН', $logger);
@@ -29,8 +27,7 @@ $client = ClientFactory::create('ВАШ_ТОКЕН', $logger);
 
 ### Вариант 3: С кастомным HTTP-клиентом
 
-```php
-use App\Component\Max\ClientFactory;
+```phpuse MaxBotSdk\ClientFactory;
 
 // $httpClient — объект, реализующий HttpClientInterface (3 метода: request, getLastStatusCode, getBaseUrl)
 $client = ClientFactory::create('ВАШ_ТОКЕН', null, $httpClient);
@@ -55,8 +52,7 @@ log_requests = true
 app_name = "MaxBot"
 ```
 
-```php
-use App\Component\Max\ClientFactory;
+```phpuse MaxBotSdk\ClientFactory;
 
 // Автоматически ищет cfg/config.ini:
 $client = ClientFactory::createFromIni();
@@ -67,8 +63,7 @@ $client = ClientFactory::createFromIni('/path/to/config.ini');
 
 ### Вариант 5: Из переменных окружения (12-Factor App)
 
-```php
-use App\Component\Max\ClientFactory;
+```phpuse MaxBotSdk\ClientFactory;
 
 // Требуется: MAX_BOT_TOKEN
 // Опционально: MAX_BOT_TIMEOUT, MAX_BOT_RETRIES, MAX_BOT_RATE_LIMIT,
@@ -78,9 +73,8 @@ $client = ClientFactory::createFromEnvironment();
 
 ### Вариант 6: Через ConfigBuilder (максимальная гибкость)
 
-```php
-use App\Component\Max\ConfigBuilder;
-use App\Component\Max\ClientFactory;
+```phpuse MaxBotSdk\ConfigBuilder;
+use MaxBotSdk\ClientFactory;
 
 $config = ConfigBuilder::create('TOKEN')
     ->withTimeout(60)
@@ -100,23 +94,21 @@ $client = ClientFactory::createFromConfig($config, $httpClient);
 
 ## Проверка подключения
 
-```php
-try {
+```phptry {
     $me = $client->bot()->getMe();
     echo 'Бот подключён: ' . $me->getName() . ' (@' . $me->getUsername() . ')';
-} catch (\App\Component\Max\Exception\MaxApiException $e) {
+} catch (\MaxBotSdk\Exception\MaxApiException $e) {
     echo 'Ошибка API: ' . $e->getMessage();
-} catch (\App\Component\Max\Exception\MaxConnectionException $e) {
+} catch (\MaxBotSdk\Exception\MaxConnectionException $e) {
     echo 'Ошибка сети: ' . $e->getMessage();
 }
 ```
 
 ## Отправка сообщений
 
-```php
-// Текстовое сообщение в чат:
+```php// Текстовое сообщение в чат:
 $message = $client->messages()->sendMessage(
-    array('text' => 'Привет из MAX Bot API SDK!'),
+    ['text' => 'Привет из MAX Bot API SDK!'],
     null,    // notify (null = по умолчанию)
     $chatId  // ID чата
 );
@@ -128,8 +120,7 @@ $message = $client->messages()->sendText('Привет!', $chatId);
 
 ## Доступные ресурсы
 
-```php
-$client->bot()           // Информация о боте → User DTO
+```php$client->bot()           // Информация о боте → User DTO
 $client->chats()         // Управление чатами → Chat / PaginatedResult
 $client->members()       // Участники чатов → ChatMember / PaginatedResult
 $client->messages()      // Сообщения → Message / PaginatedResult
@@ -140,14 +131,13 @@ $client->callbacks()     // Ответы на callback-кнопки → ActionRe
 
 ## Настройка Webhook
 
-```php
-// Подписка на все обновления:
+```php// Подписка на все обновления:
 $client->subscriptions()->subscribe('https://example.com/webhook');
 
 // Подписка на определённые типы:
 $client->subscriptions()->subscribe(
     'https://example.com/webhook',
-    array('message_created', 'message_callback'),
+    ['message_created', 'message_callback'],
     null,               // версия API
     'my_secret_key'     // секрет для верификации
 );
@@ -155,8 +145,7 @@ $client->subscriptions()->subscribe(
 
 ## Обработка Webhook
 
-```php
-use App\Component\Max\Utils\WebhookHandler;
+```phpuse MaxBotSdk\Utils\WebhookHandler;
 
 $handler = new WebhookHandler();
 
@@ -181,7 +170,7 @@ switch ($update->getUpdateType()) {
         $text = $update->getMessage()->getText();
         $chatId = $update->getMessage()->getChatId();
         $client->messages()->sendMessage(
-            array('text' => 'Вы написали: ' . $text),
+            ['text' => 'Вы написали: ' . $text],
             null, $chatId
         );
         break;

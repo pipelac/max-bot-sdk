@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Объект вложения (attachment) сообщения.
@@ -61,9 +61,9 @@ final class Attachment extends AbstractDto
      */
     public function toArray()
     {
-        return array(
+        return [
             'type'    => $this->type,
             'payload' => $this->payload,
-        );
+        ];
     }
 }

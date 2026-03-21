@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Объект пользователя/бота MAX.
@@ -95,11 +95,19 @@ final class User extends AbstractDto
     }
 
     /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf('User#%d (%s)', $this->userId, $this->name);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function toArray()
     {
-        return array(
+        return [
             'user_id'            => $this->userId,
             'name'               => $this->name,
             'username'           => $this->username,
@@ -107,6 +115,6 @@ final class User extends AbstractDto
             'last_activity_time' => $this->lastActivityTime,
             'description'        => $this->description,
             'avatar_url'         => $this->avatarUrl,
-        );
+        ];
     }
 }

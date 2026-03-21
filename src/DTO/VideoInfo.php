@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Объект информации о видео.
@@ -89,13 +89,13 @@ final class VideoInfo extends AbstractDto
      */
     public function toArray()
     {
-        return array(
+        return [
             'token'     => $this->token,
             'url'       => $this->url,
             'width'     => $this->width,
             'height'    => $this->height,
             'duration'  => $this->duration,
             'thumbnail' => $this->thumbnail,
-        );
+        ];
     }
 }

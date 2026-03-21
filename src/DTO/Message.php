@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Объект сообщения MAX.
@@ -57,7 +57,7 @@ final class Message extends AbstractDto
         $this->link = self::getArrayOrNull($body, 'link');
 
         // Вложения
-        $this->attachments = array();
+        $this->attachments = [];
         $rawAttachments = self::getArray($body, 'attachments');
         foreach ($rawAttachments as $att) {
             if (is_array($att)) {
@@ -152,16 +152,24 @@ final class Message extends AbstractDto
     }
 
     /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf('Message#%s', $this->messageId !== null ? $this->messageId : 'unknown');
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function toArray()
     {
-        $attachments = array();
+        $attachments = [];
         foreach ($this->attachments as $att) {
             $attachments[] = $att->toArray();
         }
 
-        return array(
+        return [
             'message_id'  => $this->messageId,
             'text'        => $this->text,
             'format'      => $this->format,
@@ -171,6 +179,6 @@ final class Message extends AbstractDto
             'timestamp'   => $this->timestamp,
             'link'        => $this->link,
             'stat'        => $this->stat,
-        );
+        ];
     }
 }

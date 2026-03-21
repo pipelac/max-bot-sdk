@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\Exception;
+namespace MaxBotSdk\Exception;
 
 use RuntimeException;
 

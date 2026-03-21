@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Component\Max\Tests\Unit;
+namespace MaxBotSdk\Tests\Unit;
 
-use App\Component\Max\Config;
-use App\Component\Max\ConfigBuilder;
-use App\Component\Max\Exception\MaxConfigException;
+use MaxBotSdk\Config;
+use MaxBotSdk\ConfigBuilder;
+use MaxBotSdk\Exception\MaxConfigException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -101,7 +101,7 @@ class ConfigBuilderTest extends TestCase
 
     public function testWithLoggerPassesLoggerToConfig()
     {
-        $logger = $this->createMock(\App\Component\Max\Contracts\LoggerInterface::class);
+        $logger = $this->createMock(\MaxBotSdk\Contracts\LoggerInterface::class);
         $config = ConfigBuilder::create('token')
             ->withLogger($logger)
             ->build();

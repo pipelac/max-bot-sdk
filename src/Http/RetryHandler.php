@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Component\Max\Http;
+namespace MaxBotSdk\Http;
 
-use App\Component\Max\Exception\MaxApiException;
-use App\Component\Max\Exception\MaxConnectionException;
+use MaxBotSdk\Exception\MaxApiException;
+use MaxBotSdk\Exception\MaxConnectionException;
 
 /**
  * Retry-обработчик с экспоненциальной задержкой и jitter.

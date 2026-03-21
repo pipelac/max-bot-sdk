@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Component\Max\Tests\Unit\Http;
+namespace MaxBotSdk\Tests\Unit\Http;
 
-use App\Component\Max\Http\RetryHandler;
-use App\Component\Max\Exception\MaxApiException;
-use App\Component\Max\Exception\MaxConnectionException;
+use MaxBotSdk\Exception\MaxApiException;
+use MaxBotSdk\Exception\MaxConnectionException;
+use MaxBotSdk\Http\RetryHandler;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -161,7 +161,7 @@ class RetryHandlerTest extends TestCase
 class TestRetryHandler extends RetryHandler
 {
     /** @var array */
-    public $sleepCalls = array();
+    public $sleepCalls = [];
 
     protected function sleep($milliseconds)
     {

@@ -1,19 +1,19 @@
 <?php
 
-namespace App\Component\Max\Tests\Unit;
+namespace MaxBotSdk\Tests\Unit;
 
-use App\Component\Max\Client;
-use App\Component\Max\Config;
-use App\Component\Max\ResponseDecoder;
-use App\Component\Max\Http\RetryHandler;
-use App\Component\Max\Tests\Helper\MockHttpClient;
-use App\Component\Max\Resource\Bot;
-use App\Component\Max\Resource\Chats;
-use App\Component\Max\Resource\Members;
-use App\Component\Max\Resource\Messages;
-use App\Component\Max\Resource\Subscriptions;
-use App\Component\Max\Resource\Uploads;
-use App\Component\Max\Resource\Callbacks;
+use MaxBotSdk\Client;
+use MaxBotSdk\Config;
+use MaxBotSdk\Http\RetryHandler;
+use MaxBotSdk\Resource\Bot;
+use MaxBotSdk\Resource\Callbacks;
+use MaxBotSdk\Resource\Chats;
+use MaxBotSdk\Resource\Members;
+use MaxBotSdk\Resource\Messages;
+use MaxBotSdk\Resource\Subscriptions;
+use MaxBotSdk\Resource\Uploads;
+use MaxBotSdk\ResponseDecoder;
+use MaxBotSdk\Tests\Helper\MockHttpClient;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -83,7 +83,7 @@ class ClientTest extends TestCase
         $this->mockHttp->setResponse(200, '{"user_id": 1}');
         $result = $this->client->get('/me');
 
-        $this->assertEquals(array('user_id' => 1), $result);
+        $this->assertEquals(['user_id' => 1], $result);
         $requests = $this->mockHttp->getRequests();
         $this->assertCount(1, $requests);
         $this->assertEquals('GET', $requests[0]['method']);
@@ -93,7 +93,7 @@ class ClientTest extends TestCase
     public function testPostSendsRequest()
     {
         $this->mockHttp->setResponse(200, '{"message": {"body": {"mid": "abc"}}}');
-        $result = $this->client->post('/messages', array('text' => 'hello'), array('chat_id' => 123));
+        $result = $this->client->post('/messages', ['text' => 'hello'], ['chat_id' => 123]);
 
         $requests = $this->mockHttp->getRequests();
         $this->assertCount(1, $requests);
@@ -103,7 +103,7 @@ class ClientTest extends TestCase
     public function testDeleteSendsRequest()
     {
         $this->mockHttp->setResponse(200, '{"success": true}');
-        $result = $this->client->delete('/messages', array('message_id' => 'abc'));
+        $result = $this->client->delete('/messages', ['message_id' => 'abc']);
 
         $requests = $this->mockHttp->getRequests();
         $this->assertEquals('DELETE', $requests[0]['method']);

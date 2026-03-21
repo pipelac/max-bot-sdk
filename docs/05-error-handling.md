@@ -13,15 +13,15 @@ MaxException (базовый)
 
 ## Обработка ошибок API
 
-```php
-use App\Component\Max\Exception\MaxApiException;
+```phpuse MaxBotSdk\Exception\MaxApiException;
 
 try {
     $me = $client->bot()->getMe();
 } catch (MaxApiException $e) {
     echo 'Ошибка API: ' . $e->getMessage();
     echo 'Код статуса: ' . $e->getStatusCode();
-    echo 'Тело ответа: ' . print_r($e->getResponseBody(), true);
+    echo 'Описание: ' . $e->getDescription();
+    echo 'Код ошибки: ' . $e->getErrorCode();
 
     // Типичные коды:
     // 401 — Невалидный токен
@@ -34,8 +34,7 @@ try {
 
 ## Обработка ошибок конфигурации
 
-```php
-use App\Component\Max\Exception\MaxConfigException;
+```phpuse MaxBotSdk\Exception\MaxConfigException;
 
 try {
     $config = new Config(''); // Пустой токен
@@ -52,8 +51,7 @@ try {
 
 ## Обработка сетевых ошибок
 
-```php
-use App\Component\Max\Exception\MaxConnectionException;
+```phpuse MaxBotSdk\Exception\MaxConnectionException;
 
 try {
     $chats = $client->chats()->getChats();
@@ -65,8 +63,7 @@ try {
 
 ## Обработка ошибок загрузки
 
-```php
-use App\Component\Max\Exception\MaxFileException;
+```phpuse MaxBotSdk\Exception\MaxFileException;
 
 try {
     $token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');
@@ -78,9 +75,8 @@ try {
 
 ## Обработка ошибок валидации
 
-```php
-use App\Component\Max\Exception\MaxValidationException;
-use App\Component\Max\Utils\KeyboardBuilder;
+```phpuse MaxBotSdk\Exception\MaxValidationException;
+use MaxBotSdk\Utils\KeyboardBuilder;
 
 try {
     // Слишком много кнопок
@@ -92,10 +88,9 @@ try {
 
 ## Полный обработчик (рекомендуемый шаблон)
 
-```php
-use App\Component\Max\Exception\MaxException;
-use App\Component\Max\Exception\MaxApiException;
-use App\Component\Max\Exception\MaxConnectionException;
+```phpuse MaxBotSdk\Exception\MaxException;
+use MaxBotSdk\Exception\MaxApiException;
+use MaxBotSdk\Exception\MaxConnectionException;
 
 try {
     $client = ClientFactory::create($token);
@@ -129,9 +124,8 @@ SDK автоматически повторяет запросы при тран
 
 Стратегия: exponential backoff с jitter. Количество повторов задаётся через `ConfigBuilder`:
 
-```php
-use App\Component\Max\ConfigBuilder;
-use App\Component\Max\ClientFactory;
+```phpuse MaxBotSdk\ConfigBuilder;
+use MaxBotSdk\ClientFactory;
 
 $config = ConfigBuilder::create('TOKEN')
     ->withRetries(5) // По умолчанию 3

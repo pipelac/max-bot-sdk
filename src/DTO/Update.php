@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Объект обновления (webhook/long-polling) MAX.
@@ -123,14 +123,22 @@ final class Update extends AbstractDto
     }
 
     /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf('Update[%s]@%d', $this->updateType, $this->timestamp);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function toArray()
     {
-        $result = array(
+        $result = [
             'update_type' => $this->updateType,
             'timestamp'   => $this->timestamp,
-        );
+        ];
 
         if ($this->message !== null) {
             $result['message'] = $this->message->toArray();

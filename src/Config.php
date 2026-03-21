@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Component\Max;
+namespace MaxBotSdk;
 
-use App\Component\Max\Contracts\ConfigInterface;
-use App\Component\Max\Contracts\LoggerInterface;
-use App\Component\Max\Exception\MaxConfigException;
+use MaxBotSdk\Contracts\ConfigInterface;
+use MaxBotSdk\Contracts\LoggerInterface;
+use MaxBotSdk\Exception\MaxConfigException;
 
 /**
  * Иммутабельная конфигурация MAX Bot API SDK.
@@ -112,7 +112,8 @@ final class Config implements ConfigInterface
         if ($timeout < self::MIN_TIMEOUT || $timeout > self::MAX_TIMEOUT) {
             throw new MaxConfigException(sprintf(
                 'Таймаут должен быть от %d до %d секунд.',
-                self::MIN_TIMEOUT, self::MAX_TIMEOUT
+                self::MIN_TIMEOUT,
+                self::MAX_TIMEOUT
             ));
         }
         $this->timeout = $timeout;
@@ -273,7 +274,7 @@ final class Config implements ConfigInterface
             throw new MaxConfigException('Не удалось разобрать INI файл: ' . $path);
         }
 
-        $section = isset($data['max']) && is_array($data['max']) ? $data['max'] : array();
+        $section = isset($data['max']) && is_array($data['max']) ? $data['max'] : [];
 
         $token = self::iniVal($section, 'token');
         if ($token === null || $token === '') {

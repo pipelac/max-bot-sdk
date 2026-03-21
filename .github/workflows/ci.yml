@@ -3,12 +3,8 @@ name: CI
 on:
   push:
     branches: [ main, master, develop ]
-    paths:
-      - 'Max/**'
   pull_request:
     branches: [ main, master ]
-    paths:
-      - 'Max/**'
 
 jobs:
   phpunit:
@@ -17,9 +13,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['5.6', '7.0', '7.2', '7.4', '8.0', '8.1', '8.2', '8.3']
+        php-version: ['7.3', '7.4', '8.0', '8.1', '8.2', '8.3']
         include:
-          - php-version: '7.4'
+          - php-version: '8.3'
             coverage: true
 
     steps:
@@ -33,26 +29,26 @@ jobs:
           extensions: json, mbstring, curl
           coverage: ${{ matrix.coverage && 'xdebug' || 'none' }}
 
+      - name: Validate composer.json
+        run: composer validate --strict
+
       - name: Cache Composer dependencies
         uses: actions/cache@v4
         with:
-          path: Max/vendor
-          key: composer-${{ matrix.php-version }}-${{ hashFiles('Max/composer.json') }}
+          path: vendor
+          key: composer-${{ matrix.php-version }}-${{ hashFiles('composer.json') }}
           restore-keys: |
             composer-${{ matrix.php-version }}-
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
-        working-directory: Max
 
       - name: Run PHPUnit
         run: vendor/bin/phpunit --configuration phpunit.xml.dist --colors=always
-        working-directory: Max
         if: ${{ !matrix.coverage }}
 
       - name: Run PHPUnit with coverage
         run: vendor/bin/phpunit --configuration phpunit.xml.dist --colors=always --coverage-clover build/coverage.xml
-        working-directory: Max
         if: ${{ matrix.coverage }}
 
   phpstan:
@@ -67,24 +63,22 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'
+          php-version: '8.3'
           extensions: json, mbstring, curl
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
         with:
-          path: Max/vendor
-          key: composer-7.4-${{ hashFiles('Max/composer.json') }}
+          path: vendor
+          key: composer-8.3-${{ hashFiles('composer.json') }}
           restore-keys: |
-            composer-7.4-
+            composer-8.3-
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
-        working-directory: Max
 
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse --configuration phpstan.neon --no-progress
-        working-directory: Max
 
   code-style:
     name: PHP CS Fixer
@@ -97,12 +91,10 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.4'
+          php-version: '8.3'
 
       - name: Install PHP CS Fixer
         run: composer global require friendsofphp/php-cs-fixer:^3.0 --no-interaction
-        working-directory: Max
 
       - name: Check code style
         run: php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff
-        working-directory: Max

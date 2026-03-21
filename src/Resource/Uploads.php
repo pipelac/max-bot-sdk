@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Component\Max\Resource;
+namespace MaxBotSdk\Resource;
 
-use App\Component\Max\DTO\UploadResult;
-use App\Component\Max\DTO\VideoInfo;
-use App\Component\Max\Exception\MaxFileException;
-use App\Component\Max\Utils\InputValidator;
+use MaxBotSdk\DTO\UploadResult;
+use MaxBotSdk\DTO\VideoInfo;
+use MaxBotSdk\Exception\MaxFileException;
+use MaxBotSdk\Utils\InputValidator;
 
 /**
  * Ресурс: загрузка файлов MAX Bot API.
@@ -26,13 +26,13 @@ final class Uploads extends ResourceAbstract
      *
      * @param string $type Тип файла: image, video, audio, file.
      * @return UploadResult Содержит URL для загрузки.
-     * @throws \App\Component\Max\Exception\MaxApiException
-     * @throws \App\Component\Max\Exception\MaxValidationException
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
     public function getUploadUrl($type)
     {
         InputValidator::validateUploadType($type);
-        $data = $this->post('/uploads', null, array('type' => $type));
+        $data = $this->post('/uploads', null, ['type' => $type]);
         return UploadResult::fromArray($data);
     }
 
@@ -55,18 +55,20 @@ final class Uploads extends ResourceAbstract
         $httpClient = $this->client->getHttpClient();
 
         try {
-            $response = $httpClient->request('POST', $url, array(
-                'multipart' => array(
-                    array(
+            $response = $httpClient->request('POST', $url, [
+                'multipart' => [
+                    [
                         'name'     => 'data',
                         'filename' => basename($filePath),
                         'filepath' => $filePath,
-                    ),
-                ),
-            ));
+                    ],
+                ],
+            ]);
         } catch (\Exception $e) {
             throw new MaxFileException(
-                'Ошибка загрузки файла: ' . $e->getMessage(), 0, $e
+                'Ошибка загрузки файла: ' . $e->getMessage(),
+                0,
+                $e
             );
         }
 
@@ -86,7 +88,7 @@ final class Uploads extends ResourceAbstract
      * @param string $filePath Путь к файлу.
      * @return string Token для attachment.
      * @throws MaxFileException
-     * @throws \App\Component\Max\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxApiException
      */
     public function uploadFile($type, $filePath)
     {
@@ -110,7 +112,7 @@ final class Uploads extends ResourceAbstract
      *
      * @param string $videoToken Токен видео.
      * @return VideoInfo
-     * @throws \App\Component\Max\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxApiException
      */
     public function getVideoInfo($videoToken)
     {

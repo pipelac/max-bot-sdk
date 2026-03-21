@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Component\Max\Tests\Unit;
+namespace MaxBotSdk\Tests\Unit;
 
-use App\Component\Max\Utils\WebhookHandler;
-use App\Component\Max\DTO\Update;
+use MaxBotSdk\Utils\WebhookHandler;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,21 +23,21 @@ class WebhookHandlerTest extends TestCase
         $json = '{"update_type": "message_created", "timestamp": 123}';
         $update = $this->handler->parseUpdate($json);
 
-        $this->assertInstanceOf('App\Component\Max\DTO\Update', $update);
+        $this->assertInstanceOf('MaxBotSdk\DTO\Update', $update);
         $this->assertEquals('message_created', $update->getUpdateType());
         $this->assertEquals(123, $update->getTimestamp());
     }
 
     public function testParseUpdateWithMessage()
     {
-        $json = json_encode(array(
+        $json = json_encode([
             'update_type' => 'message_created',
             'timestamp'   => 456,
-            'message'     => array(
-                'body'   => array('text' => 'Hello'),
-                'sender' => array('user_id' => 1, 'name' => 'Bot'),
-            ),
-        ));
+            'message'     => [
+                'body'   => ['text' => 'Hello'],
+                'sender' => ['user_id' => 1, 'name' => 'Bot'],
+            ],
+        ]);
 
         $update = $this->handler->parseUpdate($json);
         $this->assertNotNull($update->getMessage());

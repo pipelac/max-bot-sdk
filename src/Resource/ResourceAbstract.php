@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Component\Max\Resource;
+namespace MaxBotSdk\Resource;
 
-use App\Component\Max\Contracts\ClientInterface;
-use App\Component\Max\Contracts\ResourceInterface;
-use App\Component\Max\Utils\InputValidator;
+use MaxBotSdk\Contracts\ClientInterface;
+use MaxBotSdk\Contracts\ResourceInterface;
+use MaxBotSdk\Utils\InputValidator;
 
 /**
  * Абстрактный базовый класс для ресурсов MAX Bot API.
@@ -44,7 +44,7 @@ abstract class ResourceAbstract implements ResourceInterface
      * @param array  $query    Query-параметры.
      * @return array
      */
-    protected function get($endpoint, array $query = array())
+    protected function get($endpoint, array $query = [])
     {
         return $this->client->get($endpoint, $query);
     }
@@ -57,7 +57,7 @@ abstract class ResourceAbstract implements ResourceInterface
      * @param array      $query    Query-параметры.
      * @return array
      */
-    protected function post($endpoint, array $json = null, array $query = array())
+    protected function post($endpoint, array $json = null, array $query = [])
     {
         return $this->client->post($endpoint, $json, $query);
     }
@@ -70,7 +70,7 @@ abstract class ResourceAbstract implements ResourceInterface
      * @param array      $query    Query-параметры.
      * @return array
      */
-    protected function put($endpoint, array $json = null, array $query = array())
+    protected function put($endpoint, array $json = null, array $query = [])
     {
         return $this->client->put($endpoint, $json, $query);
     }
@@ -83,7 +83,7 @@ abstract class ResourceAbstract implements ResourceInterface
      * @param array      $query    Query-параметры.
      * @return array
      */
-    protected function patch($endpoint, array $json = null, array $query = array())
+    protected function patch($endpoint, array $json = null, array $query = [])
     {
         return $this->client->patch($endpoint, $json, $query);
     }
@@ -95,7 +95,7 @@ abstract class ResourceAbstract implements ResourceInterface
      * @param array  $query    Query-параметры.
      * @return array
      */
-    protected function delete($endpoint, array $query = array())
+    protected function delete($endpoint, array $query = [])
     {
         return $this->client->delete($endpoint, $query);
     }

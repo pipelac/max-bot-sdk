@@ -4,8 +4,7 @@
 
 Методы, возвращающие списки данных, используют `PaginatedResult`:
 
-```php
-$result = $client->chats()->getChats(50);
+```php$result = $client->chats()->getChats(50);
 
 while (true) {
     foreach ($result->getItems() as $chat) {
@@ -30,9 +29,8 @@ while (true) {
 
 SDK автоматически повторяет запросы при transient-ошибках (HTTP 429, 5xx):
 
-```php
-use App\Component\Max\ConfigBuilder;
-use App\Component\Max\ClientFactory;
+```phpuse MaxBotSdk\ConfigBuilder;
+use MaxBotSdk\ClientFactory;
 
 $config = ConfigBuilder::create('TOKEN')
     ->withRetries(5)  // Максимум 5 повторных попыток (по умолчанию 3, макс. 10)
@@ -52,8 +50,7 @@ $client = ClientFactory::createFromConfig($config);
 
 Рекомендуемый способ создания конфигурации с нестандартными параметрами:
 
-```php
-use App\Component\Max\ConfigBuilder;
+```phpuse MaxBotSdk\ConfigBuilder;
 
 $config = ConfigBuilder::create('TOKEN')
     ->withTimeout(60)        // 5–300 сек (по умолчанию 30)
@@ -70,8 +67,7 @@ $config = ConfigBuilder::create('TOKEN')
 
 SDK поддерживает ограничение количества запросов в секунду:
 
-```php
-$config = ConfigBuilder::create('TOKEN')
+```php$config = ConfigBuilder::create('TOKEN')
     ->withRateLimit(20) // Макс. 20 запросов/сек (по умолчанию 30)
     ->build();
 ```
@@ -82,10 +78,9 @@ MAX API рекомендует не более 30 запросов в секун
 
 ### Подписка с фильтрацией типов обновлений
 
-```php
-$client->subscriptions()->subscribe(
+```php$client->subscriptions()->subscribe(
     'https://example.com/webhook',
-    array('message_created', 'message_callback'), // Только эти типы
+    ['message_created', 'message_callback'], // Только эти типы
     null,  // версия API
     'my_secret_key_256_chars_max' // Секрет для верификации (5–256 символов)
 );
@@ -93,8 +88,7 @@ $client->subscriptions()->subscribe(
 
 ### Верификация секрета
 
-```php
-use App\Component\Max\Utils\WebhookHandler;
+```phpuse MaxBotSdk\Utils\WebhookHandler;
 
 $handler = new WebhookHandler();
 
@@ -107,8 +101,7 @@ $isValid = $handler->verifySecret(
 
 ### Обработка разных типов обновлений
 
-```php
-$update = $handler->parseUpdate(file_get_contents('php://input'));
+```php$update = $handler->parseUpdate(file_get_contents('php://input'));
 
 if ($update !== null) {
     switch ($update->getUpdateType()) {
@@ -135,8 +128,7 @@ if ($update !== null) {
 
 Полный 3-этапный процесс:
 
-```php
-// Способ 1: Автоматический (шаги 1+2)
+```php// Способ 1: Автоматический (шаги 1+2)
 $token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');
 
 // Способ 2: Пошаговый
@@ -145,31 +137,30 @@ $fileResult = $client->uploads()->uploadFileToUrl($uploadResult->getUrl(), '/pat
 $token = $fileResult->getToken();
 
 // Использование token в сообщении
-$client->messages()->sendMessage(array(
+$client->messages()->sendMessage([
     'text'        => 'Фото',
-    'attachments' => array(
-        array('type' => 'image', 'payload' => array('token' => $token)),
+    'attachments' => [
+        ['type' => 'image', 'payload' => ['token' => $token)),
     ),
-), null, $chatId);
+], null, $chatId);
 ```
 
 ## Inline-клавиатуры
 
-```php
-use App\Component\Max\Utils\KeyboardBuilder;
+```phpuse MaxBotSdk\Utils\KeyboardBuilder;
 
 // Строим клавиатуру
-$keyboard = KeyboardBuilder::build(array(
+$keyboard = KeyboardBuilder::build([
     // Ряд 1
-    array(
-        array('type' => 'callback', 'text' => 'Да', 'payload' => 'yes'),
-        array('type' => 'callback', 'text' => 'Нет', 'payload' => 'no'),
+    [
+        ['type' => 'callback', 'text' => 'Да', 'payload' => 'yes'),
+        ['type' => 'callback', 'text' => 'Нет', 'payload' => 'no'),
     ),
     // Ряд 2
-    array(
-        array('type' => 'link', 'text' => 'Сайт', 'url' => 'https://example.com'),
+    [
+        ['type' => 'link', 'text' => 'Сайт', 'url' => 'https://example.com'),
     ),
-));
+]);
 
 // Лимиты MAX API:
 // - Максимум 210 кнопок
@@ -179,22 +170,20 @@ $keyboard = KeyboardBuilder::build(array(
 
 ## Подключение логгера
 
-SDK принимает любой логгер, реализующий `App\Component\Max\Contracts\LoggerInterface` — 4 метода:
+SDK принимает любой логгер, реализующий `MaxBotSdk\Contracts\LoggerInterface` — 4 метода:
 
-```php
-interface LoggerInterface
+```phpinterface LoggerInterface
 {
-    public function debug($message, array $context = array());
-    public function info($message, array $context = array());
-    public function warning($message, array $context = array());
-    public function error($message, array $context = array());
+    public function debug($message, array $context = []);
+    public function info($message, array $context = []);
+    public function warning($message, array $context = []);
+    public function error($message, array $context = []);
 }
 ```
 
 ### Вариант 1: Простой файловый логгер
 
-```php
-use App\Component\Max\Contracts\LoggerInterface;
+```phpuse MaxBotSdk\Contracts\LoggerInterface;
 
 class FileLogger implements LoggerInterface
 {
@@ -205,22 +194,22 @@ class FileLogger implements LoggerInterface
         $this->file = $path;
     }
 
-    public function debug($message, array $context = array())
+    public function debug($message, array $context = [])
     {
         $this->write('DEBUG', $message, $context);
     }
 
-    public function info($message, array $context = array())
+    public function info($message, array $context = [])
     {
         $this->write('INFO', $message, $context);
     }
 
-    public function warning($message, array $context = array())
+    public function warning($message, array $context = [])
     {
         $this->write('WARNING', $message, $context);
     }
 
-    public function error($message, array $context = array())
+    public function error($message, array $context = [])
     {
         $this->write('ERROR', $message, $context);
     }
@@ -244,8 +233,7 @@ $client = ClientFactory::create('TOKEN', $logger);
 
 Если у вас уже есть PSR-3 логгер (Monolog, Symfony Logger и др.):
 
-```php
-use App\Component\Max\Contracts\LoggerInterface;
+```phpuse MaxBotSdk\Contracts\LoggerInterface;
 use Psr\Log\LoggerInterface as PsrLoggerInterface;
 
 class Psr3Adapter implements LoggerInterface
@@ -257,22 +245,22 @@ class Psr3Adapter implements LoggerInterface
         $this->logger = $logger;
     }
 
-    public function debug($message, array $context = array())
+    public function debug($message, array $context = [])
     {
         $this->logger->debug($message, $context);
     }
 
-    public function info($message, array $context = array())
+    public function info($message, array $context = [])
     {
         $this->logger->info($message, $context);
     }
 
-    public function warning($message, array $context = array())
+    public function warning($message, array $context = [])
     {
         $this->logger->warning($message, $context);
     }
 
-    public function error($message, array $context = array())
+    public function error($message, array $context = [])
     {
         $this->logger->error($message, $context);
     }
@@ -288,8 +276,7 @@ $client = ClientFactory::create('TOKEN', $logger);
 
 ### Вариант 3: Через ConfigBuilder
 
-```php
-$config = ConfigBuilder::create('TOKEN')
+```php$config = ConfigBuilder::create('TOKEN')
     ->withLogger($logger)
     ->withLogRequests(true)   // Логировать все HTTP-запросы
     ->withAppName('МойБот')   // Префикс в логах: "МойБот: ..."
@@ -302,8 +289,7 @@ $client = ClientFactory::createFromConfig($config);
 
 Если логгер не передан, SDK **не логирует** ничего — это поведение по умолчанию.
 
-```php
-// Без логирования:
+```php// Без логирования:
 $client = ClientFactory::create('TOKEN');
 
 // Или явно:
@@ -316,8 +302,7 @@ $config = ConfigBuilder::create('TOKEN')
 
 По умолчанию SDK использует встроенный `CurlHttpClient`. Любой метод `ClientFactory` принимает кастомный HTTP-клиент, реализующий `HttpClientInterface`:
 
-```php
-interface HttpClientInterface
+```phpinterface HttpClientInterface
 {
     /**
      * @param string $method  HTTP-метод (GET, POST, PUT, PATCH, DELETE).
@@ -325,7 +310,7 @@ interface HttpClientInterface
      * @param array  $options Опции: headers, json, query, multipart.
      * @return array ['status_code' => int, 'body' => string]
      */
-    public function request($method, $url, array $options = array());
+    public function request($method, $url, array $options = []);
 
     /** @return int */
     public function getLastStatusCode();
@@ -337,8 +322,7 @@ interface HttpClientInterface
 
 ### Пример: адаптер для Guzzle
 
-```php
-use App\Component\Max\Contracts\HttpClientInterface;
+```phpuse MaxBotSdk\Contracts\HttpClientInterface;
 use GuzzleHttp\Client as GuzzleClient;
 
 class GuzzleAdapter implements HttpClientInterface
@@ -350,18 +334,18 @@ class GuzzleAdapter implements HttpClientInterface
     public function __construct($token, $baseUrl = 'https://platform-api.max.ru/api')
     {
         $this->baseUrl = $baseUrl;
-        $this->guzzle = new GuzzleClient(array(
+        $this->guzzle = new GuzzleClient([
             'base_uri' => $baseUrl,
-            'headers'  => array(
+            'headers'  => [
                 'Authorization' => 'Bearer ' . $token,
                 'Content-Type'  => 'application/json',
             ),
-        ));
+        ]);
     }
 
-    public function request($method, $url, array $options = array())
+    public function request($method, $url, array $options = [])
     {
-        $guzzleOptions = array();
+        $guzzleOptions = [];
 
         if (isset($options['json'])) {
             $guzzleOptions['json'] = $options['json'];
@@ -373,10 +357,10 @@ class GuzzleAdapter implements HttpClientInterface
         $response = $this->guzzle->request($method, $url, $guzzleOptions);
         $this->lastStatusCode = $response->getStatusCode();
 
-        return array(
+        return [
             'status_code' => $this->lastStatusCode,
             'body'        => (string) $response->getBody(),
-        );
+        ];
     }
 
     public function getLastStatusCode()
@@ -403,22 +387,21 @@ $client = ClientFactory::createFromConfig($config, $httpClient);
 
 ### Мок-клиент для тестирования
 
-```php
-class MockHttpClient implements HttpClientInterface
+```phpclass MockHttpClient implements HttpClientInterface
 {
-    private $responses = array();
+    private $responses = [];
     private $lastStatusCode = 200;
 
     public function addResponse($method, $url, $statusCode, $body)
     {
         $key = $method . ':' . $url;
-        $this->responses[$key] = array(
+        $this->responses[$key] = [
             'status_code' => $statusCode,
             'body'        => $body,
-        );
+        ];
     }
 
-    public function request($method, $url, array $options = array())
+    public function request($method, $url, array $options = [])
     {
         $key = $method . ':' . $url;
         if (isset($this->responses[$key])) {
@@ -426,7 +409,7 @@ class MockHttpClient implements HttpClientInterface
             return $this->responses[$key];
         }
         $this->lastStatusCode = 200;
-        return array('status_code' => 200, 'body' => '{}');
+        return ['status_code' => 200, 'body' => '{}'];
     }
 
     public function getLastStatusCode()
@@ -453,8 +436,7 @@ $me = $client->bot()->getMe();
 
 ### Управление чатами
 
-```php
-// Удалить чат
+```php// Удалить чат
 $client->chats()->deleteChat($chatId);
 
 // Отправить действие (typing indicator)
@@ -469,8 +451,7 @@ $pinned = $client->chats()->getPinnedMessage($chatId);
 
 ### Управление участниками
 
-```php
-// Администраторы
+```php// Администраторы
 $admins = $client->members()->getAdmins($chatId);
 $client->members()->addAdmin($chatId, $userId);
 $client->members()->removeAdmin($chatId, $userId);

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Component\Max\Utils;
+namespace MaxBotSdk\Utils;
 
-use App\Component\Max\Exception\MaxValidationException;
+use MaxBotSdk\Exception\MaxValidationException;
 
 /**
  * Утилита для валидации входных параметров MAX Bot API.
@@ -30,7 +30,8 @@ final class InputValidator
         if ($length > self::MAX_TEXT_LENGTH) {
             throw new MaxValidationException(sprintf(
                 'Текст превышает максимум %d символов (текущий: %d).',
-                self::MAX_TEXT_LENGTH, $length
+                self::MAX_TEXT_LENGTH,
+                $length
             ));
         }
         return $text;
@@ -76,7 +77,7 @@ final class InputValidator
      */
     public static function validateUploadType($type)
     {
-        $allowed = array('image', 'video', 'audio', 'file');
+        $allowed = ['image', 'video', 'audio', 'file'];
         if (!in_array($type, $allowed, true)) {
             throw new MaxValidationException(
                 'Некорректный тип файла. Допустимы: ' . implode(', ', $allowed)

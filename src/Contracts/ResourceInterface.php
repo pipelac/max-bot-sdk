@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\Contracts;
+namespace MaxBotSdk\Contracts;
 
 /**
  * Интерфейс ресурса API.

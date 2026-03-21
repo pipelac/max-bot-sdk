@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Component\Max;
+namespace MaxBotSdk;
 
-use App\Component\Max\Contracts\LoggerInterface;
-use App\Component\Max\Exception\MaxConfigException;
+use MaxBotSdk\Contracts\LoggerInterface;
+use MaxBotSdk\Exception\MaxConfigException;
 
 /**
  * Fluent builder для создания иммутабельной конфигурации MAX Bot API SDK.

@@ -18,7 +18,7 @@ composer install
 
 ## Код-стайл
 
-Проект следует **PSR-2** с синтаксисом `array()` (PHP 5.6 совместимость).
+Проект следует **PSR-2** с синтаксисом `[]` (short array syntax).
 
 ```bash
 # Проверка стиля
@@ -56,10 +56,10 @@ vendor/bin/phpstan analyse --configuration phpstan.neon
 
 ## Архитектурные принципы
 
-Подробный список требований: [docs/REQUIREMENTS_SENIOR_PROD.md](docs/REQUIREMENTS_SENIOR_PROD.md)
+Подробный список требований: [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md)
 
 - **Immutability** — Config и DTO без setters
 - **DI** — зависимости через конструктор
 - **Final by default** — все leaf-классы `final`
 - **PSR-2** — единый стиль кода
-- **PHP 5.6 compat** — `array()`, без return type declarations
+- **PHP 5.6 compat** — `[]` short syntax, без return type declarations

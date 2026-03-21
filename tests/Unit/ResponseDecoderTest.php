@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Component\Max\Tests\Unit;
+namespace MaxBotSdk\Tests\Unit;
 
-use App\Component\Max\ResponseDecoder;
-use App\Component\Max\Exception\MaxApiException;
+use MaxBotSdk\Exception\MaxApiException;
+use MaxBotSdk\ResponseDecoder;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -22,13 +22,13 @@ class ResponseDecoderTest extends TestCase
     public function testDecodeValidJson()
     {
         $result = $this->decoder->decode(200, '{"ok": true}', 'GET', '/me');
-        $this->assertEquals(array('ok' => true), $result);
+        $this->assertEquals(['ok' => true], $result);
     }
 
     public function testDecodeEmptyJsonReturnsEmptyArray()
     {
         $result = $this->decoder->decode(200, 'null', 'GET', '/me');
-        $this->assertEquals(array(), $result);
+        $this->assertEquals([], $result);
     }
 
     public function testDecodeInvalidJsonThrows()

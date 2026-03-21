@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Component\Max\Http;
+namespace MaxBotSdk\Http;
 
-use App\Component\Max\Contracts\ConfigInterface;
-use App\Component\Max\Contracts\HttpClientInterface;
-use App\Component\Max\Contracts\LoggerInterface;
-use App\Component\Max\Exception\MaxConnectionException;
-use App\Component\Max\Utils\InputValidator;
+use MaxBotSdk\Contracts\ConfigInterface;
+use MaxBotSdk\Contracts\HttpClientInterface;
+use MaxBotSdk\Contracts\LoggerInterface;
+use MaxBotSdk\Exception\MaxConnectionException;
+use MaxBotSdk\Utils\InputValidator;
 
 /**
  * Standalone HTTP-транспорт для MAX Bot API на базе ext-curl.
@@ -19,6 +19,9 @@ use App\Component\Max\Utils\InputValidator;
  */
 final class CurlHttpClient implements HttpClientInterface
 {
+    /** @var string Версия SDK. */
+    const SDK_VERSION = '1.0.0';
+
     /** @var string Базовый URL MAX Bot API. */
     const BASE_URL = 'https://platform-api.max.ru';
 
@@ -32,7 +35,7 @@ final class CurlHttpClient implements HttpClientInterface
     private $lastStatusCode = 0;
 
     /** @var string[] Пути временных файлов для очистки после запроса. */
-    private $tempFiles = array();
+    private $tempFiles = [];
 
     /** @var string Базовый URL. */
     private $baseUrl;
@@ -54,10 +57,10 @@ final class CurlHttpClient implements HttpClientInterface
      *
      * @throws MaxConnectionException
      */
-    public function request($method, $url, array $options = array())
+    public function request($method, $url, array $options = [])
     {
         // Очищаем список temp-файлов от предыдущего запроса
-        $this->tempFiles = array();
+        $this->tempFiles = [];
 
         // Формируем полный URL
         $fullUrl = $this->buildUrl($url, $options);
@@ -85,10 +88,10 @@ final class CurlHttpClient implements HttpClientInterface
 
             $this->logRequest($method, $url, $this->lastStatusCode);
 
-            return array(
+            return [
                 'status_code' => $this->lastStatusCode,
                 'body'        => (string) $responseBody,
-            );
+            ];
         } finally {
             curl_close($ch);
             $this->cleanupTempFiles();
@@ -207,9 +210,11 @@ final class CurlHttpClient implements HttpClientInterface
      */
     private function buildHeaders($method, array $options)
     {
-        $headers = array(
+        $curlVersion = curl_version();
+        $headers = [
             'Authorization: ' . $this->config->getToken(),
-        );
+            'User-Agent: MaxBotSDK/' . self::SDK_VERSION . ' PHP/' . PHP_VERSION . ' cURL/' . $curlVersion['version'],
+        ];
 
         // Пользовательские заголовки
         if (isset($options['headers']) && is_array($options['headers'])) {
@@ -264,7 +269,7 @@ final class CurlHttpClient implements HttpClientInterface
      */
     private function buildMultipart(array $parts)
     {
-        $postFields = array();
+        $postFields = [];
 
         foreach ($parts as $part) {
             $name = isset($part['name']) ? $part['name'] : 'file';
@@ -309,7 +314,7 @@ final class CurlHttpClient implements HttpClientInterface
                 @unlink($file);
             }
         }
-        $this->tempFiles = array();
+        $this->tempFiles = [];
     }
 
     /**
@@ -327,11 +332,11 @@ final class CurlHttpClient implements HttpClientInterface
         }
 
         $maskedToken = InputValidator::maskToken($this->config->getToken());
-        $this->logger->debug($this->config->getAppName() . ': HTTP запрос', array(
+        $this->logger->debug($this->config->getAppName() . ': HTTP запрос', [
             'method'      => $method,
             'url'         => $url,
             'status_code' => $statusCode,
             'token'       => $maskedToken,
-        ));
+        ]);
     }
 }

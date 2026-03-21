@@ -4,11 +4,10 @@
 
 ### Настройка webhook
 
-```php
-// Подписка на все основные типы событий
+```php// Подписка на все основные типы событий
 $client->subscriptions()->subscribe(
     'https://your-domain.com/max-webhook',
-    array(
+    [
         'message_created',
         'message_callback',
         'message_edited',
@@ -19,7 +18,7 @@ $client->subscriptions()->subscribe(
         'user_added',
         'user_removed',
         'chat_title_changed',
-    ),
+    ],
     null,  // версия API (null = текущая)
     'your_secret_key_5_to_256_chars'
 );
@@ -34,8 +33,7 @@ $client->subscriptions()->subscribe(
 
 ### Безопасность webhook
 
-```php
-use App\Component\Max\Utils\WebhookHandler;
+```phpuse MaxBotSdk\Utils\WebhookHandler;
 
 $handler = new WebhookHandler();
 $secret = isset($_SERVER['HTTP_X_MAX_BOT_API_SECRET'])
@@ -52,8 +50,7 @@ MAX API передаёт секрет в заголовке `X-Max-Bot-Api-Secre
 
 ### Обработка webhook
 
-```php
-use App\Component\Max\Utils\WebhookHandler;
+```phpuse MaxBotSdk\Utils\WebhookHandler;
 
 $handler = new WebhookHandler();
 $update = $handler->parseUpdate(file_get_contents('php://input'));
@@ -82,7 +79,7 @@ switch ($update->getUpdateType()) {
         $userId = $update->getUser()->getUserId();
         $chatId = $update->getChatId();
         $client->messages()->sendMessage(
-            array('text' => 'Добро пожаловать!'),
+            ['text' => 'Добро пожаловать!'],
             null,
             $chatId
         );
@@ -115,8 +112,7 @@ http_response_code(200);
 
 ### Управление подписками
 
-```php
-// Получить список подписок → Subscription[]
+```php// Получить список подписок → Subscription[]
 $subscriptions = $client->subscriptions()->getSubscriptions();
 foreach ($subscriptions as $sub) {
     echo $sub->getUrl() . ' — ' . implode(', ', $sub->getUpdateTypes()) . "\n";
@@ -132,12 +128,11 @@ $client->subscriptions()->unsubscribe('https://your-domain.com/max-webhook');
 
 ### Базовый цикл
 
-```php
-$marker = null;
+```php$marker = null;
 
 while (true) {
     try {
-        /** @var \App\Component\Max\DTO\UpdatesResult $result */
+        /** @var \MaxBotSdk\DTO\UpdatesResult $result */
         $result = $client->subscriptions()->getUpdates(100, 30, $marker);
 
         foreach ($result->getUpdates() as $update) {
@@ -148,7 +143,7 @@ while (true) {
         // Сохранить маркер для следующего запроса
         $marker = $result->getMarker();
 
-    } catch (\App\Component\Max\Exception\MaxApiException $e) {
+    } catch (\MaxBotSdk\Exception\MaxApiException $e) {
         error_log('Ошибка polling: ' . $e->getMessage());
         sleep(5); // Пауза перед повтором
     }
@@ -157,12 +152,11 @@ while (true) {
 
 ### С фильтрацией типов
 
-```php
-$result = $client->subscriptions()->getUpdates(
+```php$result = $client->subscriptions()->getUpdates(
     50,     // limit
     30,     // timeout
     $marker,
-    array('message_created', 'message_callback') // типы событий
+    ['message_created', 'message_callback'] // типы событий
 );
 
 foreach ($result->getUpdates() as $update) {

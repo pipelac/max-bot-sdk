@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Component\Max\Tests\Unit;
+namespace MaxBotSdk\Tests\Unit;
 
-use App\Component\Max\Exception\MaxException;
-use App\Component\Max\Exception\MaxApiException;
-use App\Component\Max\Exception\MaxConfigException;
-use App\Component\Max\Exception\MaxFileException;
-use App\Component\Max\Exception\MaxValidationException;
-use App\Component\Max\Exception\MaxConnectionException;
+use MaxBotSdk\Exception\MaxApiException;
+use MaxBotSdk\Exception\MaxConfigException;
+use MaxBotSdk\Exception\MaxConnectionException;
+use MaxBotSdk\Exception\MaxException;
+use MaxBotSdk\Exception\MaxFileException;
+use MaxBotSdk\Exception\MaxValidationException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -69,13 +69,13 @@ class ExceptionTest extends TestCase
 
     public function testAllExceptionsCatchableByBase()
     {
-        $exceptions = array(
+        $exceptions = [
             new MaxApiException('api', 400),
             new MaxConfigException('config'),
             new MaxFileException('file'),
             new MaxValidationException('validation'),
             new MaxConnectionException('connection'),
-        );
+        ];
 
         foreach ($exceptions as $e) {
             $this->assertInstanceOf(MaxException::class, $e);

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Component\Max\Utils;
+namespace MaxBotSdk\Utils;
 
-use App\Component\Max\DTO\Update;
+use MaxBotSdk\DTO\Update;
 
 /**
  * Обработчик webhook-запросов MAX Bot API.

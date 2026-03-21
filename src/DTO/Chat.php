@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Объект чата MAX.
@@ -135,11 +135,19 @@ final class Chat extends AbstractDto
     }
 
     /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf('Chat#%d (%s)', $this->chatId, $this->title);
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function toArray()
     {
-        return array(
+        return [
             'chat_id'            => $this->chatId,
             'type'               => $this->type,
             'status'             => $this->status,
@@ -151,6 +159,6 @@ final class Chat extends AbstractDto
             'link'               => $this->link,
             'icon'               => $this->icon,
             'last_event_time'    => $this->lastEventTime,
-        );
+        ];
     }
 }

@@ -1,23 +1,23 @@
 <?php
 
-namespace App\Component\Max\Tests\Unit\Resource;
+namespace MaxBotSdk\Tests\Unit\Resource;
 
-use App\Component\Max\Client;
-use App\Component\Max\Config;
-use App\Component\Max\ResponseDecoder;
-use App\Component\Max\Http\RetryHandler;
-use App\Component\Max\DTO\ActionResult;
-use App\Component\Max\DTO\Chat;
-use App\Component\Max\DTO\ChatMember;
-use App\Component\Max\DTO\Message;
-use App\Component\Max\DTO\PaginatedResult;
-use App\Component\Max\DTO\Subscription;
-use App\Component\Max\DTO\Update;
-use App\Component\Max\DTO\UpdatesResult;
-use App\Component\Max\DTO\UploadResult;
-use App\Component\Max\DTO\User;
-use App\Component\Max\DTO\VideoInfo;
-use App\Component\Max\Tests\Helper\MockHttpClient;
+use MaxBotSdk\Client;
+use MaxBotSdk\Config;
+use MaxBotSdk\DTO\ActionResult;
+use MaxBotSdk\DTO\Chat;
+use MaxBotSdk\DTO\ChatMember;
+use MaxBotSdk\DTO\Message;
+use MaxBotSdk\DTO\PaginatedResult;
+use MaxBotSdk\DTO\Subscription;
+use MaxBotSdk\DTO\Update;
+use MaxBotSdk\DTO\UpdatesResult;
+use MaxBotSdk\DTO\UploadResult;
+use MaxBotSdk\DTO\User;
+use MaxBotSdk\DTO\VideoInfo;
+use MaxBotSdk\Http\RetryHandler;
+use MaxBotSdk\ResponseDecoder;
+use MaxBotSdk\Tests\Helper\MockHttpClient;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -46,12 +46,12 @@ class ResourceTest extends TestCase
 
     public function testBotGetMeReturnsUserDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
+        $this->mockHttp->setResponse(200, json_encode([
             'user_id'  => 42,
             'name'     => 'TestBot',
             'username' => 'testbot',
             'is_bot'   => true,
-        )));
+        ]));
         $user = $this->client->bot()->getMe();
 
         $this->assertInstanceOf(User::class, $user);
@@ -67,13 +67,13 @@ class ResourceTest extends TestCase
 
     public function testChatsGetChatsReturnsPaginatedResult()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'chats'  => array(
-                array('chat_id' => 1, 'type' => 'chat', 'title' => 'Group1'),
-                array('chat_id' => 2, 'type' => 'chat', 'title' => 'Group2'),
-            ),
+        $this->mockHttp->setResponse(200, json_encode([
+            'chats'  => [
+                ['chat_id' => 1, 'type' => 'chat', 'title' => 'Group1'],
+                ['chat_id' => 2, 'type' => 'chat', 'title' => 'Group2'],
+            ],
             'marker' => 'next_page',
-        )));
+        ]));
 
         $result = $this->client->chats()->getChats(10);
         $this->assertInstanceOf(PaginatedResult::class, $result);
@@ -86,11 +86,11 @@ class ResourceTest extends TestCase
 
     public function testChatsGetChatReturnsChatDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
+        $this->mockHttp->setResponse(200, json_encode([
             'chat_id' => 123,
             'type'    => 'dialog',
             'title'   => 'Private',
-        )));
+        ]));
         $chat = $this->client->chats()->getChat(123);
         $this->assertInstanceOf(Chat::class, $chat);
         $this->assertEquals(123, $chat->getChatId());
@@ -99,11 +99,11 @@ class ResourceTest extends TestCase
 
     public function testChatsEditChatReturnsChatDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
+        $this->mockHttp->setResponse(200, json_encode([
             'chat_id' => 123,
             'title'   => 'Updated',
-        )));
-        $chat = $this->client->chats()->editChat(123, array('title' => 'Updated'));
+        ]));
+        $chat = $this->client->chats()->editChat(123, ['title' => 'Updated']);
         $this->assertInstanceOf(Chat::class, $chat);
         $this->assertEquals('PATCH', $this->mockHttp->getLastRequest()['method']);
     }
@@ -129,11 +129,11 @@ class ResourceTest extends TestCase
 
     public function testChatsGetPinnedMessageReturnsMessage()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'message' => array(
-                'body' => array('mid' => 'msg_1', 'text' => 'Pinned'),
-            ),
-        )));
+        $this->mockHttp->setResponse(200, json_encode([
+            'message' => [
+                'body' => ['mid' => 'msg_1', 'text' => 'Pinned'],
+            ],
+        ]));
         $msg = $this->client->chats()->getPinnedMessage(123);
         $this->assertInstanceOf(Message::class, $msg);
     }
@@ -163,7 +163,7 @@ class ResourceTest extends TestCase
 
     public function testChatsGetChatInvalidIdThrows()
     {
-        $this->expectException(\App\Component\Max\Exception\MaxValidationException::class);
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
         $this->client->chats()->getChat('abc');
     }
 
@@ -173,11 +173,11 @@ class ResourceTest extends TestCase
 
     public function testMembersGetMembersReturnsPaginatedResult()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'members' => array(
-                array('user_id' => 10, 'name' => 'User1'),
-            ),
-        )));
+        $this->mockHttp->setResponse(200, json_encode([
+            'members' => [
+                ['user_id' => 10, 'name' => 'User1'],
+            ],
+        ]));
         $result = $this->client->members()->getMembers(123);
         $this->assertInstanceOf(PaginatedResult::class, $result);
         $items = $result->getItems();
@@ -188,7 +188,7 @@ class ResourceTest extends TestCase
     public function testMembersAddMembersReturnsActionResult()
     {
         $this->mockHttp->setResponse(200, '{"success": true}');
-        $result = $this->client->members()->addMembers(123, array(1, 2, 3));
+        $result = $this->client->members()->addMembers(123, [1, 2, 3]);
         $this->assertInstanceOf(ActionResult::class, $result);
         $req = $this->mockHttp->getLastRequest();
         $this->assertEquals('POST', $req['method']);
@@ -205,11 +205,11 @@ class ResourceTest extends TestCase
 
     public function testMembersGetMyMembershipReturnsChatMemberDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
+        $this->mockHttp->setResponse(200, json_encode([
             'user_id'  => 99,
             'name'     => 'Bot',
             'is_admin' => true,
-        )));
+        ]));
         $member = $this->client->members()->getMyMembership(123);
         $this->assertInstanceOf(ChatMember::class, $member);
         $this->assertEquals(99, $member->getUserId());
@@ -227,11 +227,11 @@ class ResourceTest extends TestCase
 
     public function testMembersGetAdminsReturnsPaginatedResult()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'members' => array(
-                array('user_id' => 5, 'name' => 'Admin1', 'is_admin' => true),
-            ),
-        )));
+        $this->mockHttp->setResponse(200, json_encode([
+            'members' => [
+                ['user_id' => 5, 'name' => 'Admin1', 'is_admin' => true],
+            ],
+        ]));
         $result = $this->client->members()->getAdmins(123);
         $this->assertInstanceOf(PaginatedResult::class, $result);
     }
@@ -256,7 +256,7 @@ class ResourceTest extends TestCase
 
     public function testMembersRemoveMemberInvalidIdThrows()
     {
-        $this->expectException(\App\Component\Max\Exception\MaxValidationException::class);
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
         $this->client->members()->removeMember('abc', 123);
     }
 
@@ -266,15 +266,15 @@ class ResourceTest extends TestCase
 
     public function testMessagesSendMessageReturnsMessageDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'body' => array(
+        $this->mockHttp->setResponse(200, json_encode([
+            'body' => [
                 'mid'  => 'm1',
                 'text' => 'Hello',
-            ),
-            'sender' => array('user_id' => 1, 'name' => 'Bot'),
-        )));
+            ],
+            'sender' => ['user_id' => 1, 'name' => 'Bot'],
+        ]));
         $msg = $this->client->messages()->sendMessage(
-            array('text' => 'Hello'),
+            ['text' => 'Hello'],
             null,
             123
         );
@@ -284,20 +284,20 @@ class ResourceTest extends TestCase
 
     public function testMessagesGetMessageReturnsMessageDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'body' => array('mid' => 'mid_123', 'text' => 'Hi'),
-        )));
+        $this->mockHttp->setResponse(200, json_encode([
+            'body' => ['mid' => 'mid_123', 'text' => 'Hi'],
+        ]));
         $msg = $this->client->messages()->getMessage('mid_123');
         $this->assertInstanceOf(Message::class, $msg);
     }
 
     public function testMessagesGetMessagesReturnsPaginatedResult()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'messages' => array(
-                array('body' => array('mid' => 'm1', 'text' => 'Msg1')),
-            ),
-        )));
+        $this->mockHttp->setResponse(200, json_encode([
+            'messages' => [
+                ['body' => ['mid' => 'm1', 'text' => 'Msg1']],
+            ],
+        ]));
         $result = $this->client->messages()->getMessages(123);
         $this->assertInstanceOf(PaginatedResult::class, $result);
         $this->assertCount(1, $result->getItems());
@@ -305,10 +305,10 @@ class ResourceTest extends TestCase
 
     public function testMessagesEditMessageReturnsMessageDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'body' => array('mid' => 'mid_123', 'text' => 'Updated'),
-        )));
-        $msg = $this->client->messages()->editMessage('mid_123', array('text' => 'Updated'));
+        $this->mockHttp->setResponse(200, json_encode([
+            'body' => ['mid' => 'mid_123', 'text' => 'Updated'],
+        ]));
+        $msg = $this->client->messages()->editMessage('mid_123', ['text' => 'Updated']);
         $this->assertInstanceOf(Message::class, $msg);
         $this->assertEquals('PUT', $this->mockHttp->getLastRequest()['method']);
     }
@@ -323,9 +323,9 @@ class ResourceTest extends TestCase
 
     public function testMessagesSendTextReturnsMessageDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'body' => array('mid' => 'm2', 'text' => 'Привет'),
-        )));
+        $this->mockHttp->setResponse(200, json_encode([
+            'body' => ['mid' => 'm2', 'text' => 'Привет'],
+        ]));
         $msg = $this->client->messages()->sendText('Привет', 123);
         $this->assertInstanceOf(Message::class, $msg);
         $req = $this->mockHttp->getLastRequest();
@@ -335,9 +335,9 @@ class ResourceTest extends TestCase
 
     public function testMessagesSendTextWithFormatReturnsMessageDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'body' => array('mid' => 'm3'),
-        )));
+        $this->mockHttp->setResponse(200, json_encode([
+            'body' => ['mid' => 'm3'],
+        ]));
         $msg = $this->client->messages()->sendText('**bold**', 123, 'markdown');
         $this->assertInstanceOf(Message::class, $msg);
         $this->assertEquals('POST', $this->mockHttp->getLastRequest()['method']);
@@ -345,14 +345,14 @@ class ResourceTest extends TestCase
 
     public function testMessagesSendTextWithKeyboardReturnsMessageDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'body' => array('mid' => 'm4'),
-        )));
-        $keyboard = array(
-            array(
-                array('type' => 'callback', 'text' => 'Кнопка', 'payload' => 'btn1'),
-            ),
-        );
+        $this->mockHttp->setResponse(200, json_encode([
+            'body' => ['mid' => 'm4'],
+        ]));
+        $keyboard = [
+            [
+                ['type' => 'callback', 'text' => 'Кнопка', 'payload' => 'btn1'],
+            ],
+        ];
         $msg = $this->client->messages()->sendTextWithKeyboard('Выберите:', 123, $keyboard);
         $this->assertInstanceOf(Message::class, $msg);
         $this->assertEquals('POST', $this->mockHttp->getLastRequest()['method']);
@@ -364,10 +364,10 @@ class ResourceTest extends TestCase
 
     public function testSubscriptionsSubscribeReturnsSubscription()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
+        $this->mockHttp->setResponse(200, json_encode([
             'url' => 'https://example.com/webhook',
             'time' => 1234567890,
-        )));
+        ]));
         $result = $this->client->subscriptions()->subscribe('https://example.com/webhook');
         $this->assertInstanceOf(Subscription::class, $result);
         $this->assertEquals('POST', $this->mockHttp->getLastRequest()['method']);
@@ -375,26 +375,26 @@ class ResourceTest extends TestCase
 
     public function testSubscriptionsSubscribeWithOptions()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
+        $this->mockHttp->setResponse(200, json_encode([
             'url' => 'https://example.com/webhook',
-        )));
+        ]));
         $this->client->subscriptions()->subscribe(
             'https://example.com/webhook',
-            array('message_created')
+            ['message_created']
         );
         $req = $this->mockHttp->getLastRequest();
         $this->assertEquals('POST', $req['method']);
-        $json = isset($req['options']['json']) ? $req['options']['json'] : array();
+        $json = isset($req['options']['json']) ? $req['options']['json'] : [];
         $this->assertEquals('https://example.com/webhook', $json['url']);
     }
 
     public function testSubscriptionsGetSubscriptionsReturnsArray()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'subscriptions' => array(
-                array('url' => 'https://example.com', 'time' => 1234567890),
-            ),
-        )));
+        $this->mockHttp->setResponse(200, json_encode([
+            'subscriptions' => [
+                ['url' => 'https://example.com', 'time' => 1234567890],
+            ],
+        ]));
         $subs = $this->client->subscriptions()->getSubscriptions();
         $this->assertTrue(is_array($subs));
         $this->assertCount(1, $subs);
@@ -411,12 +411,12 @@ class ResourceTest extends TestCase
 
     public function testSubscriptionsGetUpdatesReturnsUpdatesResult()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
-            'updates' => array(
-                array('update_type' => 'message_created', 'timestamp' => 1234567890),
-            ),
+        $this->mockHttp->setResponse(200, json_encode([
+            'updates' => [
+                ['update_type' => 'message_created', 'timestamp' => 1234567890],
+            ],
             'marker' => 42,
-        )));
+        ]));
         $result = $this->client->subscriptions()->getUpdates(50, 10);
         $this->assertInstanceOf(UpdatesResult::class, $result);
         $this->assertCount(1, $result->getUpdates());
@@ -426,7 +426,7 @@ class ResourceTest extends TestCase
 
     public function testSubscriptionsHttpUrlThrows()
     {
-        $this->expectException(\App\Component\Max\Exception\MaxValidationException::class);
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
         $this->client->subscriptions()->subscribe('http://example.com');
     }
 
@@ -449,16 +449,16 @@ class ResourceTest extends TestCase
         $this->mockHttp->setResponse(200, '{"success": true}');
         $this->client->callbacks()->answerCallback(
             'cb_123',
-            array('text' => 'Updated text')
+            ['text' => 'Updated text']
         );
         $req = $this->mockHttp->getLastRequest();
-        $json = isset($req['options']['json']) ? $req['options']['json'] : array();
+        $json = isset($req['options']['json']) ? $req['options']['json'] : [];
         $this->assertArrayHasKey('message', $json);
     }
 
     public function testCallbacksEmptyIdThrows()
     {
-        $this->expectException(\App\Component\Max\Exception\MaxValidationException::class);
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
         $this->client->callbacks()->answerCallback('');
     }
 
@@ -468,9 +468,9 @@ class ResourceTest extends TestCase
 
     public function testUploadsGetUploadUrlReturnsUploadResult()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
+        $this->mockHttp->setResponse(200, json_encode([
             'url' => 'https://upload.max.ru/abc123',
-        )));
+        ]));
         $result = $this->client->uploads()->getUploadUrl('image');
         $this->assertInstanceOf(UploadResult::class, $result);
         $this->assertEquals('https://upload.max.ru/abc123', $result->getUrl());
@@ -479,13 +479,13 @@ class ResourceTest extends TestCase
 
     public function testUploadsGetVideoInfoReturnsVideoInfoDto()
     {
-        $this->mockHttp->setResponse(200, json_encode(array(
+        $this->mockHttp->setResponse(200, json_encode([
             'token'    => 'vid_abc',
             'url'      => 'https://cdn.max.ru/video.mp4',
             'width'    => 1920,
             'height'   => 1080,
             'duration' => 120,
-        )));
+        ]));
         $info = $this->client->uploads()->getVideoInfo('vid_abc');
         $this->assertInstanceOf(VideoInfo::class, $info);
         $this->assertEquals('vid_abc', $info->getToken());
@@ -497,7 +497,7 @@ class ResourceTest extends TestCase
 
     public function testUploadsInvalidTypeThrows()
     {
-        $this->expectException(\App\Component\Max\Exception\MaxValidationException::class);
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
         $this->client->uploads()->getUploadUrl('invalid_type');
     }
 }

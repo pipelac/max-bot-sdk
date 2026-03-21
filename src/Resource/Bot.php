@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Component\Max\Resource;
+namespace MaxBotSdk\Resource;
 
-use App\Component\Max\DTO\User;
+use MaxBotSdk\DTO\User;
 
 /**
  * Ресурс: информация о боте.
@@ -15,7 +15,7 @@ final class Bot extends ResourceAbstract
      * Получить информацию о текущем боте.
      *
      * @return User
-     * @throws \App\Component\Max\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxApiException
      */
     public function getMe()
     {

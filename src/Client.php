@@ -1,23 +1,24 @@
 <?php
 
-namespace App\Component\Max;
+namespace MaxBotSdk;
 
-use App\Component\Max\Contracts\ClientInterface;
-use App\Component\Max\Contracts\ConfigInterface;
-use App\Component\Max\Contracts\HttpClientInterface;
-use App\Component\Max\Contracts\LoggerInterface;
-use App\Component\Max\Contracts\ResponseDecoderInterface;
-use App\Component\Max\Http\RetryHandler;
-use App\Component\Max\Utils\InputValidator;
+use MaxBotSdk\Contracts\ClientInterface;
+use MaxBotSdk\Contracts\ConfigInterface;
+use MaxBotSdk\Contracts\HttpClientInterface;
+use MaxBotSdk\Contracts\LoggerInterface;
+use MaxBotSdk\Contracts\ResponseDecoderInterface;
+use MaxBotSdk\Http\RateLimiter;
+use MaxBotSdk\Http\RetryHandler;
+use MaxBotSdk\Resource\Bot;
 
 // Resources
-use App\Component\Max\Resource\Bot;
-use App\Component\Max\Resource\Callbacks;
-use App\Component\Max\Resource\Chats;
-use App\Component\Max\Resource\Members;
-use App\Component\Max\Resource\Messages;
-use App\Component\Max\Resource\Subscriptions;
-use App\Component\Max\Resource\Uploads;
+use MaxBotSdk\Resource\Callbacks;
+use MaxBotSdk\Resource\Chats;
+use MaxBotSdk\Resource\Members;
+use MaxBotSdk\Resource\Messages;
+use MaxBotSdk\Resource\Subscriptions;
+use MaxBotSdk\Resource\Uploads;
+use MaxBotSdk\Utils\InputValidator;
 
 /**
  * Основной клиент MAX Bot API SDK.
@@ -51,8 +52,11 @@ final class Client implements ClientInterface
     /** @var LoggerInterface|null Логгер. */
     private $logger;
 
+    /** @var RateLimiter|null Rate limiter. */
+    private $rateLimiter;
+
     /** @var array Кэш инстансов ресурсов (ленивая инициализация). */
-    private $resourceInstances = array();
+    private $resourceInstances = [];
 
     /**
      * Конструктор с чистым Dependency Injection.
@@ -74,9 +78,13 @@ final class Client implements ClientInterface
         $this->responseDecoder = $responseDecoder;
         $this->retryHandler = $retryHandler;
 
-        $this->log('debug', 'Клиент инициализирован', array(
+        // Rate Limiter: инициализируем если настроен лимит
+        $rateLimit = $config->getRateLimit();
+        $this->rateLimiter = ($rateLimit > 0) ? new RateLimiter($rateLimit) : null;
+
+        $this->log('debug', 'Клиент инициализирован', [
             'token_masked' => InputValidator::maskToken($config->getToken()),
-        ));
+        ]);
     }
 
     // --- Явные методы доступа к ресурсам ---
@@ -156,7 +164,7 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function get($endpoint, array $query = array())
+    public function get($endpoint, array $query = [])
     {
         return $this->performRequest('GET', $endpoint, null, $query);
     }
@@ -164,7 +172,7 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function post($endpoint, array $json = null, array $query = array())
+    public function post($endpoint, array $json = null, array $query = [])
     {
         return $this->performRequest('POST', $endpoint, $json, $query);
     }
@@ -172,7 +180,7 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function put($endpoint, array $json = null, array $query = array())
+    public function put($endpoint, array $json = null, array $query = [])
     {
         return $this->performRequest('PUT', $endpoint, $json, $query);
     }
@@ -180,7 +188,7 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function patch($endpoint, array $json = null, array $query = array())
+    public function patch($endpoint, array $json = null, array $query = [])
     {
         return $this->performRequest('PATCH', $endpoint, $json, $query);
     }
@@ -188,7 +196,7 @@ final class Client implements ClientInterface
     /**
      * {@inheritdoc}
      */
-    public function delete($endpoint, array $query = array())
+    public function delete($endpoint, array $query = [])
     {
         return $this->performRequest('DELETE', $endpoint, null, $query);
     }
@@ -220,15 +228,20 @@ final class Client implements ClientInterface
      * @param array      $query    Query-параметры.
      * @return array Декодированный ответ.
      */
-    private function performRequest($method, $endpoint, $json = null, array $query = array())
+    private function performRequest($method, $endpoint, $json = null, array $query = [])
     {
         $httpClient = $this->httpClient;
         $decoder = $this->responseDecoder;
 
         $startTime = microtime(true);
 
+        // Rate limiting
+        if ($this->rateLimiter !== null) {
+            $this->rateLimiter->throttle();
+        }
+
         $result = $this->retryHandler->execute(function () use ($method, $endpoint, $json, $query, $httpClient, $decoder) {
-            $options = array();
+            $options = [];
 
             if ($json !== null) {
                 $options['json'] = $json;
@@ -249,11 +262,11 @@ final class Client implements ClientInterface
 
         $duration = round(microtime(true) - $startTime, 3);
 
-        $this->log('debug', 'Ответ API', array(
+        $this->log('debug', 'Ответ API', [
             'method'   => $method,
             'endpoint' => $endpoint,
             'duration' => $duration,
-        ));
+        ]);
 
         return $result;
     }
@@ -279,13 +292,13 @@ final class Client implements ClientInterface
      * @param string $message Сообщение.
      * @param array  $context Контекст.
      */
-    private function log($level, $message, array $context = array())
+    private function log($level, $message, array $context = [])
     {
         if ($this->logger === null) {
             return;
         }
 
-        $allowed = array('debug', 'info', 'warning', 'error');
+        $allowed = ['debug', 'info', 'warning', 'error'];
         if (!in_array($level, $allowed, true)) {
             $level = 'debug';
         }

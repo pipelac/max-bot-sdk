@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Component\Max\DTO;
+namespace MaxBotSdk\DTO;
 
 /**
  * Результат void-операций API (delete, action, pin/unpin и т.д.).
@@ -39,7 +39,7 @@ final class ActionResult extends AbstractDto
      */
     public static function success()
     {
-        return new self(array('success' => true));
+        return new self(['success' => true]);
     }
 
     /** @return bool */
@@ -59,9 +59,9 @@ final class ActionResult extends AbstractDto
      */
     public function toArray()
     {
-        return array(
+        return [
             'success' => $this->success,
             'message' => $this->message,
-        );
+        ];
     }
 }
