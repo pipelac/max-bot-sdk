@@ -1,11 +1,11 @@
 # MAX Bot API SDK
 
 [![PHP](https://img.shields.io/badge/PHP-5.6%2B-blue.svg)](https://php.net)
-[![License](https://img.shields.io/badge/license-proprietary-red.svg)]()
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 PHP SDK для работы с [MAX Bot API](https://dev.max.ru/docs-api) — мессенджером MAX.
 
-**Версия:** 1.0.0 | **PHP:** ≥ 5.6 | **Лицензия:** Proprietary
+**Версия:** 1.0.0 | **PHP:** ≥ 5.6 | **Лицензия:** MIT
 
 ## Возможности
 
@@ -526,4 +526,4 @@ composer cs-fix
 
 ## Лицензия
 
-Proprietary. Все права защищены.
+MIT License. Подробности см. в файле [LICENSE](LICENSE).
