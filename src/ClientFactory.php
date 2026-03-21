@@ -12,7 +12,8 @@ use App\Component\Max\Http\RetryHandler;
 /**
  * Фабрика для создания экземпляров Client.
  *
- * Собирает полный граф зависимостей: Config → CurlHttpClient → ResponseDecoder → RetryHandler → Client.
+ * Собирает полный граф зависимостей: Config → HttpClient → ResponseDecoder → RetryHandler → Client.
+ * По умолчанию использует встроенный CurlHttpClient, но принимает любой HttpClientInterface.
  *
  * Пример:
  * <code>
@@ -24,6 +25,9 @@ use App\Component\Max\Http\RetryHandler;
  *
  * // Из ENV:
  * $client = ClientFactory::createFromEnvironment();
+ *
+ * // С кастомным HTTP-клиентом:
+ * $client = ClientFactory::createFromConfig($config, $myGuzzleAdapter);
  *
  * // Из ConfigBuilder:
  * $client = ClientFactory::createFromBuilder(
@@ -38,75 +42,87 @@ final class ClientFactory
     /**
      * Создать клиент по токену.
      *
-     * @param string               $token  Токен бота MAX.
-     * @param LoggerInterface|null $logger Логгер.
+     * @param string                  $token      Токен бота MAX.
+     * @param LoggerInterface|null    $logger     Логгер.
+     * @param HttpClientInterface|null $httpClient Кастомный HTTP-клиент (null = CurlHttpClient).
      * @return Client
      */
-    public static function create($token, LoggerInterface $logger = null)
+    public static function create($token, LoggerInterface $logger = null, HttpClientInterface $httpClient = null)
     {
         $config = new Config($token);
         if ($logger !== null) {
             $config = ConfigBuilder::create($token)->withLogger($logger)->build();
         }
-        return self::buildClient($config);
+        return self::buildClient($config, $httpClient);
     }
 
     /**
      * Создать клиент из INI-файла.
      *
-     * @param string|null $path Путь к файлу (null = cfg/config.ini).
+     * @param string|null             $path       Путь к файлу (null = cfg/config.ini).
+     * @param HttpClientInterface|null $httpClient Кастомный HTTP-клиент (null = CurlHttpClient).
      * @return Client
      */
-    public static function createFromIni($path = null)
+    public static function createFromIni($path = null, HttpClientInterface $httpClient = null)
     {
         $config = Config::fromIniFile($path);
-        return self::buildClient($config);
+        return self::buildClient($config, $httpClient);
     }
 
     /**
      * Создать клиент из переменных окружения (12-Factor App).
      *
+     * @param HttpClientInterface|null $httpClient Кастомный HTTP-клиент (null = CurlHttpClient).
      * @return Client
      */
-    public static function createFromEnvironment()
+    public static function createFromEnvironment(HttpClientInterface $httpClient = null)
     {
         $config = Config::fromEnvironment();
-        return self::buildClient($config);
+        return self::buildClient($config, $httpClient);
     }
 
     /**
      * Создать клиент из ConfigBuilder.
      *
-     * @param ConfigBuilder $builder Настроенный builder.
+     * @param ConfigBuilder            $builder    Настроенный builder.
+     * @param HttpClientInterface|null $httpClient Кастомный HTTP-клиент (null = CurlHttpClient).
      * @return Client
      */
-    public static function createFromBuilder(ConfigBuilder $builder)
+    public static function createFromBuilder(ConfigBuilder $builder, HttpClientInterface $httpClient = null)
     {
         $config = $builder->build();
-        return self::buildClient($config);
+        return self::buildClient($config, $httpClient);
     }
 
     /**
      * Создать клиент из готового объекта конфигурации.
      *
-     * @param ConfigInterface $config Конфигурация.
+     * @param ConfigInterface          $config     Конфигурация.
+     * @param HttpClientInterface|null $httpClient Кастомный HTTP-клиент (null = CurlHttpClient).
      * @return Client
      */
-    public static function createFromConfig(ConfigInterface $config)
+    public static function createFromConfig(ConfigInterface $config, HttpClientInterface $httpClient = null)
     {
-        return self::buildClient($config);
+        return self::buildClient($config, $httpClient);
     }
 
     /**
      * Собирает весь граф зависимостей и создаёт Client.
      *
-     * @param ConfigInterface $config Конфигурация.
+     * Если $httpClient не передан, создаёт встроенный CurlHttpClient.
+     *
+     * @param ConfigInterface          $config     Конфигурация.
+     * @param HttpClientInterface|null $httpClient Кастомный HTTP-клиент.
      * @return Client
      */
-    private static function buildClient(ConfigInterface $config)
+    private static function buildClient(ConfigInterface $config, HttpClientInterface $httpClient = null)
     {
         $logger = $config->getLogger();
-        $httpClient = new CurlHttpClient($config, $logger);
+
+        if ($httpClient === null) {
+            $httpClient = new CurlHttpClient($config, $logger);
+        }
+
         $responseDecoder = new ResponseDecoder($logger);
         $retryHandler = new RetryHandler($config->getRetries());
 
