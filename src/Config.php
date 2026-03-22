@@ -270,7 +270,7 @@ final class Config implements ConfigInterface
         }
 
         $data = parse_ini_file($path, true);
-        if ($data === false || !is_array($data)) {
+        if ($data === false) {
             throw new MaxConfigException('Не удалось разобрать INI файл: ' . $path);
         }
 

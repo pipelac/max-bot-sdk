@@ -151,7 +151,7 @@
 - [x] Composer scripts: `test`, `analyse`, `cs-check`, `cs-fix`
   > `"test"`, `"phpstan"`, `"cs-check"`, `"cs-fix"` в `composer.json`.
 - [x] PHPStan — уровень ≥5
-  > `phpstan.neon`: `level: 6`, paths: `src/`.
+  > `phpstan.neon`: `level: 5`, paths: `src/`.
 - [x] PHP-CS-Fixer — актуальная версия (v3+) с `.php-cs-fixer.dist.php`
   > `.php-cs-fixer.dist.php` с PSR-2 правилами.
 - [x] PHPUnit — актуальная версия с современной XML-схемой

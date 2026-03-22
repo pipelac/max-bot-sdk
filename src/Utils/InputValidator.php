@@ -104,7 +104,7 @@ final class InputValidator
     /**
      * Валидирует непустую строку.
      *
-     * @param string $value     Строка для проверки.
+     * @param string|null $value     Строка для проверки.
      * @param string $fieldName Название поля.
      * @return string
      * @throws MaxValidationException
