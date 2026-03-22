@@ -1,12 +1,21 @@
 # MAX Bot API SDK
 
-[![PHP](https://img.shields.io/badge/PHP-5.6%2B-blue.svg)](https://php.net)
+[![PHP](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](https://github.com/pipelac/max-bot-sdk/releases/tag/v1.0.0)
+[![Version](https://img.shields.io/badge/version-2.0.0-orange.svg)](https://github.com/pipelac/max-bot-sdk/releases/tag/v2.0.0)
+[![CI](https://github.com/pipelac/max-bot-sdk/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/pipelac/max-bot-sdk/actions)
 
 PHP SDK для создания ботов в мессенджере **MAX** через официальный [MAX Bot API](https://dev.max.ru/docs-api).
 
-**Версия:** 1.0.0 | **PHP:** ≥ 5.6 | **Лицензия:** MIT
+**Версия:** 2.0.0 | **PHP:** ≥ 8.1 | **Лицензия:** MIT
+
+> **Ветвление версий:** эта ветка (`master`) — v2.x для PHP 8.1+.  
+> Для PHP 5.6+ используйте [ветку `1.x`](https://github.com/pipelac/max-bot-sdk/tree/1.x).
+
+| Ветка | PHP | Статус |
+|-------|-----|--------|
+| `master` (v2.x) | ≥ 8.1 | Активная разработка |
+| [`1.x`](https://github.com/pipelac/max-bot-sdk/tree/1.x) (v1.x) | ≥ 5.6 | Активная разработка |
 
 ---
 

@@ -1,9 +1,7 @@
 parameters:
-    level: 5
+    level: 6
     paths:
         - src
     bootstrapFiles:
         - vendor/autoload.php
-    # PHPStan 1.12 минимально поддерживает phpVersion 70100 (PHP 7.1)
-    # Совместимость с PHP 5.6 проверяется runtime-тестами
-    phpVersion: 70100
+    phpVersion: 80100

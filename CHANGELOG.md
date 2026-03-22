@@ -5,6 +5,30 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 проект следует [семантическому версионированию](https://semver.org/lang/ru/).
 
+## [2.0.0] — 2026-03-22
+
+Мажорный релиз: переход на PHP 8.1+.
+
+### Breaking Changes
+
+- **Минимальная версия PHP: 8.1** (ранее 5.6)
+- PHPUnit обновлён до ^10.5 (ранее ^9.6)
+- PHPStan level повышен до 6 (ранее 5)
+
+### Добавлено
+
+- Ветка `1.x` для поддержки PHP 5.6+ (активная разработка)
+- CI-бейдж в README
+- Таблица совместимости веток в README
+
+### Инфраструктура
+
+- CI матрица: PHP 8.1, 8.2, 8.3
+- PHPStan phpVersion: 80100
+- CI триггеры: `master`, `1.x`, `develop`
+
+---
+
 ## [1.0.0] — 2026-03-21
 
 Первый стабильный релиз MAX Bot API SDK.
@@ -58,7 +82,8 @@ Convenience-методы:
 ### Инфраструктура
 
 - `composer.json` — PSR-4 autoload, PHP 5.6+
-- PHPStan level 6 с целевой версией PHP 5.6
+- PHPStan level 5 с целевой версией PHP 7.1
 - PHPUnit тесты (214 тестов, 430 assertions)
 - CI/CD: GitHub Actions (PHP 7.3/7.4/8.0/8.1/8.2/8.3)
 - `.php-cs-fixer.dist.php`, `.editorconfig`, `phpstan.neon`
+
