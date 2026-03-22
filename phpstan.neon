@@ -4,5 +4,6 @@ parameters:
         - src
     bootstrapFiles:
         - vendor/autoload.php
-    # PHP 5.6 совместимость — указываем целевую версию
-    phpVersion: 50600
+    # PHPStan 1.12 минимально поддерживает phpVersion 70100 (PHP 7.1)
+    # Совместимость с PHP 5.6 проверяется runtime-тестами
+    phpVersion: 70100
