@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Contracts;
 
 use MaxBotSdk\Exception\MaxApiException;
@@ -14,12 +16,8 @@ interface ResponseDecoderInterface
     /**
      * Декодирует ответ API.
      *
-     * @param int    $statusCode HTTP-код ответа.
-     * @param string $body       Тело ответа.
-     * @param string $method     HTTP-метод запроса.
-     * @param string $endpoint   Эндпоинт запроса.
-     * @return array Декодированный ответ.
+     * @return array<string, mixed> Декодированный ответ.
      * @throws MaxApiException
      */
-    public function decode($statusCode, $body, $method = '', $endpoint = '');
+    public function decode(int $statusCode, string $body, string $method = '', string $endpoint = ''): array;
 }

@@ -1,76 +1,85 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Tests\Unit;
 
 use MaxBotSdk\Utils\WebhookHandler;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Тесты для WebhookHandler.
- */
-class WebhookHandlerTest extends TestCase
+final class WebhookHandlerTest extends TestCase
 {
-    /** @var WebhookHandler */
-    private $handler;
+    private WebhookHandler $handler;
 
     protected function setUp(): void
     {
         $this->handler = new WebhookHandler();
     }
 
-    public function testParseUpdateValidJson()
+    #[Test]
+    public function parseUpdateValidJson(): void
     {
         $json = '{"update_type": "message_created", "timestamp": 123}';
         $update = $this->handler->parseUpdate($json);
 
-        $this->assertInstanceOf('MaxBotSdk\DTO\Update', $update);
-        $this->assertEquals('message_created', $update->getUpdateType());
-        $this->assertEquals(123, $update->getTimestamp());
+        self::assertNotNull($update);
+        self::assertSame('message_created', $update->getUpdateType());
+        self::assertSame(123, $update->getTimestamp());
     }
 
-    public function testParseUpdateWithMessage()
+    #[Test]
+    public function parseUpdateWithMessage(): void
     {
-        $json = json_encode([
+        $json = \json_encode([
             'update_type' => 'message_created',
             'timestamp'   => 456,
             'message'     => [
-                'body'   => ['text' => 'Hello'],
+                'text'   => 'Hello',
                 'sender' => ['user_id' => 1, 'name' => 'Bot'],
             ],
         ]);
 
         $update = $this->handler->parseUpdate($json);
-        $this->assertNotNull($update->getMessage());
-        $this->assertEquals('Hello', $update->getMessage()->getText());
+        self::assertNotNull($update);
+        $message = $update->getMessage();
+        self::assertNotNull($message);
+        self::assertSame('Hello', $message->getText());
     }
 
-    public function testParseUpdateEmptyReturnsNull()
+    #[Test]
+    public function parseUpdateEmptyReturnsNull(): void
     {
-        $this->assertNull($this->handler->parseUpdate(''));
+        self::assertNull($this->handler->parseUpdate(''));
     }
 
-    public function testParseUpdateInvalidJsonReturnsNull()
+    #[Test]
+    public function parseUpdateInvalidJsonReturnsNull(): void
     {
-        $this->assertNull($this->handler->parseUpdate('NOT_JSON{{{'));
+        self::assertNull($this->handler->parseUpdate('NOT_JSON{{{'));
     }
 
-    public function testVerifySecretValid()
+    #[Test]
+    public function verifySecretValid(): void
     {
-        $this->assertTrue($this->handler->verifySecret('my_secret', 'my_secret'));
+        self::assertTrue($this->handler->verifySecret('my_secret', 'my_secret'));
     }
 
-    public function testVerifySecretInvalid()
+    #[Test]
+    public function verifySecretInvalid(): void
     {
-        $this->assertFalse($this->handler->verifySecret('my_secret', 'wrong_secret'));
+        self::assertFalse($this->handler->verifySecret('my_secret', 'wrong_secret'));
     }
 
-    public function testVerifySecretEmptyExpected()
+    #[Test]
+    public function verifySecretEmptyExpected(): void
     {
-        $this->assertFalse($this->handler->verifySecret('', 'something'));
+        self::assertFalse($this->handler->verifySecret('', 'something'));
     }
 
-    public function testVerifySecretEmptyActual()
+    #[Test]
+    public function verifySecretEmptyActual(): void
     {
-        $this->assertFalse($this->handler->verifySecret('my_secret', ''));
+        self::assertFalse($this->handler->verifySecret('my_secret', ''));
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Http;
 
 use MaxBotSdk\Exception\MaxApiException;
@@ -8,51 +10,40 @@ use MaxBotSdk\Exception\MaxConnectionException;
 /**
  * Retry-обработчик с экспоненциальной задержкой и jitter.
  *
- * Повтор происходит для transient-ошибок:
- * - HTTP 429 (Too Many Requests)
- * - HTTP 5xx (Server Error)
- * - Ошибки соединения (MaxConnectionException)
- *
  * @since 1.0.0
  */
 class RetryHandler
 {
-    /** @var int */
-    private $maxRetries;
+    private readonly int $maxRetries;
+    private readonly int $baseDelayMs;
+    private readonly int $maxDelayMs;
 
-    /** @var int Базовая задержка в миллисекундах */
-    private $baseDelayMs;
-
-    /** @var int Максимальная задержка в миллисекундах */
-    private $maxDelayMs;
-
-    /**
-     * @param int $maxRetries Максимум повторных попыток.
-     * @param int $baseDelayMs Базовая задержка (мс). По умолчанию 1000.
-     * @param int $maxDelayMs Максимальная задержка (мс). По умолчанию 30000.
-     */
-    public function __construct($maxRetries = 3, $baseDelayMs = 1000, $maxDelayMs = 30000)
-    {
-        $this->maxRetries = max(0, (int) $maxRetries);
-        $this->baseDelayMs = max(100, (int) $baseDelayMs);
-        $this->maxDelayMs = max($this->baseDelayMs, (int) $maxDelayMs);
+    public function __construct(
+        int $maxRetries = 3,
+        int $baseDelayMs = 1000,
+        int $maxDelayMs = 30000,
+    ) {
+        $this->maxRetries = \max(0, $maxRetries);
+        $this->baseDelayMs = \max(100, $baseDelayMs);
+        $this->maxDelayMs = \max($this->baseDelayMs, $maxDelayMs);
     }
 
     /**
      * Выполнить операцию с retry-логикой.
      *
-     * @param callable $operation Callable, возвращающий результат.
-     * @return mixed Результат выполнения.
-     * @throws MaxApiException При истечении попыток.
-     * @throws MaxConnectionException При истечении попыток.
+     * @template T
+     * @param callable(): T $operation
+     * @return T
+     * @throws MaxApiException
+     * @throws MaxConnectionException
      */
-    public function execute($operation)
+    public function execute(callable $operation): mixed
     {
         $attempt = 0;
 
         while (true) {
             try {
-                return call_user_func($operation);
+                return $operation();
             } catch (MaxApiException $e) {
                 $attempt++;
                 if ($attempt > $this->maxRetries || !$this->isRetryableApi($e)) {
@@ -69,47 +60,26 @@ class RetryHandler
         }
     }
 
-    /**
-     * Является ли API-ошибка transient (можно повторить).
-     *
-     * @param MaxApiException $e
-     * @return bool
-     */
-    private function isRetryableApi(MaxApiException $e)
+    private function isRetryableApi(MaxApiException $e): bool
     {
         $statusCode = $e->getStatusCode();
         return $statusCode === 429 || $statusCode >= 500;
     }
 
-    /**
-     * Рассчитать задержку с exponential backoff + jitter.
-     *
-     * @param int $attempt Номер попытки (1-based).
-     * @return int Задержка в миллисекундах.
-     */
-    private function calculateDelay($attempt)
+    private function calculateDelay(int $attempt): int
     {
-        // Exponential backoff: base * 2^(attempt-1)
-        $delay = $this->baseDelayMs * (int) pow(2, $attempt - 1);
+        $delay = $this->baseDelayMs * (int) \pow(2, $attempt - 1);
+        $delay = \min($delay, $this->maxDelayMs);
 
-        // Cap at max delay
-        $delay = min($delay, $this->maxDelayMs);
-
-        // Add jitter: ±10%
+        // Jitter: ±10%
         $jitter = (int) ($delay * 0.1);
-        $delay = $delay + mt_rand(-$jitter, $jitter);
+        $delay += \random_int(-$jitter, $jitter);
 
-        return max(0, $delay);
+        return \max(0, $delay);
     }
 
-    /**
-     * Пауза на заданное количество миллисекунд.
-     *
-     * @param int $milliseconds
-     * @return void
-     */
-    protected function sleep($milliseconds)
+    protected function sleep(int $milliseconds): void
     {
-        usleep($milliseconds * 1000);
+        \usleep($milliseconds * 1000);
     }
 }

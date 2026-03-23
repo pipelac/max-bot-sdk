@@ -1,106 +1,87 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
+
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
 
 /**
  * Результат Long Polling (обновления + маркер).
  *
+ * @implements IteratorAggregate<int, Update>
+ *
  * @since 1.0.0
  */
-final class UpdatesResult extends AbstractDto implements \Countable, \IteratorAggregate
+final class UpdatesResult extends AbstractDto implements Countable, IteratorAggregate
 {
-    /** @var Update[] */
-    private $updates;
-
-    /** @var int|null */
-    private $marker;
-
     /**
-     * @param Update[] $updates
-     * @param int|null $marker
+     * @param list<Update> $updates
      */
-    private function __construct(array $updates, $marker = null)
-    {
-        $this->updates = $updates;
-        $this->marker = $marker !== null ? (int) $marker : null;
+    private function __construct(
+        private readonly array $updates,
+        private readonly ?int $marker,
+    ) {
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArray(array $data)
+    public static function fromArray(array $data): static
     {
         $updates = [];
-        $rawUpdates = isset($data['updates']) && is_array($data['updates'])
+        $rawUpdates = isset($data['updates']) && \is_array($data['updates'])
             ? $data['updates']
             : [];
+
         foreach ($rawUpdates as $raw) {
-            if (is_array($raw)) {
+            if (\is_array($raw)) {
                 $updates[] = Update::fromArray($raw);
             }
         }
 
-        $marker = isset($data['marker']) ? $data['marker'] : null;
+        $marker = isset($data['marker']) && \is_scalar($data['marker']) ? (int) $data['marker'] : null;
 
         return new self($updates, $marker);
     }
 
     /**
-     * @return Update[]
+     * @return list<Update>
      */
-    public function getUpdates()
+    public function getUpdates(): array
     {
         return $this->updates;
     }
 
-    /**
-     * @return int|null
-     */
-    public function getMarker()
+    public function getMarker(): ?int
     {
         return $this->marker;
     }
 
-    /**
-     * @return bool Есть ли ещё обновления.
-     */
-    public function hasMore()
+    public function hasMore(): bool
     {
         return $this->marker !== null;
     }
 
-    /**
-     * @return int Количество обновлений.
-     */
-    #[\ReturnTypeWillChange]
-    public function count()
+    public function count(): int
     {
-        return count($this->updates);
+        return \count($this->updates);
     }
 
     /**
-     * Итератор для foreach.
-     *
-     * @return \ArrayIterator
+     * @return ArrayIterator<int, Update>
      */
-    #[\ReturnTypeWillChange]
-    public function getIterator()
+    public function getIterator(): ArrayIterator
     {
-        return new \ArrayIterator($this->updates);
+        return new ArrayIterator($this->updates);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toArray()
+    public function toArray(): array
     {
-        $updates = [];
-        foreach ($this->updates as $update) {
-            $updates[] = $update->toArray();
-        }
-
         return [
-            'updates' => $updates,
+            'updates' => \array_map(
+                static fn(Update $u): array => $u->toArray(),
+                $this->updates,
+            ),
             'marker'  => $this->marker,
         ];
     }

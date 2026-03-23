@@ -1,17 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Tests\Unit;
 
 use MaxBotSdk\Exception\MaxValidationException;
 use MaxBotSdk\Utils\KeyboardBuilder;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Тесты для KeyboardBuilder.
- */
-class KeyboardBuilderTest extends TestCase
+final class KeyboardBuilderTest extends TestCase
 {
-    public function testBuildSimpleKeyboard()
+    #[Test]
+    public function buildSimpleKeyboard(): void
     {
         $rows = [
             [
@@ -21,13 +22,13 @@ class KeyboardBuilderTest extends TestCase
         ];
 
         $result = KeyboardBuilder::build($rows);
-
-        $this->assertEquals('inline_keyboard', $result['type']);
-        $this->assertCount(1, $result['payload']['buttons']);
-        $this->assertCount(2, $result['payload']['buttons'][0]);
+        self::assertSame('inline_keyboard', $result['type']);
+        self::assertCount(1, $result['payload']['buttons']);
+        self::assertCount(2, $result['payload']['buttons'][0]);
     }
 
-    public function testBuildMultiRowKeyboard()
+    #[Test]
+    public function buildMultiRowKeyboard(): void
     {
         $rows = [
             [['type' => 'callback', 'text' => 'R1', 'payload' => '1']],
@@ -36,41 +37,37 @@ class KeyboardBuilderTest extends TestCase
         ];
 
         $result = KeyboardBuilder::build($rows);
-        $this->assertCount(3, $result['payload']['buttons']);
+        self::assertCount(3, $result['payload']['buttons']);
     }
 
-    public function testBuildTooManyRowsThrows()
+    #[Test]
+    public function buildTooManyRowsThrows(): void
     {
         $rows = [];
         for ($i = 0; $i < 31; $i++) {
-            $rows[] = [['type' => 'callback', 'text' => 'Btn', 'payload' => $i]];
+            $rows[] = [['type' => 'callback', 'text' => 'Btn', 'payload' => (string) $i]];
         }
 
         $this->expectException(MaxValidationException::class);
         KeyboardBuilder::build($rows);
     }
 
-    public function testBuildTooManyButtonsPerRowThrows()
+    #[Test]
+    public function buildTooManyButtonsPerRowThrows(): void
     {
         $row = [];
         for ($i = 0; $i < 8; $i++) {
-            $row[] = ['type' => 'callback', 'text' => 'Btn', 'payload' => $i];
+            $row[] = ['type' => 'callback', 'text' => 'Btn', 'payload' => (string) $i];
         }
 
         $this->expectException(MaxValidationException::class);
         KeyboardBuilder::build([$row]);
     }
 
-    public function testBuildNonArrayRowThrows()
-    {
-        $this->expectException(MaxValidationException::class);
-        KeyboardBuilder::build(['not_an_array']);
-    }
-
-    public function testBuildTotalButtonsExactLimit()
+    #[Test]
+    public function buildTotalButtonsExactLimit(): void
     {
         $rows = [];
-        // 7 кнопок * 30 рядов = 210 — ровно лимит, должно пройти
         for ($i = 0; $i < 30; $i++) {
             $row = [];
             for ($j = 0; $j < 7; $j++) {
@@ -79,6 +76,6 @@ class KeyboardBuilderTest extends TestCase
             $rows[] = $row;
         }
         $result = KeyboardBuilder::build($rows);
-        $this->assertEquals('inline_keyboard', $result['type']);
+        self::assertSame('inline_keyboard', $result['type']);
     }
 }

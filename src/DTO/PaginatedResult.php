@@ -1,134 +1,104 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+
 /**
- * Результат с пагинацией (для чатов, участников, сообщений и т.д.).
+ * Пагинированный результат API.
  *
- * Реализует Countable и IteratorAggregate для интеграции с PHP stdlib.
+ * @template T of AbstractDto
+ * @implements IteratorAggregate<int, T>
  *
  * @since 1.0.0
  */
-final class PaginatedResult extends AbstractDto implements \Countable, \IteratorAggregate
+final class PaginatedResult extends AbstractDto implements Countable, IteratorAggregate
 {
-    /** @var array Элементы текущей страницы */
-    private $items;
-
-    /** @var int|null Маркер для следующей страницы */
-    private $marker;
-
     /**
-     * @param array    $items
+     * @param list<T>  $items
      * @param int|null $marker
      */
-    private function __construct(array $items, $marker = null)
+    private function __construct(
+        private readonly array $items,
+        private readonly ?int $marker,
+    ) {
+    }
+
+    public static function fromArray(array $data): static
     {
-        $this->items = $items;
-        $this->marker = $marker !== null ? (int) $marker : null;
+        $marker = isset($data['marker']) && \is_scalar($data['marker']) ? (int) $data['marker'] : null;
+        return new self([], $marker);
     }
 
     /**
-     * {@inheritdoc}
+     * Создаёт PaginatedResult из ответа API с маппингом элементов.
      *
-     * Создаёт PaginatedResult из массива с ключом 'items'.
-     *
-     * @param array $data Полный ответ API.
-     * @return self
+     * @template U of AbstractDto
+     * @param array<string, mixed> $data     Ответ API.
+     * @param string               $itemsKey Ключ массива с элементами.
+     * @param class-string<U>      $itemClass Класс DTO для маппинга.
+     * @return self<U>
      */
-    public static function fromArray(array $data)
+    public static function fromApiResponse(array $data, string $itemsKey, string $itemClass): self
     {
-        return self::fromApiResponse($data, 'items');
-    }
-
-    /**
-     * Создать PaginatedResult из ответа API с произвольным ключом и DTO-маппингом.
-     *
-     * @param array       $data      Полный ответ API.
-     * @param string      $itemsKey  Ключ массива элементов в ответе.
-     * @param string|null $itemClass FQCN для маппинга элементов.
-     * @return self
-     */
-    public static function fromApiResponse(array $data, $itemsKey = 'items', $itemClass = null)
-    {
-        $rawItems = isset($data[$itemsKey]) && is_array($data[$itemsKey]) ? $data[$itemsKey] : [];
-        $marker = isset($data['marker']) ? $data['marker'] : null;
+        $rawItems = isset($data[$itemsKey]) && \is_array($data[$itemsKey])
+            ? $data[$itemsKey]
+            : [];
 
         $items = [];
-        if ($itemClass !== null && method_exists($itemClass, 'fromArray')) {
-            foreach ($rawItems as $raw) {
-                if (is_array($raw)) {
-                    $items[] = call_user_func([$itemClass, 'fromArray'], $raw);
-                }
+        foreach ($rawItems as $raw) {
+            if (\is_array($raw)) {
+                $items[] = $itemClass::fromArray($raw);
             }
-        } else {
-            $items = $rawItems;
         }
+
+        $marker = isset($data['marker']) && \is_scalar($data['marker']) ? (int) $data['marker'] : null;
 
         return new self($items, $marker);
     }
 
     /**
-     * @return array Элементы текущей страницы.
+     * @return list<T>
      */
-    public function getItems()
+    public function getItems(): array
     {
         return $this->items;
     }
 
-    /**
-     * @return int|null Маркер для следующей страницы.
-     */
-    public function getMarker()
+    public function getMarker(): ?int
     {
         return $this->marker;
     }
 
-    /**
-     * @return bool Есть ли ещё страницы.
-     */
-    public function hasMore()
+    public function hasMore(): bool
     {
         return $this->marker !== null;
     }
 
-    /**
-     * Количество элементов на текущей странице.
-     *
-     * @return int
-     */
-    #[\ReturnTypeWillChange]
-    public function count()
+    public function count(): int
     {
-        return count($this->items);
+        return \count($this->items);
     }
 
     /**
-     * Итератор для foreach.
-     *
-     * @return \ArrayIterator
+     * @return ArrayIterator<int, T>
      */
-    #[\ReturnTypeWillChange]
-    public function getIterator()
+    public function getIterator(): ArrayIterator
     {
-        return new \ArrayIterator($this->items);
+        return new ArrayIterator($this->items);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toArray()
+    public function toArray(): array
     {
-        $result = [];
-        foreach ($this->items as $item) {
-            if (is_object($item) && method_exists($item, 'toArray')) {
-                $result[] = $item->toArray();
-            } else {
-                $result[] = $item;
-            }
-        }
-
         return [
-            'items'  => $result,
+            'items'  => \array_map(
+                static fn(AbstractDto $item): array => $item->toArray(),
+                $this->items,
+            ),
             'marker' => $this->marker,
         ];
     }

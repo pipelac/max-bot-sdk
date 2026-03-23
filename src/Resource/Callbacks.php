@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Resource;
 
 use MaxBotSdk\DTO\ActionResult;
@@ -13,16 +15,9 @@ use MaxBotSdk\Utils\InputValidator;
 final class Callbacks extends ResourceAbstract
 {
     /**
-     * Ответить на callback.
-     *
-     * @param string      $callbackId   ID callback.
-     * @param array|null  $message      Обновлённое сообщение или null.
-     * @param string|null $notification Одноразовое уведомление.
-     * @return ActionResult
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
+     * @param array<string, mixed>|null $message Обновлённое сообщение или null.
      */
-    public function answerCallback($callbackId, array $message = null, $notification = null)
+    public function answerCallback(string $callbackId, ?array $message = null, ?string $notification = null): ActionResult
     {
         InputValidator::validateCallbackId($callbackId);
 

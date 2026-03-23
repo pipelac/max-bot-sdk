@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
 /**
@@ -9,14 +11,11 @@ namespace MaxBotSdk\DTO;
  */
 final class ActionResult extends AbstractDto
 {
-    /** @var bool */
-    private $success;
-
-    /** @var string|null */
-    private $message;
+    private readonly bool $success;
+    private readonly ?string $message;
 
     /**
-     * @param array $data
+     * @param array<string, mixed> $data
      */
     private function __construct(array $data)
     {
@@ -24,40 +23,27 @@ final class ActionResult extends AbstractDto
         $this->message = self::getStringOrNull($data, 'message');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArray(array $data)
+    public static function fromArray(array $data): static
     {
         return new self($data);
     }
 
-    /**
-     * Создать успешный результат.
-     *
-     * @return self
-     */
-    public static function success()
+    public static function success(): self
     {
         return new self(['success' => true]);
     }
 
-    /** @return bool */
-    public function isSuccess()
+    public function isSuccess(): bool
     {
         return $this->success;
     }
 
-    /** @return string|null */
-    public function getMessage()
+    public function getMessage(): ?string
     {
         return $this->message;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'success' => $this->success,

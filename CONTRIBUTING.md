@@ -4,7 +4,7 @@
 
 ## Требования к окружению
 
-- **PHP** 5.6+
+- **PHP** 8.1+
 - **Extensions:** `json`, `mbstring`, `curl`
 - **Composer** для управления зависимостями
 
@@ -18,7 +18,7 @@ composer install
 
 ## Код-стайл
 
-Проект следует **PSR-2** с синтаксисом `[]` (short array syntax).
+Проект следует **PER-CS 2.0** с синтаксисом `[]` (short array syntax).
 
 ```bash
 # Проверка стиля
@@ -61,5 +61,5 @@ vendor/bin/phpstan analyse --configuration phpstan.neon
 - **Immutability** — Config и DTO без setters
 - **DI** — зависимости через конструктор
 - **Final by default** — все leaf-классы `final`
-- **PSR-2** — единый стиль кода
-- **PHP 5.6 compat** — `[]` short syntax, без return type declarations
+- **PER-CS 2.0** — единый стиль кода
+- **PHP 8.1+** — typed properties, readonly, enums, match, constructor promotion

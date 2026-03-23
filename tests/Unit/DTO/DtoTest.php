@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Tests\Unit\DTO;
 
 use MaxBotSdk\DTO\AbstractDto;
@@ -15,16 +17,13 @@ use MaxBotSdk\DTO\UpdatesResult;
 use MaxBotSdk\DTO\UploadResult;
 use MaxBotSdk\DTO\User;
 use MaxBotSdk\DTO\VideoInfo;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Тесты для всех DTO классов.
- */
-class DtoTest extends TestCase
+final class DtoTest extends TestCase
 {
-    // --- AbstractDto ---
-
-    public function testAllDtosExtendAbstractDto()
+    #[Test]
+    public function allDtosExtendAbstractDto(): void
     {
         $dtos = [
             User::fromArray([]),
@@ -40,13 +39,14 @@ class DtoTest extends TestCase
         ];
 
         foreach ($dtos as $dto) {
-            $this->assertInstanceOf(AbstractDto::class, $dto);
+            self::assertInstanceOf(AbstractDto::class, $dto);
         }
     }
 
     // --- User ---
 
-    public function testUserFromArray()
+    #[Test]
+    public function userFromArray(): void
     {
         $user = User::fromArray([
             'user_id'  => 123,
@@ -55,22 +55,24 @@ class DtoTest extends TestCase
             'is_bot'   => true,
         ]);
 
-        $this->assertEquals(123, $user->getUserId());
-        $this->assertEquals('TestBot', $user->getName());
-        $this->assertEquals('test_bot', $user->getUsername());
-        $this->assertTrue($user->isBot());
+        self::assertSame(123, $user->getUserId());
+        self::assertSame('TestBot', $user->getName());
+        self::assertSame('test_bot', $user->getUsername());
+        self::assertTrue($user->isBot());
     }
 
-    public function testUserFromEmptyArray()
+    #[Test]
+    public function userFromEmptyArray(): void
     {
         $user = User::fromArray([]);
-        $this->assertEquals(0, $user->getUserId());
-        $this->assertEquals('', $user->getName());
-        $this->assertNull($user->getUsername());
-        $this->assertFalse($user->isBot());
+        self::assertSame(0, $user->getUserId());
+        self::assertSame('', $user->getName());
+        self::assertNull($user->getUsername());
+        self::assertFalse($user->isBot());
     }
 
-    public function testUserToArray()
+    #[Test]
+    public function userToArray(): void
     {
         $data = [
             'user_id'  => 42,
@@ -80,13 +82,14 @@ class DtoTest extends TestCase
         ];
         $user = User::fromArray($data);
         $arr = $user->toArray();
-        $this->assertEquals(42, $arr['user_id']);
-        $this->assertEquals('Bot', $arr['name']);
+        self::assertSame(42, $arr['user_id']);
+        self::assertSame('Bot', $arr['name']);
     }
 
     // --- Chat ---
 
-    public function testChatFromArray()
+    #[Test]
+    public function chatFromArray(): void
     {
         $chat = Chat::fromArray([
             'chat_id'            => 456,
@@ -97,25 +100,27 @@ class DtoTest extends TestCase
             'is_public'          => true,
         ]);
 
-        $this->assertEquals(456, $chat->getChatId());
-        $this->assertEquals('chat', $chat->getType());
-        $this->assertEquals('active', $chat->getStatus());
-        $this->assertEquals('Test Chat', $chat->getTitle());
-        $this->assertEquals(5, $chat->getParticipantsCount());
-        $this->assertTrue($chat->isPublic());
+        self::assertSame(456, $chat->getChatId());
+        self::assertSame('chat', $chat->getType());
+        self::assertSame('active', $chat->getStatus());
+        self::assertSame('Test Chat', $chat->getTitle());
+        self::assertSame(5, $chat->getParticipantsCount());
+        self::assertTrue($chat->isPublic());
     }
 
-    public function testChatFromEmptyArray()
+    #[Test]
+    public function chatFromEmptyArray(): void
     {
         $chat = Chat::fromArray([]);
-        $this->assertEquals(0, $chat->getChatId());
-        $this->assertEquals('', $chat->getTitle());
-        $this->assertFalse($chat->isPublic());
+        self::assertSame(0, $chat->getChatId());
+        self::assertNull($chat->getTitle());
+        self::assertFalse($chat->isPublic());
     }
 
     // --- ChatMember ---
 
-    public function testChatMemberFromArray()
+    #[Test]
+    public function chatMemberFromArray(): void
     {
         $member = ChatMember::fromArray([
             'user_id'  => 789,
@@ -124,69 +129,72 @@ class DtoTest extends TestCase
             'is_owner' => false,
         ]);
 
-        $this->assertEquals(789, $member->getUserId());
-        $this->assertEquals('User1', $member->getName());
-        $this->assertTrue($member->isAdmin());
-        $this->assertFalse($member->isOwner());
+        self::assertSame(789, $member->getUserId());
+        self::assertSame('User1', $member->getName());
+        self::assertTrue($member->isAdmin());
+        self::assertFalse($member->isOwner());
     }
 
     // --- Attachment ---
 
-    public function testAttachmentFromArray()
+    #[Test]
+    public function attachmentFromArray(): void
     {
         $att = Attachment::fromArray([
             'type'    => 'image',
             'payload' => ['token' => 'abc123'],
         ]);
 
-        $this->assertEquals('image', $att->getType());
-        $this->assertEquals(['token' => 'abc123'], $att->getPayload());
-        $this->assertEquals('abc123', $att->getPayloadValue('token'));
-        $this->assertNull($att->getPayloadValue('nonexistent'));
-        $this->assertEquals('default', $att->getPayloadValue('nonexistent', 'default'));
+        self::assertSame('image', $att->getType());
+        self::assertSame(['token' => 'abc123'], $att->getPayload());
+        self::assertSame('abc123', $att->getPayloadValue('token'));
+        self::assertNull($att->getPayloadValue('nonexistent'));
+        self::assertSame('default', $att->getPayloadValue('nonexistent', 'default'));
     }
 
     // --- Message ---
 
-    public function testMessageFromArray()
+    #[Test]
+    public function messageFromArray(): void
     {
         $msg = Message::fromArray([
-            'body' => [
+            'message' => [
                 'mid'  => 'msg_001',
                 'text' => 'Привет!',
-            ],
-            'sender' => [
-                'user_id' => 1,
-                'name'    => 'Bot',
-            ],
-            'recipient' => [
-                'chat_id' => 100,
+                'sender' => [
+                    'user_id' => 1,
+                    'name'    => 'Bot',
+                ],
+                'recipient' => [
+                    'chat_id' => 100,
+                ],
             ],
             'timestamp' => 1234567890,
         ]);
 
-        $this->assertEquals('msg_001', $msg->getMessageId());
-        $this->assertEquals('Привет!', $msg->getText());
-        $this->assertNotNull($msg->getSender());
-        $this->assertEquals(1, $msg->getSender()->getUserId());
-        $this->assertEquals(100, $msg->getChatId());
-        $this->assertEquals(1234567890, $msg->getTimestamp());
+        self::assertSame('msg_001', $msg->getMessageId());
+        self::assertSame('Привет!', $msg->getText());
+        self::assertNotNull($msg->getSender());
+        self::assertSame(1, $msg->getSender()->getUserId());
+        self::assertSame(1234567890, $msg->getTimestamp());
     }
 
-    public function testMessageFromEmptyArray()
+    #[Test]
+    public function messageFromEmptyArray(): void
     {
         $msg = Message::fromArray([]);
-        $this->assertNull($msg->getMessageId());
-        $this->assertNull($msg->getText());
-        $this->assertNull($msg->getSender());
-        $this->assertEmpty($msg->getAttachments());
+        self::assertSame('', $msg->getMessageId());
+        self::assertNull($msg->getText());
+        self::assertNull($msg->getSender());
+        self::assertEmpty($msg->getAttachments());
     }
 
-    public function testMessageWithAttachments()
+    #[Test]
+    public function messageWithAttachments(): void
     {
         $msg = Message::fromArray([
-            'body' => [
-                'text' => 'С картинкой',
+            'message' => [
+                'text'        => 'С картинкой',
                 'attachments' => [
                     ['type' => 'image', 'payload' => ['token' => 'img1']],
                     ['type' => 'file', 'payload' => ['token' => 'file1']],
@@ -194,45 +202,46 @@ class DtoTest extends TestCase
             ],
         ]);
 
-        $this->assertCount(2, $msg->getAttachments());
-        $this->assertEquals('image', $msg->getAttachments()[0]->getType());
+        self::assertCount(2, $msg->getAttachments());
+        self::assertSame('image', $msg->getAttachments()[0]->getType());
     }
 
-    public function testMessageToArrayReconstructs()
+    #[Test]
+    public function messageToArrayReconstructs(): void
     {
         $msg = Message::fromArray([
-            'body' => ['mid' => 'm1', 'text' => 'Hello'],
-            'sender' => ['user_id' => 1, 'name' => 'Bot'],
+            'message'   => ['mid' => 'm1', 'text' => 'Hello'],
+            'sender'    => ['user_id' => 1, 'name' => 'Bot'],
             'timestamp' => 999,
         ]);
 
         $arr = $msg->toArray();
-        $this->assertEquals('m1', $arr['message_id']);
-        $this->assertEquals('Hello', $arr['text']);
-        $this->assertNotNull($arr['sender']);
-        $this->assertEquals(999, $arr['timestamp']);
+        self::assertSame('m1', $arr['message_id']);
+        self::assertSame('Hello', $arr['text']);
     }
 
     // --- Update ---
 
-    public function testUpdateFromArray()
+    #[Test]
+    public function updateFromArray(): void
     {
         $upd = Update::fromArray([
             'update_type' => 'message_created',
             'timestamp'   => 1111111111,
             'message'     => [
-                'body' => ['text' => 'Hello'],
+                'text'   => 'Hello',
                 'sender' => ['user_id' => 1, 'name' => 'Bot'],
             ],
         ]);
 
-        $this->assertEquals('message_created', $upd->getUpdateType());
-        $this->assertEquals(1111111111, $upd->getTimestamp());
-        $this->assertNotNull($upd->getMessage());
-        $this->assertEquals('Hello', $upd->getMessage()->getText());
+        self::assertSame('message_created', $upd->getUpdateType());
+        self::assertSame(1111111111, $upd->getTimestamp());
+        self::assertNotNull($upd->getMessage());
+        self::assertSame('Hello', $upd->getMessage()->getText());
     }
 
-    public function testUpdateCallbackShortcuts()
+    #[Test]
+    public function updateCallbackShortcuts(): void
     {
         $upd = Update::fromArray([
             'update_type' => 'message_callback',
@@ -243,11 +252,14 @@ class DtoTest extends TestCase
             ],
         ]);
 
-        $this->assertEquals('cb_123', $upd->getCallbackId());
-        $this->assertEquals('btn_click', $upd->getCallbackPayload());
+        $callback = $upd->getCallback();
+        self::assertNotNull($callback);
+        self::assertSame('cb_123', $callback['callback_id']);
+        self::assertSame('btn_click', $callback['payload']);
     }
 
-    public function testUpdateBotStarted()
+    #[Test]
+    public function updateBotStarted(): void
     {
         $upd = Update::fromArray([
             'update_type' => 'bot_started',
@@ -255,30 +267,32 @@ class DtoTest extends TestCase
             'user'        => ['user_id' => 99, 'name' => 'NewUser'],
         ]);
 
-        $this->assertEquals('bot_started', $upd->getUpdateType());
-        $this->assertNotNull($upd->getUser());
-        $this->assertEquals(99, $upd->getUser()->getUserId());
+        self::assertSame('bot_started', $upd->getUpdateType());
+        self::assertNotNull($upd->getUser());
+        self::assertSame(99, $upd->getUser()->getUserId());
     }
 
-    public function testUpdateToArrayReconstructs()
+    #[Test]
+    public function updateToArrayReconstructs(): void
     {
         $upd = Update::fromArray([
             'update_type' => 'message_created',
             'timestamp'   => 555,
             'message'     => [
-                'body' => ['text' => 'Test'],
+                'text' => 'Test',
             ],
         ]);
 
         $arr = $upd->toArray();
-        $this->assertEquals('message_created', $arr['update_type']);
-        $this->assertEquals(555, $arr['timestamp']);
-        $this->assertArrayHasKey('message', $arr);
+        self::assertSame('message_created', $arr['update_type']);
+        self::assertSame(555, $arr['timestamp']);
+        self::assertArrayHasKey('message', $arr);
     }
 
     // --- Subscription ---
 
-    public function testSubscriptionFromArray()
+    #[Test]
+    public function subscriptionFromArray(): void
     {
         $sub = Subscription::fromArray([
             'url'          => 'https://example.com/webhook',
@@ -286,137 +300,119 @@ class DtoTest extends TestCase
             'update_types' => ['message_created', 'message_callback'],
         ]);
 
-        $this->assertEquals('https://example.com/webhook', $sub->getUrl());
-        $this->assertEquals(1234567890, $sub->getTime());
-        $this->assertCount(2, $sub->getUpdateTypes());
+        self::assertSame('https://example.com/webhook', $sub->getUrl());
+        self::assertSame(1234567890, $sub->getTime());
+        self::assertCount(2, $sub->getUpdateTypes());
     }
 
     // --- UploadResult ---
 
-    public function testUploadResultFromArray()
+    #[Test]
+    public function uploadResultFromArray(): void
     {
         $res = UploadResult::fromArray([
             'url'   => 'https://upload.example.com/abc',
             'token' => 'tok_123',
         ]);
 
-        $this->assertEquals('https://upload.example.com/abc', $res->getUrl());
-        $this->assertEquals('tok_123', $res->getToken());
+        self::assertSame('https://upload.example.com/abc', $res->getUrl());
+        self::assertSame('tok_123', $res->getToken());
     }
 
-    public function testUploadResultFromUrl()
+    #[Test]
+    public function uploadResultFromUrl(): void
     {
         $res = UploadResult::fromUrl('https://upload.example.com/xyz');
-        $this->assertEquals('https://upload.example.com/xyz', $res->getUrl());
-        $this->assertEquals('', $res->getToken());
+        self::assertSame('https://upload.example.com/xyz', $res->getUrl());
+        self::assertSame('', $res->getToken());
     }
 
-    public function testUploadResultFromToken()
+    #[Test]
+    public function uploadResultFromToken(): void
     {
         $res = UploadResult::fromToken('tok_abc');
-        $this->assertEquals('', $res->getUrl());
-        $this->assertEquals('tok_abc', $res->getToken());
+        self::assertSame('', $res->getUrl());
+        self::assertSame('tok_abc', $res->getToken());
     }
 
     // --- PaginatedResult ---
 
-    public function testPaginatedResultBasic()
+    #[Test]
+    public function paginatedResultWithDtoMapping(): void
     {
         $result = PaginatedResult::fromApiResponse([
             'chats'  => [
-                ['chat_id' => 1, 'title' => 'Chat 1'],
-                ['chat_id' => 2, 'title' => 'Chat 2'],
-            ],
-            'marker' => 100,
-        ], 'chats');
-
-        $this->assertEquals(2, $result->count());
-        $this->assertTrue($result->hasMore());
-        $this->assertEquals(100, $result->getMarker());
-    }
-
-    public function testPaginatedResultWithDtoMapping()
-    {
-        $result = PaginatedResult::fromApiResponse([
-            'chats' => [
                 ['chat_id' => 1, 'title' => 'A'],
                 ['chat_id' => 2, 'title' => 'B'],
             ],
+            'marker' => 100,
         ], 'chats', Chat::class);
 
+        self::assertSame(2, $result->count());
+        self::assertTrue($result->hasMore());
+        self::assertSame(100, $result->getMarker());
         $items = $result->getItems();
-        $this->assertCount(2, $items);
-        $this->assertInstanceOf(Chat::class, $items[0]);
-        $this->assertEquals('A', $items[0]->getTitle());
+        self::assertCount(2, $items);
+        self::assertInstanceOf(Chat::class, $items[0]);
+        self::assertSame('A', $items[0]->getTitle());
     }
 
-    public function testPaginatedResultNoMarker()
+    #[Test]
+    public function paginatedResultNoMarker(): void
     {
-        $result = PaginatedResult::fromArray([
-            'items' => [1, 2, 3],
-        ]);
+        $result = PaginatedResult::fromApiResponse([
+            'items' => [
+                ['chat_id' => 1],
+                ['chat_id' => 2],
+                ['chat_id' => 3],
+            ],
+        ], 'items', Chat::class);
 
-        $this->assertEquals(3, $result->count());
-        $this->assertFalse($result->hasMore());
-        $this->assertNull($result->getMarker());
+        self::assertSame(3, $result->count());
+        self::assertFalse($result->hasMore());
+        self::assertNull($result->getMarker());
     }
 
-    public function testPaginatedResultEmpty()
+    #[Test]
+    public function paginatedResultEmpty(): void
     {
-        $result = PaginatedResult::fromApiResponse([], 'items');
-        $this->assertEquals(0, $result->count());
-        $this->assertFalse($result->hasMore());
-    }
-
-    public function testPaginatedResultCountable()
-    {
-        $result = PaginatedResult::fromArray([
-            'items' => [1, 2, 3],
-        ]);
-        $this->assertCount(3, $result);
-    }
-
-    public function testPaginatedResultIteratorAggregate()
-    {
-        $result = PaginatedResult::fromArray([
-            'items' => ['a', 'b', 'c'],
-        ]);
-
-        $collected = [];
-        foreach ($result as $item) {
-            $collected[] = $item;
-        }
-        $this->assertEquals(['a', 'b', 'c'], $collected);
+        $result = PaginatedResult::fromApiResponse([], 'items', Chat::class);
+        self::assertSame(0, $result->count());
+        self::assertFalse($result->hasMore());
     }
 
     // --- ActionResult ---
 
-    public function testActionResultFromArray()
+    #[Test]
+    public function actionResultFromArray(): void
     {
         $result = ActionResult::fromArray(['success' => true]);
-        $this->assertTrue($result->isSuccess());
-        $this->assertNull($result->getMessage());
+        self::assertTrue($result->isSuccess());
+        self::assertNull($result->getMessage());
     }
 
-    public function testActionResultWithMessage()
+    #[Test]
+    public function actionResultWithMessage(): void
     {
         $result = ActionResult::fromArray([
             'success' => true,
             'message' => 'Операция выполнена',
         ]);
-        $this->assertTrue($result->isSuccess());
-        $this->assertEquals('Операция выполнена', $result->getMessage());
+        self::assertTrue($result->isSuccess());
+        self::assertSame('Операция выполнена', $result->getMessage());
     }
 
-    public function testActionResultSuccess()
+    #[Test]
+    public function actionResultSuccess(): void
     {
         $result = ActionResult::success();
-        $this->assertTrue($result->isSuccess());
+        self::assertTrue($result->isSuccess());
     }
 
     // --- UpdatesResult ---
 
-    public function testUpdatesResultFromArray()
+    #[Test]
+    public function updatesResultFromArray(): void
     {
         $result = UpdatesResult::fromArray([
             'updates' => [
@@ -426,52 +422,56 @@ class DtoTest extends TestCase
             'marker' => 42,
         ]);
 
-        $this->assertEquals(2, $result->count());
-        $this->assertTrue($result->hasMore());
-        $this->assertEquals(42, $result->getMarker());
-        $this->assertInstanceOf(Update::class, $result->getUpdates()[0]);
+        self::assertSame(2, $result->count());
+        self::assertTrue($result->hasMore());
+        self::assertSame(42, $result->getMarker());
+        self::assertInstanceOf(Update::class, $result->getUpdates()[0]);
     }
 
-    public function testUpdatesResultEmpty()
+    #[Test]
+    public function updatesResultEmpty(): void
     {
         $result = UpdatesResult::fromArray([]);
-        $this->assertEquals(0, $result->count());
-        $this->assertFalse($result->hasMore());
+        self::assertSame(0, $result->count());
+        self::assertFalse($result->hasMore());
     }
 
     // --- VideoInfo ---
 
-    public function testVideoInfoFromArray()
+    #[Test]
+    public function videoInfoFromArray(): void
     {
         $info = VideoInfo::fromArray([
-            'token'    => 'vid_abc',
-            'url'      => 'https://cdn.max.ru/video.mp4',
-            'width'    => 1920,
-            'height'   => 1080,
-            'duration' => 120,
+            'token'     => 'vid_abc',
+            'url'       => 'https://cdn.max.ru/video.mp4',
+            'width'     => 1920,
+            'height'    => 1080,
+            'duration'  => 120,
             'thumbnail' => ['url' => 'https://cdn.max.ru/thumb.jpg'],
         ]);
 
-        $this->assertEquals('vid_abc', $info->getToken());
-        $this->assertEquals('https://cdn.max.ru/video.mp4', $info->getUrl());
-        $this->assertEquals(1920, $info->getWidth());
-        $this->assertEquals(1080, $info->getHeight());
-        $this->assertEquals(120, $info->getDuration());
-        $this->assertNotNull($info->getThumbnail());
+        self::assertSame('vid_abc', $info->getToken());
+        self::assertSame('https://cdn.max.ru/video.mp4', $info->getUrl());
+        self::assertSame(1920, $info->getWidth());
+        self::assertSame(1080, $info->getHeight());
+        self::assertSame(120, $info->getDuration());
+        self::assertNotNull($info->getThumbnail());
     }
 
-    public function testVideoInfoFromEmptyArray()
+    #[Test]
+    public function videoInfoFromEmptyArray(): void
     {
         $info = VideoInfo::fromArray([]);
-        $this->assertEquals('', $info->getToken());
-        $this->assertEquals('', $info->getUrl());
-        $this->assertNull($info->getWidth());
-        $this->assertNull($info->getHeight());
-        $this->assertNull($info->getDuration());
-        $this->assertNull($info->getThumbnail());
+        self::assertSame('', $info->getToken());
+        self::assertSame('', $info->getUrl());
+        self::assertNull($info->getWidth());
+        self::assertNull($info->getHeight());
+        self::assertNull($info->getDuration());
+        self::assertNull($info->getThumbnail());
     }
 
-    public function testVideoInfoToArray()
+    #[Test]
+    public function videoInfoToArray(): void
     {
         $data = [
             'token'     => 'vid_xyz',
@@ -483,9 +483,414 @@ class DtoTest extends TestCase
         ];
         $info = VideoInfo::fromArray($data);
         $arr = $info->toArray();
-        $this->assertEquals('vid_xyz', $arr['token']);
-        $this->assertEquals(1280, $arr['width']);
-        $this->assertEquals(720, $arr['height']);
-        $this->assertEquals(60, $arr['duration']);
+        self::assertSame('vid_xyz', $arr['token']);
+        self::assertSame(1280, $arr['width']);
+        self::assertSame(720, $arr['height']);
+        self::assertSame(60, $arr['duration']);
+    }
+
+    // =====================================================================
+    // Edge Cases — Nullable Getters
+    // =====================================================================
+
+    // --- User edge cases ---
+
+    #[Test]
+    public function userGetAvatarUrl(): void
+    {
+        $user = User::fromArray([
+            'user_id'    => 1,
+            'name'       => 'Bot',
+            'avatar_url' => 'https://cdn.max.ru/ava.jpg',
+        ]);
+        self::assertSame('https://cdn.max.ru/ava.jpg', $user->getAvatarUrl());
+    }
+
+    #[Test]
+    public function userGetAvatarUrlNull(): void
+    {
+        $user = User::fromArray(['user_id' => 1, 'name' => 'Bot']);
+        self::assertNull($user->getAvatarUrl());
+    }
+
+    #[Test]
+    public function userGetDescription(): void
+    {
+        $user = User::fromArray([
+            'user_id'     => 1,
+            'name'        => 'Bot',
+            'description' => 'Мой бот',
+        ]);
+        self::assertSame('Мой бот', $user->getDescription());
+    }
+
+    #[Test]
+    public function userGetLastActivityTime(): void
+    {
+        $user = User::fromArray([
+            'user_id'            => 1,
+            'name'               => 'Bot',
+            'last_activity_time' => 1700000000,
+        ]);
+        self::assertSame(1700000000, $user->getLastActivityTime());
+    }
+
+    #[Test]
+    public function userGetLastActivityTimeNull(): void
+    {
+        $user = User::fromArray(['user_id' => 1, 'name' => 'Bot']);
+        self::assertNull($user->getLastActivityTime());
+    }
+
+    // --- Chat edge cases ---
+
+    #[Test]
+    public function chatGetDescription(): void
+    {
+        $chat = Chat::fromArray([
+            'chat_id'     => 1,
+            'type'        => 'chat',
+            'description' => 'Описание чата',
+        ]);
+        self::assertSame('Описание чата', $chat->getDescription());
+    }
+
+    #[Test]
+    public function chatGetDescriptionNull(): void
+    {
+        $chat = Chat::fromArray(['chat_id' => 1, 'type' => 'chat']);
+        self::assertNull($chat->getDescription());
+    }
+
+    #[Test]
+    public function chatGetOwner(): void
+    {
+        $chat = Chat::fromArray([
+            'chat_id'  => 1,
+            'type'     => 'chat',
+            'owner_id' => 42,
+        ]);
+        self::assertNotNull($chat->getOwner());
+        self::assertInstanceOf(User::class, $chat->getOwner());
+        self::assertSame(42, $chat->getOwner()->getUserId());
+    }
+
+    #[Test]
+    public function chatGetOwnerNull(): void
+    {
+        $chat = Chat::fromArray(['chat_id' => 1, 'type' => 'chat']);
+        self::assertNull($chat->getOwner());
+    }
+
+    #[Test]
+    public function chatGetOwnerFromNestedData(): void
+    {
+        $chat = Chat::fromArray([
+            'chat_id' => 1,
+            'type'    => 'chat',
+            'owner'   => ['user_id' => 99, 'name' => 'Admin'],
+        ]);
+        self::assertNotNull($chat->getOwner());
+        self::assertSame(99, $chat->getOwner()->getUserId());
+        self::assertSame('Admin', $chat->getOwner()->getName());
+    }
+
+    #[Test]
+    public function chatGetIcon(): void
+    {
+        $chat = Chat::fromArray([
+            'chat_id' => 1,
+            'type'    => 'chat',
+            'icon'    => ['url' => 'https://cdn.max.ru/icon.png'],
+        ]);
+        self::assertIsArray($chat->getIcon());
+        self::assertSame('https://cdn.max.ru/icon.png', $chat->getIcon()['url']);
+    }
+
+    #[Test]
+    public function chatGetIconNull(): void
+    {
+        $chat = Chat::fromArray(['chat_id' => 1]);
+        self::assertNull($chat->getIcon());
+    }
+
+    // --- ChatMember edge cases ---
+
+    #[Test]
+    public function chatMemberFromEmptyArray(): void
+    {
+        $member = ChatMember::fromArray([]);
+        self::assertSame(0, $member->getUserId());
+        self::assertSame('', $member->getName());
+        self::assertNull($member->getUsername());
+        self::assertNull($member->getAvatarUrl());
+        self::assertFalse($member->isOwner());
+        self::assertFalse($member->isAdmin());
+    }
+
+    #[Test]
+    public function chatMemberAllFields(): void
+    {
+        $member = ChatMember::fromArray([
+            'user_id'    => 100,
+            'name'       => 'Admin',
+            'username'   => 'admin_user',
+            'avatar_url' => 'https://cdn.max.ru/admin.jpg',
+            'is_owner'   => true,
+            'is_admin'   => true,
+        ]);
+        self::assertSame(100, $member->getUserId());
+        self::assertSame('admin_user', $member->getUsername());
+        self::assertSame('https://cdn.max.ru/admin.jpg', $member->getAvatarUrl());
+        self::assertTrue($member->isOwner());
+        self::assertTrue($member->isAdmin());
+    }
+
+    // --- Message edge cases ---
+
+    #[Test]
+    public function messageGetFormat(): void
+    {
+        $msg = Message::fromArray([
+            'message' => ['text' => 'Bold', 'format' => 'markdown'],
+        ]);
+        self::assertSame('markdown', $msg->getFormat());
+    }
+
+    #[Test]
+    public function messageGetFormatNull(): void
+    {
+        $msg = Message::fromArray(['message' => ['text' => 'Plain']]);
+        self::assertNull($msg->getFormat());
+    }
+
+    #[Test]
+    public function messageGetRecipient(): void
+    {
+        $msg = Message::fromArray([
+            'message'   => ['text' => 'Hi'],
+            'recipient' => ['chat_id' => 555],
+        ]);
+        self::assertNotNull($msg->getRecipient());
+        self::assertSame(555, $msg->getRecipient()['chat_id']);
+    }
+
+    #[Test]
+    public function messageGetRecipientNull(): void
+    {
+        $msg = Message::fromArray(['message' => ['text' => 'Hi']]);
+        self::assertNull($msg->getRecipient());
+    }
+
+    #[Test]
+    public function messageGetLink(): void
+    {
+        $msg = Message::fromArray([
+            'message' => ['text' => 'Hi'],
+            'link'    => 'https://max.ru/chat/123/msg/456',
+        ]);
+        self::assertSame('https://max.ru/chat/123/msg/456', $msg->getLink());
+    }
+
+    #[Test]
+    public function messageGetLinkNull(): void
+    {
+        $msg = Message::fromArray(['message' => ['text' => 'Hi']]);
+        self::assertNull($msg->getLink());
+    }
+
+    #[Test]
+    public function messageGetStat(): void
+    {
+        $msg = Message::fromArray([
+            'message' => ['text' => 'Hi'],
+            'stat'    => ['views' => 100],
+        ]);
+        self::assertNotNull($msg->getStat());
+        self::assertSame(100, $msg->getStat()['views']);
+    }
+
+    #[Test]
+    public function messageGetStatNull(): void
+    {
+        $msg = Message::fromArray(['message' => ['text' => 'Hi']]);
+        self::assertNull($msg->getStat());
+    }
+
+    // --- Update edge cases ---
+
+    #[Test]
+    public function updateGetBody(): void
+    {
+        $upd = Update::fromArray([
+            'update_type' => 'message_created',
+            'timestamp'   => 111,
+            'message'     => ['text' => 'Hi'],
+        ]);
+        self::assertIsArray($upd->getBody());
+        self::assertArrayHasKey('message', $upd->getBody());
+    }
+
+    #[Test]
+    public function updateGetMessageId(): void
+    {
+        $upd = Update::fromArray([
+            'update_type' => 'message_created',
+            'timestamp'   => 111,
+            'message_id'  => 'mid_abc',
+        ]);
+        self::assertSame('mid_abc', $upd->getMessageId());
+    }
+
+    #[Test]
+    public function updateGetMessageIdNull(): void
+    {
+        $upd = Update::fromArray([
+            'update_type' => 'message_created',
+            'timestamp'   => 111,
+        ]);
+        self::assertNull($upd->getMessageId());
+    }
+
+    #[Test]
+    public function updateGetChatId(): void
+    {
+        $upd = Update::fromArray([
+            'update_type' => 'message_created',
+            'timestamp'   => 111,
+            'chat_id'     => 777,
+        ]);
+        self::assertSame(777, $upd->getChatId());
+    }
+
+    #[Test]
+    public function updateGetUserId(): void
+    {
+        $upd = Update::fromArray([
+            'update_type' => 'bot_started',
+            'timestamp'   => 111,
+            'user_id'     => 55,
+        ]);
+        self::assertSame(55, $upd->getUserId());
+    }
+
+    #[Test]
+    public function updateGetUserIdNull(): void
+    {
+        $upd = Update::fromArray([
+            'update_type' => 'bot_started',
+            'timestamp'   => 111,
+        ]);
+        self::assertNull($upd->getUserId());
+    }
+
+    #[Test]
+    public function updateFromEmptyArray(): void
+    {
+        $upd = Update::fromArray([]);
+        self::assertSame('', $upd->getUpdateType());
+        self::assertSame(0, $upd->getTimestamp());
+        self::assertNull($upd->getMessage());
+        self::assertNull($upd->getCallback());
+        self::assertNull($upd->getUser());
+    }
+
+    // --- Subscription edge cases ---
+
+    #[Test]
+    public function subscriptionFromEmptyArray(): void
+    {
+        $sub = Subscription::fromArray([]);
+        self::assertSame('', $sub->getUrl());
+        self::assertNull($sub->getTime());
+        self::assertEmpty($sub->getUpdateTypes());
+        self::assertNull($sub->getVersion());
+    }
+
+    #[Test]
+    public function subscriptionGetVersion(): void
+    {
+        $sub = Subscription::fromArray([
+            'url'     => 'https://example.com',
+            'version' => '0.1.8',
+        ]);
+        self::assertSame('0.1.8', $sub->getVersion());
+    }
+
+    #[Test]
+    public function subscriptionToArray(): void
+    {
+        $sub = Subscription::fromArray([
+            'url'          => 'https://example.com/webhook',
+            'time'         => 1234567890,
+            'update_types' => ['message_created'],
+            'version'      => '0.1.8',
+        ]);
+        $arr = $sub->toArray();
+        self::assertSame('https://example.com/webhook', $arr['url']);
+        self::assertSame(1234567890, $arr['time']);
+        self::assertContains('message_created', $arr['update_types']);
+    }
+
+    // --- Attachment edge cases ---
+
+    #[Test]
+    public function attachmentFromEmptyArray(): void
+    {
+        $att = Attachment::fromArray([]);
+        self::assertSame('', $att->getType());
+        self::assertEmpty($att->getPayload());
+    }
+
+    #[Test]
+    public function attachmentToArray(): void
+    {
+        $att = Attachment::fromArray([
+            'type'    => 'video',
+            'payload' => ['token' => 'vid_1', 'url' => 'https://cdn.max.ru/v.mp4'],
+        ]);
+        $arr = $att->toArray();
+        self::assertSame('video', $arr['type']);
+        self::assertSame('vid_1', $arr['payload']['token']);
+    }
+
+    // --- PaginatedResult iteration ---
+
+    #[Test]
+    public function paginatedResultIterator(): void
+    {
+        $result = PaginatedResult::fromApiResponse([
+            'chats' => [
+                ['chat_id' => 1, 'title' => 'A'],
+                ['chat_id' => 2, 'title' => 'B'],
+            ],
+        ], 'chats', Chat::class);
+
+        $titles = [];
+        foreach ($result as $chat) {
+            self::assertInstanceOf(Chat::class, $chat);
+            $titles[] = $chat->getTitle();
+        }
+        self::assertSame(['A', 'B'], $titles);
+    }
+
+    // --- UpdatesResult iteration ---
+
+    #[Test]
+    public function updatesResultIterator(): void
+    {
+        $result = UpdatesResult::fromArray([
+            'updates' => [
+                ['update_type' => 'message_created', 'timestamp' => 100],
+                ['update_type' => 'bot_started', 'timestamp' => 200],
+            ],
+        ]);
+
+        $types = [];
+        foreach ($result as $update) {
+            self::assertInstanceOf(Update::class, $update);
+            $types[] = $update->getUpdateType();
+        }
+        self::assertSame(['message_created', 'bot_started'], $types);
     }
 }

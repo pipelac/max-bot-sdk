@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Contracts;
 
 /**
@@ -15,24 +17,18 @@ interface HttpClientInterface
     /**
      * Выполняет HTTP-запрос к MAX Bot API.
      *
-     * @param string $method  HTTP-метод (GET, POST, PUT, PATCH, DELETE).
-     * @param string $url     URL или путь эндпоинта.
-     * @param array  $options Опции запроса (headers, json, query, multipart).
-     * @return array Ассоциативный массив с ключами 'status_code' и 'body'.
+     * @param array<string, mixed> $options Опции запроса (headers, json, query, multipart).
+     * @return array{status_code: int, body: string} Ответ c кодом и телом.
      */
-    public function request($method, $url, array $options = []);
+    public function request(string $method, string $url, array $options = []): array;
 
     /**
      * Возвращает код последнего HTTP-ответа.
-     *
-     * @return int
      */
-    public function getLastStatusCode();
+    public function getLastStatusCode(): int;
 
     /**
      * Возвращает базовый URL API.
-     *
-     * @return string
      */
-    public function getBaseUrl();
+    public function getBaseUrl(): string;
 }

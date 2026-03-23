@@ -1,96 +1,62 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Http;
 
 /**
- * Rate Limiter — ограничение скорости запросов к MAX Bot API.
- *
- * Реализует алгоритм скользящего окна (sliding window) для ограничения
- * количества HTTP-запросов в секунду. Вызывается перед каждым запросом.
+ * Rate Limiter — скользящее окно для ограничения запросов.
  *
  * @since 1.0.0
  */
 final class RateLimiter
 {
-    /** @var int Максимальное количество запросов в секунду. */
-    private $maxRequestsPerSecond;
+    /** @var list<float> Timestamps отправленных запросов. */
+    private array $timestamps = [];
 
-    /** @var float[] Timestamps отправленных запросов. */
-    private $timestamps = [];
-
-    /**
-     * @param int $maxRequestsPerSecond Максимум запросов в секунду.
-     */
-    public function __construct($maxRequestsPerSecond)
-    {
-        $this->maxRequestsPerSecond = max(1, (int) $maxRequestsPerSecond);
+    public function __construct(
+        private readonly int $maxRequestsPerSecond,
+    ) {
     }
 
-    /**
-     * Выполнить throttling перед запросом.
-     *
-     * Если лимит запросов исчерпан, метод блокирует выполнение (usleep)
-     * до момента, когда окно освободится.
-     *
-     * @return void
-     */
-    public function throttle()
+    public function throttle(): void
     {
-        $now = microtime(true);
-
-        // Удаляем timestamps старше 1 секунды
+        $now = \microtime(true);
         $this->cleanup($now);
 
-        // Если лимит исчерпан — ждём
-        if (count($this->timestamps) >= $this->maxRequestsPerSecond) {
-            $oldest = reset($this->timestamps);
-            $waitUntil = $oldest + 1.0;
-            $delay = $waitUntil - $now;
-            if ($delay > 0) {
-                $this->sleep($delay);
+        if (\count($this->timestamps) >= $this->maxRequestsPerSecond) {
+            $oldest = \reset($this->timestamps);
+            if ($oldest !== false) {
+                $waitUntil = $oldest + 1.0;
+                $delay = $waitUntil - $now;
+                if ($delay > 0) {
+                    $this->sleep($delay);
+                }
             }
-            // Очищаем после ожидания
-            $this->cleanup(microtime(true));
+            $this->cleanup(\microtime(true));
         }
 
-        // Регистрируем текущий запрос
-        $this->timestamps[] = microtime(true);
+        $this->timestamps[] = \microtime(true);
     }
 
-    /**
-     * Получить текущий лимит.
-     *
-     * @return int
-     */
-    public function getMaxRequestsPerSecond()
+    public function getMaxRequestsPerSecond(): int
     {
         return $this->maxRequestsPerSecond;
     }
 
-    /**
-     * Удаляет устаревшие timestamps (старше 1 секунды).
-     *
-     * @param float $now Текущее время.
-     * @return void
-     */
-    private function cleanup($now)
+    private function cleanup(float $now): void
     {
         $cutoff = $now - 1.0;
-        $this->timestamps = array_values(
-            array_filter($this->timestamps, function ($ts) use ($cutoff) {
-                return $ts > $cutoff;
-            })
+        $this->timestamps = \array_values(
+            \array_filter(
+                $this->timestamps,
+                static fn(float $ts): bool => $ts > $cutoff,
+            ),
         );
     }
 
-    /**
-     * Блокирующий sleep. Вынесен в отдельный метод для тестируемости.
-     *
-     * @param float $seconds Время ожидания в секундах.
-     * @return void
-     */
-    protected function sleep($seconds)
+    protected function sleep(float $seconds): void
     {
-        usleep((int) ($seconds * 1000000));
+        \usleep((int) ($seconds * 1_000_000));
     }
 }

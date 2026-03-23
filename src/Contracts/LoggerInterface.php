@@ -1,41 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Contracts;
 
 /**
- * Интерфейс логгера (PSR-3 совместимый для PHP 5.6).
- *
- * Позволяет инжектировать любой логгер, включая App\Component\Logger.
+ * Интерфейс логгера (PSR-3 совместимый).
  *
  * @since 1.0.0
  */
 interface LoggerInterface
 {
     /**
-     * @param string $message
-     * @param array  $context
-     * @return void
+     * @param array<string, mixed> $context
      */
-    public function debug($message, array $context = []);
+    public function debug(string $message, array $context = []): void;
 
     /**
-     * @param string $message
-     * @param array  $context
-     * @return void
+     * @param array<string, mixed> $context
      */
-    public function info($message, array $context = []);
+    public function info(string $message, array $context = []): void;
 
     /**
-     * @param string $message
-     * @param array  $context
-     * @return void
+     * @param array<string, mixed> $context
      */
-    public function warning($message, array $context = []);
+    public function warning(string $message, array $context = []): void;
 
     /**
-     * @param string $message
-     * @param array  $context
-     * @return void
+     * @param array<string, mixed> $context
      */
-    public function error($message, array $context = []);
+    public function error(string $message, array $context = []): void;
 }

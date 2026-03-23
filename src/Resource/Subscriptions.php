@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Resource;
 
 use MaxBotSdk\DTO\ActionResult;
@@ -15,20 +17,17 @@ use MaxBotSdk\Utils\InputValidator;
 final class Subscriptions extends ResourceAbstract
 {
     /**
-     * Подписаться на обновления (webhook).
-     *
-     * @param string      $url         URL webhook (HTTPS обязателен).
-     * @param array|null  $updateTypes Типы обновлений (null = все).
-     * @param string|null $version     Версия API.
-     * @param string|null $secret      Секретный ключ для верификации webhook-запросов.
-     * @return Subscription
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
+     * @param list<string>|null $updateTypes
      */
-    public function subscribe($url, array $updateTypes = null, $version = null, $secret = null)
-    {
+    public function subscribe(
+        string $url,
+        ?array $updateTypes = null,
+        ?string $version = null,
+        ?string $secret = null,
+    ): Subscription {
         InputValidator::validateWebhookUrl($url);
         $payload = ['url' => $url];
+
         if ($updateTypes !== null) {
             $payload['update_types'] = $updateTypes;
         }
@@ -44,22 +43,19 @@ final class Subscriptions extends ResourceAbstract
     }
 
     /**
-     * Получить текущие подписки.
-     *
-     * @return Subscription[]
-     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @return list<Subscription>
      */
-    public function getSubscriptions()
+    public function getSubscriptions(): array
     {
         $data = $this->get('/subscriptions');
         $subscriptions = [];
 
-        $rawSubs = isset($data['subscriptions']) && is_array($data['subscriptions'])
+        $rawSubs = isset($data['subscriptions']) && \is_array($data['subscriptions'])
             ? $data['subscriptions']
             : [];
 
         foreach ($rawSubs as $raw) {
-            if (is_array($raw)) {
+            if (\is_array($raw)) {
                 $subscriptions[] = Subscription::fromArray($raw);
             }
         }
@@ -67,15 +63,7 @@ final class Subscriptions extends ResourceAbstract
         return $subscriptions;
     }
 
-    /**
-     * Отписаться от обновлений (удалить webhook).
-     *
-     * @param string $url URL webhook для удаления.
-     * @return ActionResult
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
-     */
-    public function unsubscribe($url)
+    public function unsubscribe(string $url): ActionResult
     {
         InputValidator::validateWebhookUrl($url);
         $data = $this->delete('/subscriptions', ['url' => $url]);
@@ -83,29 +71,26 @@ final class Subscriptions extends ResourceAbstract
     }
 
     /**
-     * Получить обновления (long-polling).
-     *
-     * @param int|null $limit   Макс. количество обновлений.
-     * @param int|null $timeout Таймаут в секундах.
-     * @param int|null $marker  Маркер для получения следующей порции.
-     * @param array|null $types Типы обновлений.
-     * @return UpdatesResult
-     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @param list<string>|null $types
      */
-    public function getUpdates($limit = null, $timeout = null, $marker = null, array $types = null)
-    {
+    public function getUpdates(
+        ?int $limit = null,
+        ?int $timeout = null,
+        ?int $marker = null,
+        ?array $types = null,
+    ): UpdatesResult {
         $query = [];
         if ($limit !== null) {
-            $query['limit'] = (int) $limit;
+            $query['limit'] = $limit;
         }
         if ($timeout !== null) {
-            $query['timeout'] = (int) $timeout;
+            $query['timeout'] = $timeout;
         }
         if ($marker !== null) {
-            $query['marker'] = (int) $marker;
+            $query['marker'] = $marker;
         }
         if ($types !== null) {
-            $query['types'] = implode(',', $types);
+            $query['types'] = \implode(',', $types);
         }
 
         $data = $this->get('/updates', $query);

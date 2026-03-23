@@ -1,37 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Tests\Helper;
 
 use MaxBotSdk\Contracts\HttpClientInterface;
 
 /**
  * Мок HTTP-клиента для тестирования MAX SDK.
- *
- * Позволяет предопределять ответы на запросы и записывать историю
- * вызовов для последующей проверки в тестах.
  */
-class MockHttpClient implements HttpClientInterface
+final class MockHttpClient implements HttpClientInterface
 {
-    /** @var array Очередь ответов. */
-    private $responses = [];
+    /** @var list<array{status_code: int, body: string}> */
+    private array $responses = [];
 
-    /** @var array История запросов. */
-    private $requests = [];
+    /** @var list<array{method: string, url: string, options: array<string, mixed>}> */
+    private array $requests = [];
 
-    /** @var int Индекс текущего ответа. */
-    private $currentResponseIndex = 0;
+    private int $currentResponseIndex = 0;
+    private int $lastStatusCode = 200;
 
-    /** @var int Последний HTTP-код. */
-    private $lastStatusCode = 200;
-
-    /**
-     * Добавляет предопределённый ответ в очередь.
-     *
-     * @param int    $statusCode HTTP-код ответа.
-     * @param string $body       JSON-тело ответа.
-     * @return self
-     */
-    public function setResponse($statusCode, $body = '{}')
+    public function setResponse(int $statusCode, string $body = '{}'): self
     {
         $this->responses[] = [
             'status_code' => $statusCode,
@@ -41,40 +30,30 @@ class MockHttpClient implements HttpClientInterface
     }
 
     /**
-     * Возвращает все выполненные запросы.
-     *
-     * @return array
+     * @return list<array{method: string, url: string, options: array<string, mixed>}>
      */
-    public function getRequests()
+    public function getRequests(): array
     {
         return $this->requests;
     }
 
     /**
-     * Возвращает последний запрос.
-     *
-     * @return array|null
+     * @return array{method: string, url: string, options: array<string, mixed>}|null
      */
-    public function getLastRequest()
+    public function getLastRequest(): ?array
     {
-        $count = count($this->requests);
+        $count = \count($this->requests);
         return $count > 0 ? $this->requests[$count - 1] : null;
     }
 
-    /**
-     * Очищает историю запросов и очередь ответов.
-     */
-    public function reset()
+    public function reset(): void
     {
         $this->requests = [];
         $this->responses = [];
         $this->currentResponseIndex = 0;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function request($method, $url, array $options = [])
+    public function request(string $method, string $url, array $options = []): array
     {
         $this->requests[] = [
             'method'  => $method,
@@ -82,14 +61,13 @@ class MockHttpClient implements HttpClientInterface
             'options' => $options,
         ];
 
+        $response = $this->responses[$this->currentResponseIndex] ?? [
+            'status_code' => 200,
+            'body'        => '{}',
+        ];
+
         if (isset($this->responses[$this->currentResponseIndex])) {
-            $response = $this->responses[$this->currentResponseIndex];
             $this->currentResponseIndex++;
-        } else {
-            $response = [
-                'status_code' => 200,
-                'body'        => '{}',
-            ];
         }
 
         $this->lastStatusCode = $response['status_code'];
@@ -97,18 +75,12 @@ class MockHttpClient implements HttpClientInterface
         return $response;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getLastStatusCode()
+    public function getLastStatusCode(): int
     {
         return $this->lastStatusCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getBaseUrl()
+    public function getBaseUrl(): string
     {
         return 'https://platform-api.max.ru';
     }

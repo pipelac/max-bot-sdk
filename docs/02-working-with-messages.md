@@ -4,7 +4,8 @@
 
 ### Текстовое сообщение
 
-```php// В чат
+```php
+// В чат
 $message = $client->messages()->sendMessage(
     ['text' => 'Привет!'],
     null,     // notify
@@ -21,11 +22,12 @@ $message = $client->messages()->sendText('**Жирный** и _курсив_', $
 
 ### Форматирование текста
 
-```php// Markdown
+```php
+// Markdown
 $client->messages()->sendMessage([
     'text'   => '**Жирный**, _курсив_, `код`, [ссылка](https://example.com)',
     'format' => 'markdown',
-), null, $chatId);
+], null, $chatId);
 
 // HTML
 $client->messages()->sendMessage([
@@ -36,7 +38,8 @@ $client->messages()->sendMessage([
 
 ### Тихая отправка (без уведомления)
 
-```php$client->messages()->sendMessage([
+```php
+$client->messages()->sendMessage([
     'text'   => 'Тихое сообщение',
     'notify' => false,
 ], null, $chatId);
@@ -44,23 +47,25 @@ $client->messages()->sendMessage([
 
 ### Ответ на сообщение (reply)
 
-```php$client->messages()->sendMessage([
+```php
+$client->messages()->sendMessage([
     'text' => 'Это ответ на ваше сообщение',
     'link' => [
-        'type'    => 'reply',
-        'mid'     => $originalMessageId,
-    ),
+        'type' => 'reply',
+        'mid'  => $originalMessageId,
+    ],
 ], null, $chatId);
 ```
 
 ### Пересылка сообщения (forward)
 
-```php$client->messages()->sendMessage([
+```php
+$client->messages()->sendMessage([
     'text' => 'Пересланное сообщение',
     'link' => [
-        'type'    => 'forward',
-        'mid'     => $originalMessageId,
-    ),
+        'type' => 'forward',
+        'mid'  => $originalMessageId,
+    ],
 ], null, $chatId);
 ```
 
@@ -68,47 +73,50 @@ $client->messages()->sendMessage([
 
 ### Callback-кнопки
 
-```phpuse MaxBotSdk\Utils\KeyboardBuilder;
+```php
+use MaxBotSdk\Utils\KeyboardBuilder;
 
 $keyboard = KeyboardBuilder::build([
     [
-        ['type' => 'callback', 'text' => 'Кнопка 1', 'payload' => 'btn_1'),
-        ['type' => 'callback', 'text' => 'Кнопка 2', 'payload' => 'btn_2'),
-    ),
+        ['type' => 'callback', 'text' => 'Кнопка 1', 'payload' => 'btn_1'],
+        ['type' => 'callback', 'text' => 'Кнопка 2', 'payload' => 'btn_2'],
+    ],
 ]);
 
 $client->messages()->sendMessage([
     'text'        => 'Нажмите кнопку:',
-    'attachments' => [$keyboard),
+    'attachments' => [$keyboard],
 ], null, $chatId);
 
 // Или shortcut:
 $client->messages()->sendTextWithKeyboard('Нажмите кнопку:', $chatId, [
     [
-        ['type' => 'callback', 'text' => 'Кнопка 1', 'payload' => 'btn_1'),
-        ['type' => 'callback', 'text' => 'Кнопка 2', 'payload' => 'btn_2'),
-    ),
+        ['type' => 'callback', 'text' => 'Кнопка 1', 'payload' => 'btn_1'],
+        ['type' => 'callback', 'text' => 'Кнопка 2', 'payload' => 'btn_2'],
+    ],
 ]);
 ```
 
 ### Кнопка-ссылка
 
-```php$keyboard = KeyboardBuilder::build([
+```php
+$keyboard = KeyboardBuilder::build([
     [
-        ['type' => 'link', 'text' => '🔗 Открыть', 'url' => 'https://example.com'),
-    ),
+        ['type' => 'link', 'text' => '🔗 Открыть', 'url' => 'https://example.com'],
+    ],
 ]);
 ```
 
 ### Запрос контакта / геолокации
 
-```php$keyboard = KeyboardBuilder::build([
+```php
+$keyboard = KeyboardBuilder::build([
     [
-        ['type' => 'request_contact', 'text' => '📱 Отправить контакт'),
-    ),
+        ['type' => 'request_contact', 'text' => '📱 Отправить контакт'],
+    ],
     [
-        ['type' => 'request_geo', 'text' => '📍 Отправить геолокацию'),
-    ),
+        ['type' => 'request_geo', 'text' => '📍 Отправить геолокацию'],
+    ],
 ]);
 ```
 
@@ -122,7 +130,8 @@ $client->messages()->sendTextWithKeyboard('Нажмите кнопку:', $chatI
 
 ### Одно сообщение по ID
 
-```php$message = $client->messages()->getMessage($messageId);
+```php
+$message = $client->messages()->getMessage($messageId);
 echo $message->getText();
 echo $message->getSender()->getName();
 echo $message->getSender()->getUsername();
@@ -130,7 +139,8 @@ echo $message->getSender()->getUsername();
 
 ### Список сообщений из чата
 
-```php$result = $client->messages()->getMessages($chatId, 20);
+```php
+$result = $client->messages()->getMessages($chatId, 20);
 
 foreach ($result->getItems() as $msg) {
     echo $msg->getText() . "\n";
@@ -144,7 +154,8 @@ if ($result->hasMore()) {
 
 ### С фильтрацией по времени
 
-```php$result = $client->messages()->getMessages(
+```php
+$result = $client->messages()->getMessages(
     $chatId,
     50,                      // count
     strtotime('-1 hour'),    // from
@@ -156,7 +167,8 @@ if ($result->hasMore()) {
 
 > **Примечание:** Редактировать можно только сообщения, отправленные менее 24 часов назад.
 
-```php// Изменить текст
+```php
+// Изменить текст
 $client->messages()->editMessage($messageId, [
     'text' => 'Обновлённый текст',
 ]);
@@ -164,19 +176,19 @@ $client->messages()->editMessage($messageId, [
 // Изменить текст и обновить клавиатуру
 $newKeyboard = KeyboardBuilder::build([
     [
-        ['type' => 'callback', 'text' => '✅ Готово', 'payload' => 'done'),
-    ),
+        ['type' => 'callback', 'text' => '✅ Готово', 'payload' => 'done'],
+    ],
 ]);
 
 $client->messages()->editMessage($messageId, [
     'text'        => 'Задача выполнена!',
-    'attachments' => [$newKeyboard),
+    'attachments' => [$newKeyboard],
 ]);
 
 // Удалить все вложения (пустой массив)
 $client->messages()->editMessage($messageId, [
     'text'        => 'Текст без вложений',
-    'attachments' => [),
+    'attachments' => [],
 ]);
 ```
 
@@ -184,15 +196,17 @@ $client->messages()->editMessage($messageId, [
 
 > **Примечание:** Удалять можно только сообщения, отправленные менее 24 часов назад.
 
-```php$client->messages()->deleteMessage($messageId);
+```php
+$client->messages()->deleteMessage($messageId);
 ```
 
 ## Обработка callback-ов
 
-```php// Ответ на нажатие inline-кнопки (обновление сообщения + уведомление)
+```php
+// Ответ на нажатие inline-кнопки (обновление сообщения + уведомление)
 $client->callbacks()->answerCallback($callbackId, [
     'text'        => 'Обновлённое сообщение',
-    'attachments' => [$newKeyboard),
+    'attachments' => [$newKeyboard],
 ], 'Уведомление пользователю');
 
 // Только уведомление (без обновления сообщения)

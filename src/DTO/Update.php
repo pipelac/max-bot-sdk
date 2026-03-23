@@ -1,161 +1,107 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
 /**
- * Объект обновления (webhook/long-polling) MAX.
+ * Объект обновления (webhook / long-polling).
  *
  * @since 1.0.0
  */
 final class Update extends AbstractDto
 {
-    /** @var string */
-    private $updateType;
-
-    /** @var int */
-    private $timestamp;
-
-    /** @var Message|null */
-    private $message;
-
-    /** @var array|null Callback-данные (callback_id, payload, user) */
-    private $callback;
-
-    /** @var User|null */
-    private $user;
-
-    /** @var int|null */
-    private $chatId;
-
-    /** @var string|null */
-    private $messageId;
+    private readonly string $updateType;
+    private readonly int $timestamp;
+    /** @var array<string, mixed> */
+    private readonly array $body;
+    private readonly ?string $messageId;
+    private readonly ?int $chatId;
+    private readonly ?int $userId;
 
     /**
-     * @param array $data
+     * @param array<string, mixed> $data
      */
     private function __construct(array $data)
     {
         $this->updateType = self::getString($data, 'update_type');
         $this->timestamp = self::getInt($data, 'timestamp');
-
-        // message_created, message_edited
-        $messageData = self::getArrayOrNull($data, 'message');
-        $this->message = $messageData !== null ? Message::fromArray($messageData) : null;
-
-        // message_callback
-        $this->callback = self::getArrayOrNull($data, 'callback');
-
-        // bot_started, user_added, user_removed
-        $userData = self::getArrayOrNull($data, 'user');
-        $this->user = $userData !== null ? User::fromArray($userData) : null;
-
-        // chat_id для chat-related events
-        $this->chatId = self::getIntOrNull($data, 'chat_id');
-
-        // message_removed
         $this->messageId = self::getStringOrNull($data, 'message_id');
+        $this->chatId = self::getIntOrNull($data, 'chat_id');
+        $this->userId = self::getIntOrNull($data, 'user_id');
+
+        // Всё остальное сохраняем как body
+        $this->body = $data;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArray(array $data)
+    public static function fromArray(array $data): static
     {
         return new self($data);
     }
 
-    /** @return string */
-    public function getUpdateType()
+    public function getUpdateType(): string
     {
         return $this->updateType;
     }
 
-    /** @return int */
-    public function getTimestamp()
+    public function getTimestamp(): int
     {
         return $this->timestamp;
     }
 
-    /** @return Message|null */
-    public function getMessage()
-    {
-        return $this->message;
-    }
-
-    /** @return array|null */
-    public function getCallback()
-    {
-        return $this->callback;
-    }
-
     /**
-     * @return string|null ID callback-а (shortcut).
+     * @return array<string, mixed>
      */
-    public function getCallbackId()
+    public function getBody(): array
     {
-        return isset($this->callback['callback_id']) ? (string) $this->callback['callback_id'] : null;
+        return $this->body;
     }
 
-    /**
-     * @return string|null Payload callback-а.
-     */
-    public function getCallbackPayload()
-    {
-        return isset($this->callback['payload']) ? (string) $this->callback['payload'] : null;
-    }
-
-    /** @return User|null */
-    public function getUser()
-    {
-        return $this->user;
-    }
-
-    /** @return int|null */
-    public function getChatId()
-    {
-        return $this->chatId;
-    }
-
-    /** @return string|null */
-    public function getMessageId()
+    public function getMessageId(): ?string
     {
         return $this->messageId;
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function getChatId(): ?int
     {
-        return sprintf('Update[%s]@%d', $this->updateType, $this->timestamp);
+        return $this->chatId;
+    }
+
+    public function getUserId(): ?int
+    {
+        return $this->userId;
     }
 
     /**
-     * {@inheritdoc}
+     * Получить объект сообщения из body (если тип содержит message).
      */
-    public function toArray()
+    public function getMessage(): ?Message
     {
-        $result = [
-            'update_type' => $this->updateType,
-            'timestamp'   => $this->timestamp,
-        ];
+        $messageData = self::getArrayOrNull($this->body, 'message');
+        return $messageData !== null ? Message::fromArray($messageData) : null;
+    }
 
-        if ($this->message !== null) {
-            $result['message'] = $this->message->toArray();
-        }
-        if ($this->callback !== null) {
-            $result['callback'] = $this->callback;
-        }
-        if ($this->user !== null) {
-            $result['user'] = $this->user->toArray();
-        }
-        if ($this->chatId !== null) {
-            $result['chat_id'] = $this->chatId;
-        }
-        if ($this->messageId !== null) {
-            $result['message_id'] = $this->messageId;
-        }
+    /**
+     * Получить callback данные из body.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getCallback(): ?array
+    {
+        return self::getArrayOrNull($this->body, 'callback');
+    }
 
-        return $result;
+    /**
+     * Получить данные пользователя из body.
+     */
+    public function getUser(): ?User
+    {
+        $userData = self::getArrayOrNull($this->body, 'user');
+        return $userData !== null ? User::fromArray($userData) : null;
+    }
+
+    public function toArray(): array
+    {
+        return $this->body;
     }
 }

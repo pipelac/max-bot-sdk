@@ -1,79 +1,89 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Tests\Unit;
 
 use MaxBotSdk\Config;
 use MaxBotSdk\ConfigBuilder;
+use MaxBotSdk\Contracts\LoggerInterface;
 use MaxBotSdk\Exception\MaxConfigException;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Тесты для класса ConfigBuilder.
- */
-class ConfigBuilderTest extends TestCase
+final class ConfigBuilderTest extends TestCase
 {
-    public function testCreateReturnsBuilder()
+    #[Test]
+    public function createReturnsBuilder(): void
     {
         $builder = ConfigBuilder::create('token');
-        $this->assertInstanceOf(ConfigBuilder::class, $builder);
+        self::assertInstanceOf(ConfigBuilder::class, $builder);
     }
 
-    public function testBuildReturnsConfig()
+    #[Test]
+    public function buildReturnsConfig(): void
     {
         $config = ConfigBuilder::create('my_token')->build();
-        $this->assertInstanceOf(Config::class, $config);
-        $this->assertEquals('my_token', $config->getToken());
+        self::assertInstanceOf(Config::class, $config);
+        self::assertSame('my_token', $config->getToken());
     }
 
-    public function testWithTimeout()
+    #[Test]
+    public function withTimeout(): void
     {
         $config = ConfigBuilder::create('token')
             ->withTimeout(60)
             ->build();
-        $this->assertEquals(60, $config->getTimeout());
+        self::assertSame(60, $config->getTimeout());
     }
 
-    public function testWithRetries()
+    #[Test]
+    public function withRetries(): void
     {
         $config = ConfigBuilder::create('token')
             ->withRetries(7)
             ->build();
-        $this->assertEquals(7, $config->getRetries());
+        self::assertSame(7, $config->getRetries());
     }
 
-    public function testWithRateLimit()
+    #[Test]
+    public function withRateLimit(): void
     {
         $config = ConfigBuilder::create('token')
             ->withRateLimit(50)
             ->build();
-        $this->assertEquals(50, $config->getRateLimit());
+        self::assertSame(50, $config->getRateLimit());
     }
 
-    public function testWithVerifySsl()
+    #[Test]
+    public function withVerifySsl(): void
     {
         $config = ConfigBuilder::create('token')
             ->withVerifySsl(false)
             ->build();
-        $this->assertFalse($config->getVerifySsl());
+        self::assertFalse($config->getVerifySsl());
     }
 
-    public function testWithLogRequests()
+    #[Test]
+    public function withLogRequests(): void
     {
         $config = ConfigBuilder::create('token')
             ->withLogRequests(false)
             ->build();
-        $this->assertFalse($config->getLogRequests());
+        self::assertFalse($config->getLogRequests());
     }
 
-    public function testWithAppName()
+    #[Test]
+    public function withAppName(): void
     {
         $config = ConfigBuilder::create('token')
             ->withAppName('TestApp')
             ->build();
-        $this->assertEquals('TestApp', $config->getAppName());
+        self::assertSame('TestApp', $config->getAppName());
     }
 
-    public function testFullFluentChain()
+    #[Test]
+    public function fullFluentChain(): void
     {
         $config = ConfigBuilder::create('test_token')
             ->withTimeout(120)
@@ -84,44 +94,48 @@ class ConfigBuilderTest extends TestCase
             ->withAppName('SuperBot')
             ->build();
 
-        $this->assertEquals('test_token', $config->getToken());
-        $this->assertEquals(120, $config->getTimeout());
-        $this->assertEquals(5, $config->getRetries());
-        $this->assertEquals(20, $config->getRateLimit());
-        $this->assertFalse($config->getVerifySsl());
-        $this->assertTrue($config->getLogRequests());
-        $this->assertEquals('SuperBot', $config->getAppName());
+        self::assertSame('test_token', $config->getToken());
+        self::assertSame(120, $config->getTimeout());
+        self::assertSame(5, $config->getRetries());
+        self::assertSame(20, $config->getRateLimit());
+        self::assertFalse($config->getVerifySsl());
+        self::assertTrue($config->getLogRequests());
+        self::assertSame('SuperBot', $config->getAppName());
     }
 
-    public function testBuildWithEmptyTokenThrows()
+    #[Test]
+    public function buildWithEmptyTokenThrows(): void
     {
         $this->expectException(MaxConfigException::class);
         ConfigBuilder::create('')->build();
     }
 
-    public function testWithLoggerPassesLoggerToConfig()
+    #[Test]
+    public function withLoggerPassesLoggerToConfig(): void
     {
-        $logger = $this->createMock(\MaxBotSdk\Contracts\LoggerInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
         $config = ConfigBuilder::create('token')
             ->withLogger($logger)
             ->build();
-        $this->assertSame($logger, $config->getLogger());
+        self::assertSame($logger, $config->getLogger());
     }
 
-    public function testWithLoggerNullIsDefault()
+    #[Test]
+    public function withLoggerNullIsDefault(): void
     {
         $config = ConfigBuilder::create('token')->build();
-        $this->assertNull($config->getLogger());
+        self::assertNull($config->getLogger());
     }
 
-    public function testDefaultValuesAreApplied()
+    #[Test]
+    public function defaultValuesAreApplied(): void
     {
         $config = ConfigBuilder::create('token')->build();
-        $this->assertEquals(Config::DEFAULT_TIMEOUT, $config->getTimeout());
-        $this->assertEquals(Config::DEFAULT_RETRIES, $config->getRetries());
-        $this->assertEquals(Config::DEFAULT_RATE_LIMIT, $config->getRateLimit());
-        $this->assertTrue($config->getVerifySsl());
-        $this->assertTrue($config->getLogRequests());
-        $this->assertEquals('MaxBot', $config->getAppName());
+        self::assertSame(Config::DEFAULT_TIMEOUT, $config->getTimeout());
+        self::assertSame(Config::DEFAULT_RETRIES, $config->getRetries());
+        self::assertSame(Config::DEFAULT_RATE_LIMIT, $config->getRateLimit());
+        self::assertTrue($config->getVerifySsl());
+        self::assertTrue($config->getLogRequests());
+        self::assertSame('MaxBot', $config->getAppName());
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk;
 
 use MaxBotSdk\Contracts\ConfigInterface;
@@ -12,241 +14,146 @@ use MaxBotSdk\Exception\MaxConfigException;
  * Все параметры задаются при создании через конструктор, фабричные методы
  * или ConfigBuilder. После создания изменение невозможно.
  *
- * Пример:
- * <code>
- * // Через конструктор (с defaults):
- * $config = new Config('TOKEN');
- *
- * // Через ConfigBuilder:
- * $config = ConfigBuilder::create('TOKEN')
- *     ->withTimeout(60)
- *     ->withRetries(5)
- *     ->build();
- *
- * // Из ENV (12-Factor App):
- * $config = Config::fromEnvironment();
- *
- * // Из INI файла:
- * $config = Config::fromIniFile('/path/to/config.ini');
- * </code>
- *
  * @since 1.0.0
  */
 final class Config implements ConfigInterface
 {
-    /** @var int Таймаут по умолчанию (секунды). */
-    const DEFAULT_TIMEOUT = 30;
+    public const DEFAULT_TIMEOUT = 30;
+    public const MIN_TIMEOUT = 5;
+    public const MAX_TIMEOUT = 300;
+    public const DEFAULT_RETRIES = 3;
+    public const MAX_RETRIES = 10;
+    public const DEFAULT_RATE_LIMIT = 30;
+    public const MAX_RATE_LIMIT = 100;
 
-    /** @var int Минимальный таймаут (секунды). */
-    const MIN_TIMEOUT = 5;
-
-    /** @var int Максимальный таймаут (секунды). */
-    const MAX_TIMEOUT = 300;
-
-    /** @var int Повторные попытки по умолчанию. */
-    const DEFAULT_RETRIES = 3;
-
-    /** @var int Максимум повторных попыток. */
-    const MAX_RETRIES = 10;
-
-    /** @var int Лимит запросов/сек по умолчанию. */
-    const DEFAULT_RATE_LIMIT = 30;
-
-    /** @var int Максимальный лимит запросов/сек. */
-    const MAX_RATE_LIMIT = 100;
-
-    /** @var string Токен бота. */
-    private $token;
-
-    /** @var int Таймаут HTTP-запросов (секунды). */
-    private $timeout;
-
-    /** @var int Количество повторных попыток. */
-    private $retries;
-
-    /** @var int Лимит запросов в секунду. */
-    private $rateLimit;
-
-    /** @var bool Проверка SSL-сертификатов. */
-    private $verifySsl;
-
-    /** @var bool Логировать успешные запросы. */
-    private $logRequests;
-
-    /** @var string Имя приложения для логов. */
-    private $appName;
-
-    /** @var LoggerInterface|null Внешний логгер. */
-    private $logger;
+    private readonly string $token;
+    private readonly int $timeout;
+    private readonly int $retries;
+    private readonly int $rateLimit;
+    private readonly bool $verifySsl;
+    private readonly bool $logRequests;
+    private readonly string $appName;
+    private readonly ?LoggerInterface $logger;
 
     /**
-     * Конструктор. Все параметры иммутабельны после создания.
-     *
-     * @param string               $token       Токен бота MAX.
-     * @param int                  $timeout     Таймаут (5–300 сек).
-     * @param int                  $retries     Повторные попытки (0–10).
-     * @param int                  $rateLimit   Лимит запросов/сек (1–100).
-     * @param bool                 $verifySsl   Проверка SSL.
-     * @param bool                 $logRequests Логировать запросы.
-     * @param string               $appName     Имя приложения для логов.
-     * @param LoggerInterface|null $logger      Логгер.
-     * @throws MaxConfigException  Если параметры невалидны.
+     * @throws MaxConfigException Если параметры невалидны.
      */
     public function __construct(
-        $token,
-        $timeout = self::DEFAULT_TIMEOUT,
-        $retries = self::DEFAULT_RETRIES,
-        $rateLimit = self::DEFAULT_RATE_LIMIT,
-        $verifySsl = true,
-        $logRequests = true,
-        $appName = 'MaxBot',
-        LoggerInterface $logger = null
+        string $token,
+        int $timeout = self::DEFAULT_TIMEOUT,
+        int $retries = self::DEFAULT_RETRIES,
+        int $rateLimit = self::DEFAULT_RATE_LIMIT,
+        bool $verifySsl = true,
+        bool $logRequests = true,
+        string $appName = 'MaxBot',
+        ?LoggerInterface $logger = null,
     ) {
-        $token = trim((string) $token);
+        $token = \trim($token);
         if ($token === '') {
             throw new MaxConfigException('Токен MAX бота не указан.');
         }
         $this->token = $token;
 
-        $timeout = (int) $timeout;
         if ($timeout < self::MIN_TIMEOUT || $timeout > self::MAX_TIMEOUT) {
-            throw new MaxConfigException(sprintf(
+            throw new MaxConfigException(\sprintf(
                 'Таймаут должен быть от %d до %d секунд.',
                 self::MIN_TIMEOUT,
-                self::MAX_TIMEOUT
+                self::MAX_TIMEOUT,
             ));
         }
         $this->timeout = $timeout;
 
-        $retries = (int) $retries;
         if ($retries < 0 || $retries > self::MAX_RETRIES) {
-            throw new MaxConfigException(sprintf(
+            throw new MaxConfigException(\sprintf(
                 'Количество повторов должно быть от 0 до %d.',
-                self::MAX_RETRIES
+                self::MAX_RETRIES,
             ));
         }
         $this->retries = $retries;
 
-        $rateLimit = (int) $rateLimit;
         if ($rateLimit < 1 || $rateLimit > self::MAX_RATE_LIMIT) {
-            throw new MaxConfigException(sprintf(
+            throw new MaxConfigException(\sprintf(
                 'Лимит запросов должен быть от 1 до %d.',
-                self::MAX_RATE_LIMIT
+                self::MAX_RATE_LIMIT,
             ));
         }
         $this->rateLimit = $rateLimit;
 
-        $this->verifySsl = (bool) $verifySsl;
-        $this->logRequests = (bool) $logRequests;
-        $this->appName = trim((string) $appName) !== '' ? trim((string) $appName) : 'MaxBot';
+        $this->verifySsl = $verifySsl;
+        $this->logRequests = $logRequests;
+        $this->appName = \trim($appName) !== '' ? \trim($appName) : 'MaxBot';
         $this->logger = $logger;
     }
 
-    // --- Геттеры (только чтение) ---
-
-    /** @return string */
-    public function getToken()
+    public function getToken(): string
     {
         return $this->token;
     }
 
-    /** @return int */
-    public function getTimeout()
+    public function getTimeout(): int
     {
         return $this->timeout;
     }
 
-    /** @return int */
-    public function getRetries()
+    public function getRetries(): int
     {
         return $this->retries;
     }
 
-    /** @return int */
-    public function getRateLimit()
+    public function getRateLimit(): int
     {
         return $this->rateLimit;
     }
 
-    /** @return bool */
-    public function getVerifySsl()
+    public function getVerifySsl(): bool
     {
         return $this->verifySsl;
     }
 
-    /** @return bool */
-    public function getLogRequests()
+    public function getLogRequests(): bool
     {
         return $this->logRequests;
     }
 
-    /** @return string */
-    public function getAppName()
+    public function getAppName(): string
     {
         return $this->appName;
     }
 
-    /** @return LoggerInterface|null */
-    public function getLogger()
+    public function getLogger(): ?LoggerInterface
     {
         return $this->logger;
     }
 
-    // --- Фабричные методы ---
-
     /**
      * Создаёт конфигурацию из переменных окружения (12-Factor App).
      *
-     * Переменные:
-     *   MAX_BOT_TOKEN (обязательно), MAX_BOT_TIMEOUT, MAX_BOT_RETRIES,
-     *   MAX_BOT_RATE_LIMIT, MAX_BOT_VERIFY_SSL, MAX_BOT_LOG_REQUESTS,
-     *   MAX_BOT_APP_NAME
-     *
-     * @return self
      * @throws MaxConfigException Если MAX_BOT_TOKEN не задан.
      */
-    public static function fromEnvironment()
+    public static function fromEnvironment(): self
     {
-        $token = getenv('MAX_BOT_TOKEN');
-        if ($token === false || trim($token) === '') {
+        $token = \getenv('MAX_BOT_TOKEN');
+        if ($token === false || \trim($token) === '') {
             throw new MaxConfigException('Переменная окружения MAX_BOT_TOKEN не задана.');
         }
 
-        $timeout = self::DEFAULT_TIMEOUT;
-        $envTimeout = getenv('MAX_BOT_TIMEOUT');
-        if ($envTimeout !== false && $envTimeout !== '') {
-            $timeout = (int) $envTimeout;
-        }
+        $envTimeout = \getenv('MAX_BOT_TIMEOUT');
+        $timeout = ($envTimeout !== false && $envTimeout !== '') ? (int) $envTimeout : self::DEFAULT_TIMEOUT;
 
-        $retries = self::DEFAULT_RETRIES;
-        $envRetries = getenv('MAX_BOT_RETRIES');
-        if ($envRetries !== false && $envRetries !== '') {
-            $retries = (int) $envRetries;
-        }
+        $envRetries = \getenv('MAX_BOT_RETRIES');
+        $retries = ($envRetries !== false && $envRetries !== '') ? (int) $envRetries : self::DEFAULT_RETRIES;
 
-        $rateLimit = self::DEFAULT_RATE_LIMIT;
-        $envRateLimit = getenv('MAX_BOT_RATE_LIMIT');
-        if ($envRateLimit !== false && $envRateLimit !== '') {
-            $rateLimit = (int) $envRateLimit;
-        }
+        $envRateLimit = \getenv('MAX_BOT_RATE_LIMIT');
+        $rateLimit = ($envRateLimit !== false && $envRateLimit !== '') ? (int) $envRateLimit : self::DEFAULT_RATE_LIMIT;
 
-        $verifySsl = true;
-        $envVerifySsl = getenv('MAX_BOT_VERIFY_SSL');
-        if ($envVerifySsl !== false && $envVerifySsl !== '') {
-            $verifySsl = self::toBool($envVerifySsl);
-        }
+        $envVerifySsl = \getenv('MAX_BOT_VERIFY_SSL');
+        $verifySsl = ($envVerifySsl !== false && $envVerifySsl !== '') ? self::toBool($envVerifySsl) : true;
 
-        $logRequests = true;
-        $envLogRequests = getenv('MAX_BOT_LOG_REQUESTS');
-        if ($envLogRequests !== false && $envLogRequests !== '') {
-            $logRequests = self::toBool($envLogRequests);
-        }
+        $envLogRequests = \getenv('MAX_BOT_LOG_REQUESTS');
+        $logRequests = ($envLogRequests !== false && $envLogRequests !== '') ? self::toBool($envLogRequests) : true;
 
-        $appName = 'MaxBot';
-        $envAppName = getenv('MAX_BOT_APP_NAME');
-        if ($envAppName !== false && $envAppName !== '') {
-            $appName = $envAppName;
-        }
+        $envAppName = \getenv('MAX_BOT_APP_NAME');
+        $appName = ($envAppName !== false && $envAppName !== '') ? $envAppName : 'MaxBot';
 
         return new self($token, $timeout, $retries, $rateLimit, $verifySsl, $logRequests, $appName);
     }
@@ -254,27 +161,26 @@ final class Config implements ConfigInterface
     /**
      * Создаёт конфигурацию из INI-файла.
      *
-     * @param string|null $path Путь к INI-файлу. Если null — ищет cfg/config.ini.
-     * @return self
      * @throws MaxConfigException
      */
-    public static function fromIniFile($path = null)
+    public static function fromIniFile(?string $path = null): self
     {
         if ($path === null || $path === '') {
-            $sdkDir = dirname(__DIR__);
-            $path = $sdkDir . DIRECTORY_SEPARATOR . 'cfg' . DIRECTORY_SEPARATOR . 'config.ini';
+            $sdkDir = \dirname(__DIR__);
+            $path = $sdkDir . \DIRECTORY_SEPARATOR . 'cfg' . \DIRECTORY_SEPARATOR . 'config.ini';
         }
 
-        if (!is_file($path) || !is_readable($path)) {
+        if (!\is_file($path) || !\is_readable($path)) {
             throw new MaxConfigException('INI файл конфигурации не найден: ' . $path);
         }
 
-        $data = parse_ini_file($path, true);
+        $data = \parse_ini_file($path, true);
         if ($data === false) {
             throw new MaxConfigException('Не удалось разобрать INI файл: ' . $path);
         }
 
-        $section = isset($data['max']) && is_array($data['max']) ? $data['max'] : [];
+        /** @var array<string, string> $section */
+        $section = isset($data['max']) && \is_array($data['max']) ? $data['max'] : [];
 
         $token = self::iniVal($section, 'token');
         if ($token === null || $token === '') {
@@ -295,32 +201,28 @@ final class Config implements ConfigInterface
             $rateLimit !== null ? (int) $rateLimit : self::DEFAULT_RATE_LIMIT,
             $verifySsl !== null ? self::toBool($verifySsl) : true,
             $logRequests !== null ? self::toBool($logRequests) : true,
-            $appName !== null ? $appName : 'MaxBot'
+            $appName ?? 'MaxBot',
         );
     }
 
-    // --- Вспомогательные методы ---
-
     /**
-     * @param array  $arr
-     * @param string $key
-     * @return string|null
+     * @param array<string, string> $arr
      */
-    private static function iniVal(array $arr, $key)
+    private static function iniVal(array $arr, string $key): ?string
     {
         return isset($arr[$key]) ? (string) $arr[$key] : null;
     }
 
-    /**
-     * @param mixed $value
-     * @return bool
-     */
-    private static function toBool($value)
+    private static function toBool(mixed $value): bool
     {
-        if (is_bool($value)) {
+        if (\is_bool($value)) {
             return $value;
         }
-        $v = strtolower(trim((string) $value));
-        return ($v === '1' || $v === 'true' || $v === 'yes' || $v === 'on');
+        $v = \is_scalar($value) ? \strtolower(\trim((string) $value)) : '';
+
+        return match ($v) {
+            '1', 'true', 'yes', 'on' => true,
+            default => false,
+        };
     }
 }

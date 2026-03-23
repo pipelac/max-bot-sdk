@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk;
 
 use MaxBotSdk\Contracts\ClientInterface;
@@ -7,11 +9,10 @@ use MaxBotSdk\Contracts\ConfigInterface;
 use MaxBotSdk\Contracts\HttpClientInterface;
 use MaxBotSdk\Contracts\LoggerInterface;
 use MaxBotSdk\Contracts\ResponseDecoderInterface;
+use MaxBotSdk\Enum\LogLevel;
 use MaxBotSdk\Http\RateLimiter;
 use MaxBotSdk\Http\RetryHandler;
 use MaxBotSdk\Resource\Bot;
-
-// Resources
 use MaxBotSdk\Resource\Callbacks;
 use MaxBotSdk\Resource\Chats;
 use MaxBotSdk\Resource\Members;
@@ -26,284 +27,198 @@ use MaxBotSdk\Utils\InputValidator;
  * Фасад для всех операций с MAX Bot API. Все зависимости инжектируются
  * через конструктор (чистый DI), управляет ресурсами через ленивую инициализацию.
  *
- * Пример:
- * <code>
- * $client = ClientFactory::create('TOKEN');
- * $me = $client->bot()->getMe();              // Возвращает User DTO
- * $client->messages()->sendText('Привет!', $chatId);
- * </code>
- *
  * @since 1.0.0
  */
 final class Client implements ClientInterface
 {
-    /** @var ConfigInterface Конфигурация SDK. */
-    private $config;
+    private readonly ?LoggerInterface $logger;
+    private readonly ?RateLimiter $rateLimiter;
 
-    /** @var HttpClientInterface HTTP-клиент. */
-    private $httpClient;
+    /** @var array<class-string, object> */
+    private array $resourceInstances = [];
 
-    /** @var ResponseDecoderInterface Декодер ответов. */
-    private $responseDecoder;
-
-    /** @var RetryHandler Обработчик повторных попыток. */
-    private $retryHandler;
-
-    /** @var LoggerInterface|null Логгер. */
-    private $logger;
-
-    /** @var RateLimiter|null Rate limiter. */
-    private $rateLimiter;
-
-    /** @var array Кэш инстансов ресурсов (ленивая инициализация). */
-    private $resourceInstances = [];
-
-    /**
-     * Конструктор с чистым Dependency Injection.
-     *
-     * @param ConfigInterface          $config          Конфигурация SDK.
-     * @param HttpClientInterface      $httpClient      HTTP-клиент.
-     * @param ResponseDecoderInterface $responseDecoder Декодер ответов.
-     * @param RetryHandler             $retryHandler    Обработчик повторов.
-     */
     public function __construct(
-        ConfigInterface $config,
-        HttpClientInterface $httpClient,
-        ResponseDecoderInterface $responseDecoder,
-        RetryHandler $retryHandler
+        private readonly ConfigInterface $config,
+        private readonly HttpClientInterface $httpClient,
+        private readonly ResponseDecoderInterface $responseDecoder,
+        private readonly RetryHandler $retryHandler,
     ) {
-        $this->config = $config;
         $this->logger = $config->getLogger();
-        $this->httpClient = $httpClient;
-        $this->responseDecoder = $responseDecoder;
-        $this->retryHandler = $retryHandler;
-
-        // Rate Limiter: инициализируем если настроен лимит
         $rateLimit = $config->getRateLimit();
-        $this->rateLimiter = ($rateLimit > 0) ? new RateLimiter($rateLimit) : null;
-
-        $this->log('debug', 'Клиент инициализирован', [
-            'token_masked' => InputValidator::maskToken($config->getToken()),
-        ]);
+        $this->rateLimiter = $rateLimit > 0 ? new RateLimiter($rateLimit) : null;
     }
 
-    // --- Явные методы доступа к ресурсам ---
+    // ─── HTTP методы ─────────────────────────────────────────────
 
     /**
-     * Ресурс: информация о боте.
-     *
-     * @return Bot
+     * @param array<string, mixed> $query
+     * @return array<string, mixed>
      */
-    public function bot()
+    public function get(string $endpoint, array $query = []): array
     {
-        return $this->getResource(Bot::class);
+        return $this->request('GET', $endpoint, ['query' => $query]);
     }
 
     /**
-     * Ресурс: управление чатами.
-     *
-     * @return Chats
+     * @param array<string, mixed>|null $json
+     * @param array<string, mixed>      $query
+     * @return array<string, mixed>
      */
-    public function chats()
+    public function post(string $endpoint, ?array $json = null, array $query = []): array
     {
-        return $this->getResource(Chats::class);
+        $options = ['query' => $query];
+        if ($json !== null) {
+            $options['json'] = $json;
+        }
+        return $this->request('POST', $endpoint, $options);
     }
 
     /**
-     * Ресурс: управление участниками.
-     *
-     * @return Members
+     * @param array<string, mixed>|null $json
+     * @param array<string, mixed>      $query
+     * @return array<string, mixed>
      */
-    public function members()
+    public function put(string $endpoint, ?array $json = null, array $query = []): array
     {
-        return $this->getResource(Members::class);
+        $options = ['query' => $query];
+        if ($json !== null) {
+            $options['json'] = $json;
+        }
+        return $this->request('PUT', $endpoint, $options);
     }
 
     /**
-     * Ресурс: работа с сообщениями.
-     *
-     * @return Messages
+     * @param array<string, mixed>|null $json
+     * @param array<string, mixed>      $query
+     * @return array<string, mixed>
      */
-    public function messages()
+    public function patch(string $endpoint, ?array $json = null, array $query = []): array
     {
-        return $this->getResource(Messages::class);
+        $options = ['query' => $query];
+        if ($json !== null) {
+            $options['json'] = $json;
+        }
+        return $this->request('PATCH', $endpoint, $options);
     }
 
     /**
-     * Ресурс: подписки (webhook/polling).
-     *
-     * @return Subscriptions
+     * @param array<string, mixed> $query
+     * @return array<string, mixed>
      */
-    public function subscriptions()
+    public function delete(string $endpoint, array $query = []): array
     {
-        return $this->getResource(Subscriptions::class);
+        return $this->request('DELETE', $endpoint, ['query' => $query]);
     }
 
-    /**
-     * Ресурс: загрузка файлов.
-     *
-     * @return Uploads
-     */
-    public function uploads()
-    {
-        return $this->getResource(Uploads::class);
-    }
-
-    /**
-     * Ресурс: обработка callback-ов.
-     *
-     * @return Callbacks
-     */
-    public function callbacks()
-    {
-        return $this->getResource(Callbacks::class);
-    }
-
-    // --- HTTP-методы (делегирование) ---
-
-    /**
-     * {@inheritdoc}
-     */
-    public function get($endpoint, array $query = [])
-    {
-        return $this->performRequest('GET', $endpoint, null, $query);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function post($endpoint, array $json = null, array $query = [])
-    {
-        return $this->performRequest('POST', $endpoint, $json, $query);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function put($endpoint, array $json = null, array $query = [])
-    {
-        return $this->performRequest('PUT', $endpoint, $json, $query);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function patch($endpoint, array $json = null, array $query = [])
-    {
-        return $this->performRequest('PATCH', $endpoint, $json, $query);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function delete($endpoint, array $query = [])
-    {
-        return $this->performRequest('DELETE', $endpoint, null, $query);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getHttpClient()
+    public function getHttpClient(): HttpClientInterface
     {
         return $this->httpClient;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getConfig()
+    public function getConfig(): ConfigInterface
     {
         return $this->config;
     }
 
-    // --- Приватные методы ---
+    // ─── Ресурсы (lazy) ──────────────────────────────────────────
+
+    public function bot(): Bot
+    {
+        return $this->getResource(Bot::class);
+    }
+
+    public function messages(): Messages
+    {
+        return $this->getResource(Messages::class);
+    }
+
+    public function chats(): Chats
+    {
+        return $this->getResource(Chats::class);
+    }
+
+    public function members(): Members
+    {
+        return $this->getResource(Members::class);
+    }
+
+    public function subscriptions(): Subscriptions
+    {
+        return $this->getResource(Subscriptions::class);
+    }
+
+    public function uploads(): Uploads
+    {
+        return $this->getResource(Uploads::class);
+    }
+
+    public function callbacks(): Callbacks
+    {
+        return $this->getResource(Callbacks::class);
+    }
+
+    // ─── Приватные методы ────────────────────────────────────────
 
     /**
-     * Выполняет HTTP-запрос к API с retry-логикой.
-     *
-     * @param string     $method   HTTP-метод.
-     * @param string     $endpoint Эндпоинт.
-     * @param array|null $json     JSON-тело.
-     * @param array      $query    Query-параметры.
-     * @return array Декодированный ответ.
+     * @param array<string, mixed> $options
+     * @return array<string, mixed>
      */
-    private function performRequest($method, $endpoint, $json = null, array $query = [])
+    private function request(string $method, string $endpoint, array $options = []): array
     {
-        $httpClient = $this->httpClient;
-        $decoder = $this->responseDecoder;
+        $this->rateLimiter?->throttle();
 
-        $startTime = microtime(true);
+        $this->log(LogLevel::Debug, 'Запрос к API', [
+            'method'   => $method,
+            'endpoint' => $endpoint,
+        ]);
 
-        // Rate limiting
-        if ($this->rateLimiter !== null) {
-            $this->rateLimiter->throttle();
-        }
-
-        $result = $this->retryHandler->execute(function () use ($method, $endpoint, $json, $query, $httpClient, $decoder) {
-            $options = [];
-
-            if ($json !== null) {
-                $options['json'] = $json;
-            }
-            if (!empty($query)) {
-                $options['query'] = $query;
-            }
-
-            $response = $httpClient->request($method, $endpoint, $options);
-
-            return $decoder->decode(
+        /** @var array<string, mixed> $result */
+        $result = $this->retryHandler->execute(function () use ($method, $endpoint, $options): array {
+            $response = $this->httpClient->request($method, $endpoint, $options);
+            return $this->responseDecoder->decode(
                 $response['status_code'],
                 $response['body'],
                 $method,
-                $endpoint
+                $endpoint,
             );
         });
-
-        $duration = round(microtime(true) - $startTime, 3);
-
-        $this->log('debug', 'Ответ API', [
-            'method'   => $method,
-            'endpoint' => $endpoint,
-            'duration' => $duration,
-        ]);
 
         return $result;
     }
 
     /**
-     * Получает экземпляр ресурса с ленивой инициализацией.
-     *
-     * @param string $resourceClass Полное имя класса.
-     * @return mixed
+     * @param array<string, mixed> $context
      */
-    private function getResource($resourceClass)
-    {
-        if (!isset($this->resourceInstances[$resourceClass])) {
-            $this->resourceInstances[$resourceClass] = new $resourceClass($this);
-        }
-        return $this->resourceInstances[$resourceClass];
-    }
-
-    /**
-     * Логирование с префиксом имени приложения.
-     *
-     * @param string $level   Уровень (debug, info, warning, error).
-     * @param string $message Сообщение.
-     * @param array  $context Контекст.
-     */
-    private function log($level, $message, array $context = [])
+    private function log(LogLevel $level, string $message, array $context = []): void
     {
         if ($this->logger === null) {
             return;
         }
 
-        $allowed = ['debug', 'info', 'warning', 'error'];
-        if (!in_array($level, $allowed, true)) {
-            $level = 'debug';
+        $maskedToken = InputValidator::maskToken($this->config->getToken());
+        $context['token'] = $maskedToken;
+        $fullMessage = $this->config->getAppName() . ': ' . $message;
+
+        match ($level) {
+            LogLevel::Debug   => $this->logger->debug($fullMessage, $context),
+            LogLevel::Info    => $this->logger->info($fullMessage, $context),
+            LogLevel::Warning => $this->logger->warning($fullMessage, $context),
+            LogLevel::Error   => $this->logger->error($fullMessage, $context),
+        };
+    }
+
+    /**
+     * @template T of object
+     * @param class-string<T> $class
+     * @return T
+     */
+    private function getResource(string $class): object
+    {
+        if (!isset($this->resourceInstances[$class])) {
+            $this->resourceInstances[$class] = new $class($this);
         }
 
-        $prefix = $this->config->getAppName() . ': ';
-        $this->logger->$level($prefix . $message, $context);
+        /** @var T */
+        return $this->resourceInstances[$class];
     }
 }

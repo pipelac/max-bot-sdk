@@ -1,12 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Tests\Unit\Http;
 
 use MaxBotSdk\Config;
 use MaxBotSdk\Http\CurlHttpClient;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
-use ReflectionMethod;
 
 /**
  * Unit-тесты для CurlHttpClient.
@@ -14,13 +15,10 @@ use ReflectionMethod;
  * Тестируем внутреннюю логику (buildUrl, buildHeaders, buildMultipart, cleanupTempFiles)
  * через рефлексию, поскольку cURL-вызовы невозможно мокать без интеграционного окружения.
  */
-class CurlHttpClientTest extends TestCase
+final class CurlHttpClientTest extends TestCase
 {
-    /** @var Config */
-    private $config;
-
-    /** @var CurlHttpClient */
-    private $client;
+    private Config $config;
+    private CurlHttpClient $client;
 
     protected function setUp(): void
     {
@@ -30,139 +28,149 @@ class CurlHttpClientTest extends TestCase
 
     // --- buildUrl ---
 
-    public function testBuildUrlRelativePath()
+    #[Test]
+    public function buildUrlRelativePath(): void
     {
         $result = $this->invokePrivate('buildUrl', ['/chats', []]);
-        $this->assertEquals('https://platform-api.max.ru/chats', $result);
+        self::assertSame('https://platform-api.max.ru/chats', $result);
     }
 
-    public function testBuildUrlRelativePathWithLeadingSlash()
+    #[Test]
+    public function buildUrlRelativePathWithLeadingSlash(): void
     {
         $result = $this->invokePrivate('buildUrl', ['chats', []]);
-        $this->assertEquals('https://platform-api.max.ru/chats', $result);
+        self::assertSame('https://platform-api.max.ru/chats', $result);
     }
 
-    public function testBuildUrlAbsoluteUrl()
+    #[Test]
+    public function buildUrlAbsoluteUrl(): void
     {
         $result = $this->invokePrivate('buildUrl', ['https://upload.max.ru/file', []]);
-        $this->assertEquals('https://upload.max.ru/file', $result);
+        self::assertSame('https://upload.max.ru/file', $result);
     }
 
-    public function testBuildUrlAbsoluteHttpUrl()
+    #[Test]
+    public function buildUrlAbsoluteHttpUrl(): void
     {
         $result = $this->invokePrivate('buildUrl', ['http://localhost:8080/test', []]);
-        $this->assertEquals('http://localhost:8080/test', $result);
+        self::assertSame('http://localhost:8080/test', $result);
     }
 
-    public function testBuildUrlWithQueryParams()
+    #[Test]
+    public function buildUrlWithQueryParams(): void
     {
         $result = $this->invokePrivate('buildUrl', ['/chats', [
             'query' => ['count' => 10, 'marker' => 42],
         ]]);
-        $this->assertStringContainsString('count=10', $result);
-        $this->assertStringContainsString('marker=42', $result);
-        $this->assertStringStartsWith('https://platform-api.max.ru/chats?', $result);
+        self::assertStringContainsString('count=10', $result);
+        self::assertStringContainsString('marker=42', $result);
+        self::assertStringStartsWith('https://platform-api.max.ru/chats?', $result);
     }
 
-    public function testBuildUrlWithEmptyQuery()
+    #[Test]
+    public function buildUrlWithEmptyQuery(): void
     {
-        $result = $this->invokePrivate('buildUrl', ['/chats', [
-            'query' => [],
-        ]]);
-        $this->assertEquals('https://platform-api.max.ru/chats', $result);
+        $result = $this->invokePrivate('buildUrl', ['/chats', ['query' => []]]);
+        self::assertSame('https://platform-api.max.ru/chats', $result);
     }
 
-    public function testBuildUrlWithExistingQueryString()
+    #[Test]
+    public function buildUrlWithExistingQueryString(): void
     {
         $result = $this->invokePrivate('buildUrl', ['https://example.com/path?existing=1', [
             'query' => ['new' => 'value'],
         ]]);
-        $this->assertStringContainsString('existing=1', $result);
-        $this->assertStringContainsString('&new=value', $result);
+        self::assertStringContainsString('existing=1', $result);
+        self::assertStringContainsString('&new=value', $result);
     }
 
-    public function testBuildUrlCustomBaseUrl()
+    #[Test]
+    public function buildUrlCustomBaseUrl(): void
     {
         $client = new CurlHttpClient($this->config, null, 'https://custom-api.example.com/');
-        $ref = new ReflectionClass($client);
+        $ref = new \ReflectionClass($client);
         $method = $ref->getMethod('buildUrl');
         $method->setAccessible(true);
         $result = $method->invoke($client, '/test', []);
-        $this->assertEquals('https://custom-api.example.com/test', $result);
+        self::assertSame('https://custom-api.example.com/test', $result);
     }
 
     // --- buildHeaders ---
 
-    public function testBuildHeadersIncludesAuthorization()
+    #[Test]
+    public function buildHeadersIncludesAuthorization(): void
     {
         $headers = $this->invokePrivate('buildHeaders', ['GET', []]);
-        $this->assertContains('Authorization: test_token_123', $headers);
+        self::assertContains('Authorization: test_token_123', $headers);
     }
 
-    public function testBuildHeadersJsonContentType()
+    #[Test]
+    public function buildHeadersJsonContentType(): void
     {
         $headers = $this->invokePrivate('buildHeaders', ['POST', [
             'json' => ['key' => 'value'],
         ]]);
-        $this->assertContains('Content-Type: application/json', $headers);
-        $this->assertContains('Accept: application/json', $headers);
+        self::assertContains('Content-Type: application/json', $headers);
+        self::assertContains('Accept: application/json', $headers);
     }
 
-    public function testBuildHeadersMultipartNoContentType()
+    #[Test]
+    public function buildHeadersMultipartNoContentType(): void
     {
         $headers = $this->invokePrivate('buildHeaders', ['POST', [
             'multipart' => [['name' => 'file']],
         ]]);
-        // Multipart should NOT have Content-Type (cURL sets it with boundary)
         $hasContentType = false;
         foreach ($headers as $header) {
-            if (stripos($header, 'Content-Type:') !== false) {
+            if (\stripos($header, 'Content-Type:') !== false) {
                 $hasContentType = true;
             }
         }
-        $this->assertFalse($hasContentType);
-        $this->assertContains('Accept: application/json', $headers);
+        self::assertFalse($hasContentType);
+        self::assertContains('Accept: application/json', $headers);
     }
 
-    public function testBuildHeadersCustomHeadersAddedButAuthorizationProtected()
+    #[Test]
+    public function buildHeadersCustomHeadersAddedButAuthorizationProtected(): void
     {
         $headers = $this->invokePrivate('buildHeaders', ['POST', [
             'headers' => [
-                'X-Custom' => 'value1',
+                'X-Custom'      => 'value1',
                 'Authorization' => 'evil_token',
             ],
         ]]);
 
-        $this->assertContains('X-Custom: value1', $headers);
-        // Should NOT contain the injected authorization
+        self::assertContains('X-Custom: value1', $headers);
         $authCount = 0;
         foreach ($headers as $header) {
-            if (stripos($header, 'Authorization:') === 0) {
+            if (\stripos($header, 'Authorization:') === 0) {
                 $authCount++;
             }
         }
-        $this->assertEquals(1, $authCount, 'Only one Authorization header should be present');
-        $this->assertContains('Authorization: test_token_123', $headers);
+        self::assertSame(1, $authCount, 'Only one Authorization header should be present');
+        self::assertContains('Authorization: test_token_123', $headers);
     }
 
-    public function testBuildHeadersGetRequestNoContentType()
+    #[Test]
+    public function buildHeadersGetRequestNoContentType(): void
     {
         $headers = $this->invokePrivate('buildHeaders', ['GET', []]);
         $hasContentType = false;
         foreach ($headers as $header) {
-            if (stripos($header, 'Content-Type:') !== false) {
+            if (\stripos($header, 'Content-Type:') !== false) {
                 $hasContentType = true;
             }
         }
-        $this->assertFalse($hasContentType, 'GET requests should not have Content-Type');
+        self::assertFalse($hasContentType, 'GET requests should not have Content-Type');
     }
 
     // --- buildMultipart ---
 
-    public function testBuildMultipartWithFilepath()
+    #[Test]
+    public function buildMultipartWithFilepath(): void
     {
-        $tmpFile = tempnam(sys_get_temp_dir(), 'test_');
-        file_put_contents($tmpFile, 'test content');
+        $tmpFile = \tempnam(\sys_get_temp_dir(), 'test_');
+        \file_put_contents($tmpFile, 'test content');
 
         try {
             $result = $this->invokePrivate('buildMultipart', [[
@@ -173,14 +181,15 @@ class CurlHttpClientTest extends TestCase
                 ],
             ]]);
 
-            $this->assertArrayHasKey('data', $result);
-            $this->assertInstanceOf(\CURLFile::class, $result['data']);
+            self::assertArrayHasKey('data', $result);
+            self::assertInstanceOf(\CURLFile::class, $result['data']);
         } finally {
-            @unlink($tmpFile);
+            @\unlink($tmpFile);
         }
     }
 
-    public function testBuildMultipartWithContents()
+    #[Test]
+    public function buildMultipartWithContents(): void
     {
         $result = $this->invokePrivate('buildMultipart', [[
             [
@@ -189,11 +198,12 @@ class CurlHttpClientTest extends TestCase
             ],
         ]]);
 
-        $this->assertArrayHasKey('field', $result);
-        $this->assertEquals('plain text value', $result['field']);
+        self::assertArrayHasKey('field', $result);
+        self::assertSame('plain text value', $result['field']);
     }
 
-    public function testBuildMultipartWithContentsAndFilenameCreatesTempFile()
+    #[Test]
+    public function buildMultipartWithContentsAndFilenameCreatesTempFile(): void
     {
         $result = $this->invokePrivate('buildMultipart', [[
             [
@@ -203,107 +213,96 @@ class CurlHttpClientTest extends TestCase
             ],
         ]]);
 
-        $this->assertArrayHasKey('data', $result);
-        $this->assertInstanceOf(\CURLFile::class, $result['data']);
+        self::assertArrayHasKey('data', $result);
+        self::assertInstanceOf(\CURLFile::class, $result['data']);
 
-        // Verify temp file was tracked for cleanup
-        $ref = new ReflectionClass($this->client);
+        $ref = new \ReflectionClass($this->client);
         $prop = $ref->getProperty('tempFiles');
         $prop->setAccessible(true);
         $tempFiles = $prop->getValue($this->client);
-        $this->assertNotEmpty($tempFiles);
+        self::assertNotEmpty($tempFiles);
 
-        // Cleanup
         foreach ($tempFiles as $file) {
-            @unlink($file);
+            @\unlink($file);
         }
     }
 
-    public function testBuildMultipartDefaultName()
+    #[Test]
+    public function buildMultipartDefaultName(): void
     {
         $result = $this->invokePrivate('buildMultipart', [[
-            [
-                'contents' => 'no name',
-            ],
+            ['contents' => 'no name'],
         ]]);
-
-        // Default name is 'file'
-        $this->assertArrayHasKey('file', $result);
+        self::assertArrayHasKey('file', $result);
     }
 
     // --- cleanupTempFiles ---
 
-    public function testCleanupTempFiles()
+    #[Test]
+    public function cleanupTempFiles(): void
     {
-        $tmpFile1 = tempnam(sys_get_temp_dir(), 'cleanup_');
-        $tmpFile2 = tempnam(sys_get_temp_dir(), 'cleanup_');
-        file_put_contents($tmpFile1, 'a');
-        file_put_contents($tmpFile2, 'b');
+        $tmpFile1 = \tempnam(\sys_get_temp_dir(), 'cleanup_');
+        $tmpFile2 = \tempnam(\sys_get_temp_dir(), 'cleanup_');
+        \file_put_contents($tmpFile1, 'a');
+        \file_put_contents($tmpFile2, 'b');
 
-        // Inject temp files via reflection
-        $ref = new ReflectionClass($this->client);
+        $ref = new \ReflectionClass($this->client);
         $prop = $ref->getProperty('tempFiles');
         $prop->setAccessible(true);
         $prop->setValue($this->client, [$tmpFile1, $tmpFile2]);
 
-        // Run cleanup
         $this->invokePrivate('cleanupTempFiles', []);
 
-        $this->assertFileDoesNotExist($tmpFile1);
-        $this->assertFileDoesNotExist($tmpFile2);
-
-        // tempFiles array should be empty after cleanup
-        $this->assertEmpty($prop->getValue($this->client));
+        self::assertFileDoesNotExist($tmpFile1);
+        self::assertFileDoesNotExist($tmpFile2);
+        self::assertEmpty($prop->getValue($this->client));
     }
 
-    public function testCleanupTempFilesIgnoresMissingFiles()
+    #[Test]
+    public function cleanupTempFilesIgnoresMissingFiles(): void
     {
-        $ref = new ReflectionClass($this->client);
+        $ref = new \ReflectionClass($this->client);
         $prop = $ref->getProperty('tempFiles');
         $prop->setAccessible(true);
         $prop->setValue($this->client, ['/nonexistent/file/path']);
 
-        // Should not throw
         $this->invokePrivate('cleanupTempFiles', []);
-        $this->assertEmpty($prop->getValue($this->client));
+        self::assertEmpty($prop->getValue($this->client));
     }
 
     // --- Constructor / getBaseUrl / getLastStatusCode ---
 
-    public function testGetBaseUrlDefault()
+    #[Test]
+    public function getBaseUrlDefault(): void
     {
-        $this->assertEquals('https://platform-api.max.ru', $this->client->getBaseUrl());
+        self::assertSame('https://platform-api.max.ru', $this->client->getBaseUrl());
     }
 
-    public function testGetBaseUrlCustom()
+    #[Test]
+    public function getBaseUrlCustom(): void
     {
         $client = new CurlHttpClient($this->config, null, 'https://custom.api.com/');
-        $this->assertEquals('https://custom.api.com', $client->getBaseUrl());
+        self::assertSame('https://custom.api.com', $client->getBaseUrl());
     }
 
-    public function testGetBaseUrlTrimsTrailingSlash()
+    #[Test]
+    public function getBaseUrlTrimsTrailingSlash(): void
     {
         $client = new CurlHttpClient($this->config, null, 'https://example.com///');
-        $this->assertStringEndsNotWith('/', $client->getBaseUrl());
+        self::assertStringEndsNotWith('/', $client->getBaseUrl());
     }
 
-    public function testGetLastStatusCodeDefaultsToZero()
+    #[Test]
+    public function getLastStatusCodeDefaultsToZero(): void
     {
-        $this->assertEquals(0, $this->client->getLastStatusCode());
+        self::assertSame(0, $this->client->getLastStatusCode());
     }
 
     // --- Helper ---
 
-    /**
-     * Вызвать приватный метод через рефлексию.
-     *
-     * @param string $method Имя метода.
-     * @param array  $args   Аргументы.
-     * @return mixed
-     */
-    private function invokePrivate($method, array $args = [])
+    private function invokePrivate(string $method, array $args = []): mixed
     {
-        $ref = new ReflectionMethod(CurlHttpClient::class, $method);
+        $ref = new \ReflectionMethod(CurlHttpClient::class, $method);
         $ref->setAccessible(true);
         return $ref->invokeArgs($this->client, $args);
     }

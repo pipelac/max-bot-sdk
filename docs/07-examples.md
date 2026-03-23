@@ -8,7 +8,8 @@
 
 Минимальный бот, который отвечает на каждое сообщение тем же текстом.
 
-```php<?php
+```php
+<?php
 require_once 'vendor/autoload.php';
 
 use MaxBotSdk\ClientFactory;
@@ -39,7 +40,7 @@ if ($update === null) {
 if ($update->getUpdateType() === 'message_created') {
     $message = $update->getMessage();
     $text = $message->getText();
-    $chatId = $message->getChatId();
+    $chatId = $message->getRecipient()['chat_id'] ?? null;
 
     if ($text !== null && $chatId !== null) {
         $client->messages()->sendMessage(
@@ -59,7 +60,8 @@ http_response_code(200);
 
 Бот обрабатывает текстовые команды и нажатия inline-кнопок.
 
-```php<?php
+```php
+<?php
 require_once 'vendor/autoload.php';
 
 use MaxBotSdk\ClientFactory;
@@ -86,7 +88,7 @@ switch ($update->getUpdateType()) {
 
     case 'bot_started':
         // Приветствие нового пользователя
-        $chatId = $update->getChatId();
+        $chatId = $update->toArray()['chat_id'] ?? null;
         if ($chatId !== null) {
             $client->messages()->sendMessage(
                 ['text' => '👋 Добро пожаловать! Напишите /help для списка команд.'],
@@ -108,7 +110,7 @@ function handleCommand($client, $update)
     }
 
     $text = $message->getText();
-    $chatId = $message->getChatId();
+    $chatId = $message->getRecipient()['chat_id'] ?? null;
 
     if ($text === null || $chatId === null) {
         return;
@@ -129,21 +131,21 @@ function handleCommand($client, $update)
         case '/menu':
             $keyboard = KeyboardBuilder::build([
                 [
-                    ['type' => 'callback', 'text' => '📊 Статистика', 'payload' => 'stats'),
-                    ['type' => 'callback', 'text' => '⚙️ Настройки', 'payload' => 'settings'),
-                ),
+                    ['type' => 'callback', 'text' => '📊 Статистика', 'payload' => 'stats'],
+                    ['type' => 'callback', 'text' => '⚙️ Настройки', 'payload' => 'settings'],
+                ],
                 [
-                    ['type' => 'callback', 'text' => 'ℹ️ О боте', 'payload' => 'about'),
-                ),
+                    ['type' => 'callback', 'text' => 'ℹ️ О боте', 'payload' => 'about'],
+                ],
                 [
-                    ['type' => 'link', 'text' => '📖 Документация', 'url' => 'https://dev.max.ru/docs-api'),
-                ),
+                    ['type' => 'link', 'text' => '📖 Документация', 'url' => 'https://dev.max.ru/docs-api'],
+                ],
             ]);
 
             $client->messages()->sendMessage([
                 'text'        => '🏠 **Главное меню**',
                 'format'      => 'markdown',
-                'attachments' => [$keyboard),
+                'attachments' => [$keyboard],
             ], null, $chatId);
             break;
 
@@ -171,8 +173,9 @@ function handleCommand($client, $update)
 // --- Обработка callback-нажатий ---
 function handleCallback($client, $update)
 {
-    $callbackId = $update->getCallbackId();
-    $payload = $update->getCallbackPayload();
+    $callback = $update->getCallback();
+    $callbackId = $callback['callback_id'] ?? '';
+    $payload = $callback['payload'] ?? '';
 
     if ($callbackId === null) {
         return;
@@ -191,25 +194,25 @@ function handleCallback($client, $update)
             // Обновить сообщение на меню настроек
             $settingsKeyboard = KeyboardBuilder::build([
                 [
-                    ['type' => 'callback', 'text' => '🔔 Уведомления', 'payload' => 'notif_toggle'),
-                    ['type' => 'callback', 'text' => '🌐 Язык', 'payload' => 'lang_select'),
-                ),
+                    ['type' => 'callback', 'text' => '🔔 Уведомления', 'payload' => 'notif_toggle'],
+                    ['type' => 'callback', 'text' => '🌐 Язык', 'payload' => 'lang_select'],
+                ],
                 [
-                    ['type' => 'callback', 'text' => '◀️ Назад', 'payload' => 'back_to_menu'),
-                ),
+                    ['type' => 'callback', 'text' => '◀️ Назад', 'payload' => 'back_to_menu'],
+                ],
             ]);
 
             $client->callbacks()->answerCallback(
                 $callbackId,
                 [
                     'text'        => '⚙️ **Настройки**',
-                    'attachments' => [$settingsKeyboard),
+                    'attachments' => [$settingsKeyboard],
                 ]
             );
             break;
 
         case 'about':
-            $client->callbacks()->answerCallback($callbackId, null, '🤖 MAX Bot SDK v1.0.0');
+            $client->callbacks()->answerCallback($callbackId, null, '🤖 MAX Bot SDK v2.0.0');
             break;
 
         default:
@@ -225,10 +228,12 @@ function handleCallback($client, $update)
 
 Полный цикл: загрузка файла на сервер MAX → отправка в чат.
 
-```php<?php
+```php
+<?php
 require_once 'vendor/autoload.php';
 
 use MaxBotSdk\ClientFactory;
+use MaxBotSdk\Enum\UploadType;
 use MaxBotSdk\Exception\MaxFileException;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН');
@@ -238,16 +243,16 @@ $chatId = 12345;
 
 try {
     // uploadFile() объединяет getUploadUrl() + uploadFileToUrl()
-    $token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');
+    $token = $client->uploads()->uploadFile(UploadType::Image, '/path/to/photo.jpg');
 
     $client->messages()->sendMessage([
         'text'        => '📷 Вот ваше фото!',
         'attachments' => [
             [
                 'type'    => 'image',
-                'payload' => ['token' => $token),
-            ),
-        ),
+                'payload' => ['token' => $token],
+            ],
+        ],
     ], null, $chatId);
 
 } catch (MaxFileException $e) {
@@ -258,7 +263,7 @@ try {
 
 try {
     // Шаг 1: Получить URL для загрузки
-    $uploadResult = $client->uploads()->getUploadUrl('video');
+    $uploadResult = $client->uploads()->getUploadUrl(UploadType::Video);
     $uploadUrl = $uploadResult->getUrl();
 
     // Шаг 2: Загрузить файл по полученному URL
@@ -271,9 +276,9 @@ try {
         'attachments' => [
             [
                 'type'    => 'video',
-                'payload' => ['token' => $videoToken),
-            ),
-        ),
+                'payload' => ['token' => $videoToken],
+            ],
+        ],
     ], null, $chatId);
 
 } catch (MaxFileException $e) {
@@ -283,18 +288,18 @@ try {
 // --- Загрузка разных типов ---
 
 // Аудио
-$audioToken = $client->uploads()->uploadFile('audio', '/path/to/music.mp3');
+$audioToken = $client->uploads()->uploadFile(UploadType::Audio, '/path/to/music.mp3');
 
 // Документ
-$docToken = $client->uploads()->uploadFile('file', '/path/to/report.pdf');
+$docToken = $client->uploads()->uploadFile(UploadType::File, '/path/to/report.pdf');
 
 // Отправка нескольких вложений
 $client->messages()->sendMessage([
     'text'        => '📎 Файлы:',
     'attachments' => [
-        ['type' => 'audio', 'payload' => ['token' => $audioToken)),
-        ['type' => 'file',  'payload' => ['token' => $docToken)),
-    ),
+        ['type' => 'audio', 'payload' => ['token' => $audioToken]],
+        ['type' => 'file',  'payload' => ['token' => $docToken]],
+    ],
 ], null, $chatId);
 ```
 
@@ -304,7 +309,8 @@ $client->messages()->sendMessage([
 
 Для разработки и тестирования — без webhook.
 
-```php<?php
+```php
+<?php
 require_once 'vendor/autoload.php';
 
 use MaxBotSdk\ClientFactory;
@@ -357,7 +363,7 @@ function processUpdate($client, $update)
                 break;
             }
             $text = $message->getText();
-            $chatId = $message->getChatId();
+            $chatId = $message->getRecipient()['chat_id'] ?? null;
             echo "  Текст: {$text}\n";
 
             if ($text !== null && $chatId !== null) {
@@ -371,8 +377,9 @@ function processUpdate($client, $update)
             break;
 
         case 'message_callback':
-            $callbackId = $update->getCallbackId();
-            $payload = $update->getCallbackPayload();
+            $callback = $update->getCallback();
+            $callbackId = $callback['callback_id'] ?? '';
+            $payload = $callback['payload'] ?? '';
             echo "  Callback: {$payload}\n";
 
             if ($callbackId !== null) {
@@ -393,7 +400,8 @@ function processUpdate($client, $update)
 
 Перебирает все чаты бота и отправляет объявление.
 
-```php<?php
+```php
+<?php
 require_once 'vendor/autoload.php';
 
 use MaxBotSdk\ClientFactory;
@@ -442,7 +450,8 @@ echo "\nИтого: отправлено {$sent}, ошибок {$failed}\n";
 
 Паттерн надёжной обработки с каскадным перехватом.
 
-```php<?php
+```php
+<?php
 require_once 'vendor/autoload.php';
 
 use MaxBotSdk\ConfigBuilder;
@@ -460,7 +469,7 @@ $config = ConfigBuilder::create('ВАШ_ТОКЕН')
     ->withRateLimit(20)
     ->build();
 
-$client = ClientFactory::createFromConfig($config);
+$client = ClientFactory::fromConfig($config);
 
 /**
  * Отправить сообщение с обработкой всех ошибок.
@@ -520,7 +529,8 @@ echo $success ? 'Отправлено' : 'Ошибка отправки';
 
 Управление участниками, админами, закреплёнными сообщениями.
 
-```php<?php
+```php
+<?php
 require_once 'vendor/autoload.php';
 
 use MaxBotSdk\ClientFactory;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
 /**
@@ -9,32 +11,18 @@ namespace MaxBotSdk\DTO;
  */
 final class ChatMember extends AbstractDto
 {
-    /** @var int */
-    private $userId;
-
-    /** @var string */
-    private $name;
-
-    /** @var string|null */
-    private $username;
-
-    /** @var string|null */
-    private $avatarUrl;
-
-    /** @var bool */
-    private $isOwner;
-
-    /** @var bool */
-    private $isAdmin;
-
-    /** @var int|null */
-    private $joinTime;
-
-    /** @var array|null */
-    private $permissions;
+    private readonly int $userId;
+    private readonly string $name;
+    private readonly ?string $username;
+    private readonly ?string $avatarUrl;
+    private readonly bool $isOwner;
+    private readonly bool $isAdmin;
+    private readonly ?int $joinTime;
+    /** @var array<string, mixed>|null */
+    private readonly ?array $permissions;
 
     /**
-     * @param array $data
+     * @param array<string, mixed> $data
      */
     private function __construct(array $data)
     {
@@ -48,74 +36,60 @@ final class ChatMember extends AbstractDto
         $this->permissions = self::getArrayOrNull($data, 'permissions');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArray(array $data)
+    public static function fromArray(array $data): static
     {
         return new self($data);
     }
 
-    /** @return int */
-    public function getUserId()
+    public function getUserId(): int
     {
         return $this->userId;
     }
 
-    /** @return string */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    /** @return string|null */
-    public function getUsername()
+    public function getUsername(): ?string
     {
         return $this->username;
     }
 
-    /** @return string|null */
-    public function getAvatarUrl()
+    public function getAvatarUrl(): ?string
     {
         return $this->avatarUrl;
     }
 
-    /** @return bool */
-    public function isOwner()
+    public function isOwner(): bool
     {
         return $this->isOwner;
     }
 
-    /** @return bool */
-    public function isAdmin()
+    public function isAdmin(): bool
     {
         return $this->isAdmin;
     }
 
-    /** @return int|null */
-    public function getJoinTime()
+    public function getJoinTime(): ?int
     {
         return $this->joinTime;
     }
 
-    /** @return array|null */
-    public function getPermissions()
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getPermissions(): ?array
     {
         return $this->permissions;
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
-        return sprintf('ChatMember#%d (%s)', $this->userId, $this->name);
+        return \sprintf('ChatMember#%d (%s)', $this->userId, $this->name);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'user_id'     => $this->userId,

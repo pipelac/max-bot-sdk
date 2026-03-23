@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Contracts;
 
 /**
@@ -15,62 +17,53 @@ interface ClientInterface
     /**
      * Выполняет GET-запрос к MAX Bot API.
      *
-     * @param string $endpoint Эндпоинт API (например, '/me').
-     * @param array  $query    Параметры query string.
-     * @return array Декодированный ответ API.
+     * @param array<string, mixed> $query Параметры query string.
+     * @return array<string, mixed> Декодированный ответ API.
      */
-    public function get($endpoint, array $query = []);
+    public function get(string $endpoint, array $query = []): array;
 
     /**
      * Выполняет POST-запрос к MAX Bot API.
      *
-     * @param string     $endpoint Эндпоинт API.
-     * @param array|null $json     Тело запроса (JSON).
-     * @param array      $query    Параметры query string.
-     * @return array Декодированный ответ API.
+     * @param array<string, mixed>|null $json  Тело запроса (JSON).
+     * @param array<string, mixed>      $query Параметры query string.
+     * @return array<string, mixed> Декодированный ответ API.
      */
-    public function post($endpoint, array $json = null, array $query = []);
+    public function post(string $endpoint, ?array $json = null, array $query = []): array;
 
     /**
      * Выполняет PUT-запрос к MAX Bot API.
      *
-     * @param string     $endpoint Эндпоинт API.
-     * @param array|null $json     Тело запроса (JSON).
-     * @param array      $query    Параметры query string.
-     * @return array Декодированный ответ API.
+     * @param array<string, mixed>|null $json  Тело запроса (JSON).
+     * @param array<string, mixed>      $query Параметры query string.
+     * @return array<string, mixed> Декодированный ответ API.
      */
-    public function put($endpoint, array $json = null, array $query = []);
+    public function put(string $endpoint, ?array $json = null, array $query = []): array;
 
     /**
      * Выполняет PATCH-запрос к MAX Bot API.
      *
-     * @param string     $endpoint Эндпоинт API.
-     * @param array|null $json     Тело запроса (JSON).
-     * @param array      $query    Параметры query string.
-     * @return array Декодированный ответ API.
+     * @param array<string, mixed>|null $json  Тело запроса (JSON).
+     * @param array<string, mixed>      $query Параметры query string.
+     * @return array<string, mixed> Декодированный ответ API.
      */
-    public function patch($endpoint, array $json = null, array $query = []);
+    public function patch(string $endpoint, ?array $json = null, array $query = []): array;
 
     /**
      * Выполняет DELETE-запрос к MAX Bot API.
      *
-     * @param string $endpoint Эндпоинт API.
-     * @param array  $query    Параметры query string.
-     * @return array Декодированный ответ API.
+     * @param array<string, mixed> $query Параметры query string.
+     * @return array<string, mixed> Декодированный ответ API.
      */
-    public function delete($endpoint, array $query = []);
+    public function delete(string $endpoint, array $query = []): array;
 
     /**
      * Получает экземпляр HTTP-клиента.
-     *
-     * @return HttpClientInterface
      */
-    public function getHttpClient();
+    public function getHttpClient(): HttpClientInterface;
 
     /**
      * Получает объект конфигурации.
-     *
-     * @return ConfigInterface
      */
-    public function getConfig();
+    public function getConfig(): ConfigInterface;
 }

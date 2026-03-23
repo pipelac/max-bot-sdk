@@ -1,70 +1,31 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Contracts;
 
 /**
  * Интерфейс конфигурации MAX Bot API SDK.
  *
- * Определяет контракт для доступа к параметрам конфигурации.
  * Конфигурация иммутабельна — все значения задаются при создании.
  *
  * @since 1.0.0
  */
 interface ConfigInterface
 {
-    /**
-     * Получает токен бота.
-     *
-     * @return string
-     */
-    public function getToken();
+    public function getToken(): string;
 
-    /**
-     * Получает таймаут HTTP-запросов в секундах.
-     *
-     * @return int
-     */
-    public function getTimeout();
+    public function getTimeout(): int;
 
-    /**
-     * Получает количество повторных попыток.
-     *
-     * @return int
-     */
-    public function getRetries();
+    public function getRetries(): int;
 
-    /**
-     * Получает лимит запросов в секунду.
-     *
-     * @return int
-     */
-    public function getRateLimit();
+    public function getRateLimit(): int;
 
-    /**
-     * Получает флаг проверки SSL.
-     *
-     * @return bool
-     */
-    public function getVerifySsl();
+    public function getVerifySsl(): bool;
 
-    /**
-     * Получает флаг логирования запросов.
-     *
-     * @return bool
-     */
-    public function getLogRequests();
+    public function getLogRequests(): bool;
 
-    /**
-     * Получает имя приложения для логов.
-     *
-     * @return string
-     */
-    public function getAppName();
+    public function getAppName(): string;
 
-    /**
-     * Получает логгер или null.
-     *
-     * @return LoggerInterface|null
-     */
-    public function getLogger();
+    public function getLogger(): ?LoggerInterface;
 }

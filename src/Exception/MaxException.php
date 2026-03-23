@@ -1,14 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Exception;
 
 use RuntimeException;
 
 /**
  * Базовое исключение для всех ошибок MAX Bot API SDK.
- *
- * Все специализированные исключения наследуются от этого класса,
- * что позволяет перехватывать любые ошибки SDK одним блоком catch.
  *
  * @since 1.0.0
  */

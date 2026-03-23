@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Http;
 
+use CURLFile;
+use CurlHandle;
 use MaxBotSdk\Contracts\ConfigInterface;
 use MaxBotSdk\Contracts\HttpClientInterface;
 use MaxBotSdk\Contracts\LoggerInterface;
@@ -9,83 +13,58 @@ use MaxBotSdk\Exception\MaxConnectionException;
 use MaxBotSdk\Utils\InputValidator;
 
 /**
- * Standalone HTTP-транспорт для MAX Bot API на базе ext-curl.
- *
- * Полностью заменяет зависимость от BaseUtils (App\Component\Http).
- * Поддерживает: GET/POST/PUT/PATCH/DELETE, JSON body, multipart upload,
- * произвольные headers, timeout, SSL verify.
+ * HTTP-транспорт для MAX Bot API на базе ext-curl.
  *
  * @since 1.0.0
  */
 final class CurlHttpClient implements HttpClientInterface
 {
-    /** @var string Версия SDK. */
-    const SDK_VERSION = '1.0.0';
+    public const SDK_VERSION = '2.0.0';
+    public const BASE_URL = 'https://platform-api.max.ru';
 
-    /** @var string Базовый URL MAX Bot API. */
-    const BASE_URL = 'https://platform-api.max.ru';
+    private int $lastStatusCode = 0;
+    /** @var list<string> */
+    private array $tempFiles = [];
+    private readonly string $baseUrl;
 
-    /** @var ConfigInterface Конфигурация SDK. */
-    private $config;
-
-    /** @var LoggerInterface|null Логгер. */
-    private $logger;
-
-    /** @var int Код последнего HTTP-ответа. */
-    private $lastStatusCode = 0;
-
-    /** @var string[] Пути временных файлов для очистки после запроса. */
-    private $tempFiles = [];
-
-    /** @var string Базовый URL. */
-    private $baseUrl;
-
-    /**
-     * @param ConfigInterface      $config Конфигурация.
-     * @param LoggerInterface|null $logger Логгер.
-     * @param string|null          $baseUrl Базовый URL (для тестов).
-     */
-    public function __construct(ConfigInterface $config, LoggerInterface $logger = null, $baseUrl = null)
-    {
-        $this->config = $config;
-        $this->logger = $logger;
-        $this->baseUrl = $baseUrl !== null ? rtrim($baseUrl, '/') : self::BASE_URL;
+    public function __construct(
+        private readonly ConfigInterface $config,
+        private readonly ?LoggerInterface $logger = null,
+        ?string $baseUrl = null,
+    ) {
+        $this->baseUrl = $baseUrl !== null ? \rtrim($baseUrl, '/') : self::BASE_URL;
     }
 
     /**
-     * {@inheritdoc}
-     *
+     * @param array<string, mixed> $options
+     * @return array{status_code: int, body: string}
      * @throws MaxConnectionException
      */
-    public function request($method, $url, array $options = [])
+    public function request(string $method, string $url, array $options = []): array
     {
-        // Очищаем список temp-файлов от предыдущего запроса
         $this->tempFiles = [];
-
-        // Формируем полный URL
         $fullUrl = $this->buildUrl($url, $options);
 
-        $ch = curl_init();
-        if ($ch === false) {
+        $ch = \curl_init();
+        if (!$ch instanceof CurlHandle) {
             throw new MaxConnectionException('Не удалось инициализировать cURL.');
         }
 
         try {
             $this->configureCurl($ch, $method, $fullUrl, $options);
 
-            $responseBody = curl_exec($ch);
+            $responseBody = \curl_exec($ch);
 
             if ($responseBody === false) {
-                $error = curl_error($ch);
-                $errno = curl_errno($ch);
+                $error = \curl_error($ch);
+                $errno = \curl_errno($ch);
                 throw new MaxConnectionException(
-                    sprintf('Ошибка cURL [%s %s]: %s (код %d)', $method, $url, $error, $errno),
-                    $errno
+                    \sprintf('Ошибка cURL [%s %s]: %s (код %d)', $method, $url, $error, $errno),
+                    $errno,
                 );
             }
 
-            $this->lastStatusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
+            $this->lastStatusCode = (int) \curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $this->logRequest($method, $url, $this->lastStatusCode);
 
             return [
@@ -93,208 +72,143 @@ final class CurlHttpClient implements HttpClientInterface
                 'body'        => (string) $responseBody,
             ];
         } finally {
-            curl_close($ch);
+            \curl_close($ch);
             $this->cleanupTempFiles();
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getLastStatusCode()
+    public function getLastStatusCode(): int
     {
         return $this->lastStatusCode;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getBaseUrl()
+    public function getBaseUrl(): string
     {
         return $this->baseUrl;
     }
 
     /**
-     * Формирует полный URL с query-параметрами.
-     *
-     * @param string $url     Путь или полный URL.
-     * @param array  $options Опции запроса.
-     * @return string
+     * @param array<string, mixed> $options
      */
-    private function buildUrl($url, array $options)
+    private function buildUrl(string $url, array $options): string
     {
-        // Если URL уже абсолютный — не добавляем base
-        if (strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0) {
-            $fullUrl = $url;
-        } else {
-            $fullUrl = $this->baseUrl . '/' . ltrim($url, '/');
-        }
+        $fullUrl = \str_starts_with($url, 'http://') || \str_starts_with($url, 'https://')
+            ? $url
+            : $this->baseUrl . '/' . \ltrim($url, '/');
 
-        // Добавляем query-параметры
-        if (isset($options['query']) && is_array($options['query']) && !empty($options['query'])) {
-            $separator = (strpos($fullUrl, '?') !== false) ? '&' : '?';
-            $fullUrl .= $separator . http_build_query($options['query']);
+        if (isset($options['query']) && \is_array($options['query']) && $options['query'] !== []) {
+            $separator = \str_contains($fullUrl, '?') ? '&' : '?';
+            $fullUrl .= $separator . \http_build_query($options['query']);
         }
 
         return $fullUrl;
     }
 
     /**
-     * Настраивает cURL handle.
-     *
-     * @param resource $ch      cURL handle.
-     * @param string   $method  HTTP-метод.
-     * @param string   $fullUrl Полный URL.
-     * @param array    $options Опции запроса.
-     * @return void
+     * @param array<string, mixed> $options
      */
-    private function configureCurl($ch, $method, $fullUrl, array $options)
+    private function configureCurl(CurlHandle $ch, string $method, string $fullUrl, array $options): void
     {
-        curl_setopt($ch, CURLOPT_URL, $fullUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, $this->config->getTimeout());
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, min($this->config->getTimeout(), 10));
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->config->getVerifySsl());
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $this->config->getVerifySsl() ? 2 : 0);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        \curl_setopt($ch, CURLOPT_URL, $fullUrl);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, $this->config->getTimeout());
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, \min($this->config->getTimeout(), 10));
+        \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->config->getVerifySsl());
+        \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $this->config->getVerifySsl() ? 2 : 0);
+        \curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 
-        // HTTP-метод
         $this->setMethod($ch, $method);
 
-        // Headers
         $headers = $this->buildHeaders($method, $options);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-        // Body
         $this->setBody($ch, $method, $options);
     }
 
-    /**
-     * Устанавливает HTTP-метод.
-     *
-     * @param resource $ch     cURL handle.
-     * @param string   $method HTTP-метод.
-     * @return void
-     */
-    private function setMethod($ch, $method)
+    private function setMethod(CurlHandle $ch, string $method): void
     {
-        $method = strtoupper($method);
-        switch ($method) {
-            case 'GET':
-                curl_setopt($ch, CURLOPT_HTTPGET, true);
-                break;
-            case 'POST':
-                curl_setopt($ch, CURLOPT_POST, true);
-                break;
-            case 'PUT':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-                break;
-            case 'PATCH':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
-                break;
-            case 'DELETE':
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
-                break;
-            default:
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-                break;
-        }
+        $upper = \strtoupper($method);
+        match ($upper) {
+            'GET'  => \curl_setopt($ch, CURLOPT_HTTPGET, true),
+            'POST' => \curl_setopt($ch, CURLOPT_POST, true),
+            default => \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $upper),
+        };
     }
 
     /**
-     * Формирует заголовки запроса.
-     *
-     * @param string $method  HTTP-метод.
-     * @param array  $options Опции запроса.
-     * @return array Массив заголовков в формате 'Key: Value'.
+     * @param array<string, mixed> $options
+     * @return list<string>
      */
-    private function buildHeaders($method, array $options)
+    private function buildHeaders(string $method, array $options): array
     {
-        $curlVersion = curl_version();
+        /** @var array{version: string} $curlVersion */
+        $curlVersion = \curl_version();
         $headers = [
             'Authorization: ' . $this->config->getToken(),
             'User-Agent: MaxBotSDK/' . self::SDK_VERSION . ' PHP/' . PHP_VERSION . ' cURL/' . $curlVersion['version'],
         ];
 
-        // Пользовательские заголовки
-        if (isset($options['headers']) && is_array($options['headers'])) {
+        if (isset($options['headers']) && \is_array($options['headers'])) {
             foreach ($options['headers'] as $name => $value) {
-                if (strtolower($name) !== 'authorization') {
+                if (\strtolower((string) $name) !== 'authorization') {
                     $headers[] = $name . ': ' . $value;
                 }
             }
         }
 
-        // Content-Type для JSON body
-        if (isset($options['json']) && !isset($options['multipart'])) {
-            $headers[] = 'Content-Type: application/json';
-            $headers[] = 'Accept: application/json';
-        } elseif (!isset($options['multipart']) && $method !== 'GET') {
-            $headers[] = 'Content-Type: application/json';
-            $headers[] = 'Accept: application/json';
-        } else {
-            $headers[] = 'Accept: application/json';
+        $hasMultipart = isset($options['multipart']);
+        if (!$hasMultipart) {
+            if ($method !== 'GET') {
+                $headers[] = 'Content-Type: application/json';
+            }
         }
+        $headers[] = 'Accept: application/json';
 
         return $headers;
     }
 
     /**
-     * Устанавливает тело запроса.
-     *
-     * @param resource $ch      cURL handle.
-     * @param string   $method  HTTP-метод.
-     * @param array    $options Опции запроса.
-     * @return void
+     * @param array<string, mixed> $options
      */
-    private function setBody($ch, $method, array $options)
+    private function setBody(CurlHandle $ch, string $method, array $options): void
     {
-        if (isset($options['multipart']) && is_array($options['multipart'])) {
+        if (isset($options['multipart']) && \is_array($options['multipart'])) {
             $postFields = $this->buildMultipart($options['multipart']);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
         } elseif (isset($options['json'])) {
-            $json = json_encode($options['json'], JSON_UNESCAPED_UNICODE);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+            $json = \json_encode($options['json'], JSON_UNESCAPED_UNICODE);
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
         } elseif ($method === 'POST' || $method === 'PUT' || $method === 'PATCH') {
-            // Пустое тело для POST/PUT/PATCH без данных
-            curl_setopt($ch, CURLOPT_POSTFIELDS, '');
+            \curl_setopt($ch, CURLOPT_POSTFIELDS, '');
         }
     }
 
     /**
-     * Собирает multipart данные для cURL.
-     *
-     * @param array $parts Части multipart запроса.
-     * @return array Массив для CURLOPT_POSTFIELDS.
+     * @param list<array<string, mixed>> $parts
+     * @return array<string, CURLFile|string>
      */
-    private function buildMultipart(array $parts)
+    private function buildMultipart(array $parts): array
     {
         $postFields = [];
 
         foreach ($parts as $part) {
-            $name = isset($part['name']) ? $part['name'] : 'file';
-            $filename = isset($part['filename']) ? $part['filename'] : null;
+            $name = isset($part['name']) && \is_string($part['name']) ? $part['name'] : 'file';
+            $filename = isset($part['filename']) && \is_string($part['filename']) ? $part['filename'] : null;
 
-            if (isset($part['filepath']) && is_file($part['filepath'])) {
-                // Загрузка файла через CURLFile (стриминг, без загрузки всего в память)
-                if (class_exists('CURLFile')) {
-                    $mimeType = isset($part['mime_type']) ? $part['mime_type'] : 'application/octet-stream';
-                    $postFields[$name] = new \CURLFile($part['filepath'], $mimeType, $filename);
-                } else {
-                    // Fallback для PHP < 5.5 (не наш случай, но на всякий)
-                    $postFields[$name] = '@' . $part['filepath'];
-                }
+            if (isset($part['filepath']) && \is_string($part['filepath']) && \is_file($part['filepath'])) {
+                $mimeType = isset($part['mime_type']) && \is_string($part['mime_type']) ? $part['mime_type'] : 'application/octet-stream';
+                $postFields[$name] = new CURLFile($part['filepath'], $mimeType, $filename ?? '');
             } elseif (isset($part['contents'])) {
-                // Используем содержимое напрямую
-                if ($filename !== null && class_exists('CURLFile')) {
-                    // Создаём временный файл для передачи через CURLFile
-                    $tmpFile = tempnam(sys_get_temp_dir(), 'max_upload_');
-                    file_put_contents($tmpFile, $part['contents']);
-                    $this->tempFiles[] = $tmpFile;
-                    $mimeType = isset($part['mime_type']) ? $part['mime_type'] : 'application/octet-stream';
-                    $postFields[$name] = new \CURLFile($tmpFile, $mimeType, $filename);
+                if ($filename !== null) {
+                    $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_upload_');
+                    if ($tmpFile !== false) {
+                        \file_put_contents($tmpFile, $part['contents']);
+                        $this->tempFiles[] = $tmpFile;
+                        $mimeType = isset($part['mime_type']) && \is_string($part['mime_type']) ? $part['mime_type'] : 'application/octet-stream';
+                        $postFields[$name] = new CURLFile($tmpFile, $mimeType, $filename);
+                    }
                 } else {
-                    $postFields[$name] = $part['contents'];
+                    $postFields[$name] = \is_scalar($part['contents']) ? (string) $part['contents'] : '';
                 }
             }
         }
@@ -302,30 +216,17 @@ final class CurlHttpClient implements HttpClientInterface
         return $postFields;
     }
 
-    /**
-     * Удаляет временные файлы, созданные для multipart-загрузки.
-     *
-     * @return void
-     */
-    private function cleanupTempFiles()
+    private function cleanupTempFiles(): void
     {
         foreach ($this->tempFiles as $file) {
-            if (is_file($file)) {
-                @unlink($file);
+            if (\is_file($file)) {
+                @\unlink($file);
             }
         }
         $this->tempFiles = [];
     }
 
-    /**
-     * Логирует HTTP-запрос.
-     *
-     * @param string $method     HTTP-метод.
-     * @param string $url        URL.
-     * @param int    $statusCode Код ответа.
-     * @return void
-     */
-    private function logRequest($method, $url, $statusCode)
+    private function logRequest(string $method, string $url, int $statusCode): void
     {
         if ($this->logger === null || !$this->config->getLogRequests()) {
             return;

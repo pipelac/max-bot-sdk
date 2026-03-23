@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
 /**
@@ -9,29 +11,16 @@ namespace MaxBotSdk\DTO;
  */
 final class User extends AbstractDto
 {
-    /** @var int */
-    private $userId;
-
-    /** @var string */
-    private $name;
-
-    /** @var string|null */
-    private $username;
-
-    /** @var bool */
-    private $isBot;
-
-    /** @var int|null */
-    private $lastActivityTime;
-
-    /** @var string|null */
-    private $description;
-
-    /** @var string|null */
-    private $avatarUrl;
+    private readonly int $userId;
+    private readonly string $name;
+    private readonly ?string $username;
+    private readonly bool $isBot;
+    private readonly ?int $lastActivityTime;
+    private readonly ?string $description;
+    private readonly ?string $avatarUrl;
 
     /**
-     * @param array $data Данные из API.
+     * @param array<string, mixed> $data
      */
     private function __construct(array $data)
     {
@@ -44,68 +33,52 @@ final class User extends AbstractDto
         $this->avatarUrl = self::getStringOrNull($data, 'avatar_url');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArray(array $data)
+    public static function fromArray(array $data): static
     {
         return new self($data);
     }
 
-    /** @return int */
-    public function getUserId()
+    public function getUserId(): int
     {
         return $this->userId;
     }
 
-    /** @return string */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    /** @return string|null */
-    public function getUsername()
+    public function getUsername(): ?string
     {
         return $this->username;
     }
 
-    /** @return bool */
-    public function isBot()
+    public function isBot(): bool
     {
         return $this->isBot;
     }
 
-    /** @return int|null */
-    public function getLastActivityTime()
+    public function getLastActivityTime(): ?int
     {
         return $this->lastActivityTime;
     }
 
-    /** @return string|null */
-    public function getDescription()
+    public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    /** @return string|null */
-    public function getAvatarUrl()
+    public function getAvatarUrl(): ?string
     {
         return $this->avatarUrl;
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
-        return sprintf('User#%d (%s)', $this->userId, $this->name);
+        return \sprintf('User#%d (%s)', $this->userId, $this->name);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'user_id'            => $this->userId,

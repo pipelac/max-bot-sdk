@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
 /**
@@ -9,14 +11,12 @@ namespace MaxBotSdk\DTO;
  */
 final class Attachment extends AbstractDto
 {
-    /** @var string */
-    private $type;
-
-    /** @var array */
-    private $payload;
+    private readonly string $type;
+    /** @var array<string, mixed> */
+    private readonly array $payload;
 
     /**
-     * @param array $data
+     * @param array<string, mixed> $data
      */
     private function __construct(array $data)
     {
@@ -24,42 +24,30 @@ final class Attachment extends AbstractDto
         $this->payload = self::getArray($data, 'payload');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArray(array $data)
+    public static function fromArray(array $data): static
     {
         return new self($data);
     }
 
-    /** @return string */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
-    /** @return array */
-    public function getPayload()
+    /**
+     * @return array<string, mixed>
+     */
+    public function getPayload(): array
     {
         return $this->payload;
     }
 
-    /**
-     * Получить значение из payload по ключу.
-     *
-     * @param string $key
-     * @param mixed  $default
-     * @return mixed
-     */
-    public function getPayloadValue($key, $default = null)
+    public function getPayloadValue(string $key, mixed $default = null): mixed
     {
-        return isset($this->payload[$key]) ? $this->payload[$key] : $default;
+        return $this->payload[$key] ?? $default;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'type'    => $this->type,

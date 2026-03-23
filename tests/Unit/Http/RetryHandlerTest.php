@@ -1,32 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Tests\Unit\Http;
 
 use MaxBotSdk\Exception\MaxApiException;
 use MaxBotSdk\Exception\MaxConnectionException;
 use MaxBotSdk\Http\RetryHandler;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Тесты для RetryHandler.
- */
-class RetryHandlerTest extends TestCase
+final class RetryHandlerTest extends TestCase
 {
-    public function testSuccessOnFirstAttempt()
+    #[Test]
+    public function successOnFirstAttempt(): void
     {
         $handler = new TestRetryHandler(3);
-        $result = $handler->execute(function () {
-            return 'success';
-        });
-        $this->assertEquals('success', $result);
+        $result = $handler->execute(static fn(): string => 'success');
+        self::assertSame('success', $result);
     }
 
-    public function testRetryOnServerError()
+    #[Test]
+    public function retryOnServerError(): void
     {
         $handler = new TestRetryHandler(3);
         $attempts = 0;
 
-        $result = $handler->execute(function () use (&$attempts) {
+        $result = $handler->execute(static function () use (&$attempts): string {
             $attempts++;
             if ($attempts < 3) {
                 throw new MaxApiException('Server error', 500);
@@ -34,16 +34,17 @@ class RetryHandlerTest extends TestCase
             return 'recovered';
         });
 
-        $this->assertEquals('recovered', $result);
-        $this->assertEquals(3, $attempts);
+        self::assertSame('recovered', $result);
+        self::assertSame(3, $attempts);
     }
 
-    public function testRetryOn429()
+    #[Test]
+    public function retryOn429(): void
     {
         $handler = new TestRetryHandler(2);
         $attempts = 0;
 
-        $result = $handler->execute(function () use (&$attempts) {
+        $result = $handler->execute(static function () use (&$attempts): string {
             $attempts++;
             if ($attempts < 2) {
                 throw new MaxApiException('Rate limited', 429);
@@ -51,16 +52,17 @@ class RetryHandlerTest extends TestCase
             return 'ok';
         });
 
-        $this->assertEquals('ok', $result);
-        $this->assertEquals(2, $attempts);
+        self::assertSame('ok', $result);
+        self::assertSame(2, $attempts);
     }
 
-    public function testRetryOnConnectionException()
+    #[Test]
+    public function retryOnConnectionException(): void
     {
         $handler = new TestRetryHandler(3);
         $attempts = 0;
 
-        $result = $handler->execute(function () use (&$attempts) {
+        $result = $handler->execute(static function () use (&$attempts): string {
             $attempts++;
             if ($attempts < 3) {
                 throw new MaxConnectionException('Connection timeout');
@@ -68,89 +70,94 @@ class RetryHandlerTest extends TestCase
             return 'reconnected';
         });
 
-        $this->assertEquals('reconnected', $result);
-        $this->assertEquals(3, $attempts);
+        self::assertSame('reconnected', $result);
+        self::assertSame(3, $attempts);
     }
 
-    public function testConnectionExceptionExhaustedRetries()
+    #[Test]
+    public function connectionExceptionExhaustedRetries(): void
     {
         $handler = new TestRetryHandler(1);
         $attempts = 0;
 
         try {
-            $handler->execute(function () use (&$attempts) {
+            $handler->execute(static function () use (&$attempts): never {
                 $attempts++;
                 throw new MaxConnectionException('Connection refused');
             });
-            $this->fail('Expected MaxConnectionException');
-        } catch (MaxConnectionException $e) {
-            $this->assertEquals(2, $attempts); // 1 initial + 1 retry
+            self::fail('Expected MaxConnectionException');
+        } catch (MaxConnectionException) {
+            self::assertSame(2, $attempts); // 1 initial + 1 retry
         }
     }
 
-    public function testNoRetryOn400()
+    #[Test]
+    public function noRetryOn400(): void
     {
         $handler = new TestRetryHandler(3);
         $attempts = 0;
 
         try {
-            $handler->execute(function () use (&$attempts) {
+            $handler->execute(static function () use (&$attempts): never {
                 $attempts++;
                 throw new MaxApiException('Bad request', 400);
             });
-            $this->fail('Expected MaxApiException');
+            self::fail('Expected MaxApiException');
         } catch (MaxApiException $e) {
-            $this->assertEquals(400, $e->getStatusCode());
-            $this->assertEquals(1, $attempts); // Не повторяет для 4xx (кроме 429)
+            self::assertSame(400, $e->getStatusCode());
+            self::assertSame(1, $attempts);
         }
     }
 
-    public function testNoRetryOn401()
+    #[Test]
+    public function noRetryOn401(): void
     {
         $handler = new TestRetryHandler(3);
         $attempts = 0;
 
         try {
-            $handler->execute(function () use (&$attempts) {
+            $handler->execute(static function () use (&$attempts): never {
                 $attempts++;
                 throw new MaxApiException('Unauthorized', 401);
             });
-            $this->fail('Expected MaxApiException');
-        } catch (MaxApiException $e) {
-            $this->assertEquals(1, $attempts);
+            self::fail('Expected MaxApiException');
+        } catch (MaxApiException) {
+            self::assertSame(1, $attempts);
         }
     }
 
-    public function testExhaustedRetries()
+    #[Test]
+    public function exhaustedRetries(): void
     {
         $handler = new TestRetryHandler(2);
         $attempts = 0;
 
         try {
-            $handler->execute(function () use (&$attempts) {
+            $handler->execute(static function () use (&$attempts): never {
                 $attempts++;
                 throw new MaxApiException('Server error', 500);
             });
-            $this->fail('Expected MaxApiException');
+            self::fail('Expected MaxApiException');
         } catch (MaxApiException $e) {
-            $this->assertEquals(500, $e->getStatusCode());
-            $this->assertEquals(3, $attempts); // 1 initial + 2 retries
+            self::assertSame(500, $e->getStatusCode());
+            self::assertSame(3, $attempts); // 1 initial + 2 retries
         }
     }
 
-    public function testZeroRetries()
+    #[Test]
+    public function zeroRetries(): void
     {
         $handler = new TestRetryHandler(0);
         $attempts = 0;
 
         try {
-            $handler->execute(function () use (&$attempts) {
+            $handler->execute(static function () use (&$attempts): never {
                 $attempts++;
                 throw new MaxApiException('Server error', 500);
             });
-            $this->fail('Expected MaxApiException');
-        } catch (MaxApiException $e) {
-            $this->assertEquals(1, $attempts); // Без повторов
+            self::fail('Expected MaxApiException');
+        } catch (MaxApiException) {
+            self::assertSame(1, $attempts);
         }
     }
 }
@@ -160,12 +167,11 @@ class RetryHandlerTest extends TestCase
  */
 class TestRetryHandler extends RetryHandler
 {
-    /** @var array */
-    public $sleepCalls = [];
+    /** @var list<int> */
+    public array $sleepCalls = [];
 
-    protected function sleep($milliseconds)
+    protected function sleep(int $milliseconds): void
     {
         $this->sleepCalls[] = $milliseconds;
-        // Не спим в тестах
     }
 }

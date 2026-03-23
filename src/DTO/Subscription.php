@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
 /**
@@ -9,65 +11,55 @@ namespace MaxBotSdk\DTO;
  */
 final class Subscription extends AbstractDto
 {
-    /** @var string */
-    private $url;
-
-    /** @var int|null */
-    private $time;
-
-    /** @var array */
-    private $updateTypes;
-
-    /** @var string|null */
-    private $version;
+    private readonly string $url;
+    private readonly ?int $time;
+    /** @var list<string> */
+    private readonly array $updateTypes;
+    private readonly ?string $version;
 
     /**
-     * @param array $data
+     * @param array<string, mixed> $data
      */
     private function __construct(array $data)
     {
         $this->url = self::getString($data, 'url');
         $this->time = self::getIntOrNull($data, 'time');
-        $this->updateTypes = self::getArray($data, 'update_types');
+        $this->updateTypes = \array_values(\array_map(
+            static fn(mixed $v): string => \is_scalar($v) ? (string) $v : '',
+            self::getArray($data, 'update_types'),
+        ));
         $this->version = self::getStringOrNull($data, 'version');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArray(array $data)
+    public static function fromArray(array $data): static
     {
         return new self($data);
     }
 
-    /** @return string */
-    public function getUrl()
+    public function getUrl(): string
     {
         return $this->url;
     }
 
-    /** @return int|null */
-    public function getTime()
+    public function getTime(): ?int
     {
         return $this->time;
     }
 
-    /** @return array */
-    public function getUpdateTypes()
+    /**
+     * @return list<string>
+     */
+    public function getUpdateTypes(): array
     {
         return $this->updateTypes;
     }
 
-    /** @return string|null */
-    public function getVersion()
+    public function getVersion(): ?string
     {
         return $this->version;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'url'          => $this->url,

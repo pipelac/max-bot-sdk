@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Contracts;
 
 /**
@@ -9,10 +11,5 @@ namespace MaxBotSdk\Contracts;
  */
 interface ResourceInterface
 {
-    /**
-     * Получает экземпляр клиента.
-     *
-     * @return ClientInterface
-     */
-    public function getClient();
+    public function getClient(): ClientInterface;
 }

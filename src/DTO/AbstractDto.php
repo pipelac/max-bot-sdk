@@ -1,127 +1,85 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
 /**
- * Базовый абстрактный класс для всех DTO MAX Bot API.
- *
- * Предоставляет единый контракт и вспомогательные методы для создания
- * типизированных, immutable Data Transfer Objects из данных API.
+ * Абстрактный базовый класс для всех DTO MAX Bot API.
  *
  * @since 1.0.0
  */
 abstract class AbstractDto
 {
     /**
-     * Создать DTO из массива данных API.
+     * Создаёт DTO из массива данных API.
      *
-     * Каждый дочерний класс ДОЛЖЕН переопределить этот метод.
-     * Базовая реализация вместо abstract static — для совместимости с PHP 5.6,
-     * который не поддерживает `abstract static`.
-     *
-     * @param array $data Данные из ответа API.
-     * @return static
-     * @throws \BadMethodCallException Если дочерний класс не переопределил метод.
+     * @param array<string, mixed> $data
      */
-    public static function fromArray(array $data)
+    abstract public static function fromArray(array $data): static;
+
+    /**
+     * Преобразует DTO обратно в массив.
+     *
+     * @return array<string, mixed>
+     */
+    abstract public function toArray(): array;
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    protected static function getString(array $data, string $key, string $default = ''): string
     {
-        throw new \BadMethodCallException(
-            sprintf('Класс %s должен переопределить метод fromArray().', get_called_class())
-        );
+        return isset($data[$key]) && \is_scalar($data[$key]) ? (string) $data[$key] : $default;
     }
 
     /**
-     * Сериализовать DTO обратно в массив.
-     *
-     * @return array
+     * @param array<string, mixed> $data
      */
-    abstract public function toArray();
-
-    /**
-     * Получить строковое значение из массива данных.
-     *
-     * @param array  $data    Массив данных.
-     * @param string $key     Ключ.
-     * @param string $default Значение по умолчанию.
-     * @return string
-     */
-    protected static function getString(array $data, $key, $default = '')
+    protected static function getStringOrNull(array $data, string $key): ?string
     {
-        return isset($data[$key]) ? (string) $data[$key] : $default;
+        return isset($data[$key]) && \is_scalar($data[$key]) ? (string) $data[$key] : null;
     }
 
     /**
-     * Получить строковое значение или null.
-     *
-     * @param array  $data Массив данных.
-     * @param string $key  Ключ.
-     * @return string|null
+     * @param array<string, mixed> $data
      */
-    protected static function getStringOrNull(array $data, $key)
+    protected static function getInt(array $data, string $key, int $default = 0): int
     {
-        return isset($data[$key]) ? (string) $data[$key] : null;
+        return isset($data[$key]) && \is_scalar($data[$key]) ? (int) $data[$key] : $default;
     }
 
     /**
-     * Получить целочисленное значение из массива данных.
-     *
-     * @param array  $data    Массив данных.
-     * @param string $key     Ключ.
-     * @param int    $default Значение по умолчанию.
-     * @return int
+     * @param array<string, mixed> $data
      */
-    protected static function getInt(array $data, $key, $default = 0)
+    protected static function getIntOrNull(array $data, string $key): ?int
     {
-        return isset($data[$key]) ? (int) $data[$key] : $default;
+        return isset($data[$key]) && \is_scalar($data[$key]) ? (int) $data[$key] : null;
     }
 
     /**
-     * Получить целочисленное значение или null.
-     *
-     * @param array  $data Массив данных.
-     * @param string $key  Ключ.
-     * @return int|null
+     * @param array<string, mixed> $data
      */
-    protected static function getIntOrNull(array $data, $key)
-    {
-        return isset($data[$key]) ? (int) $data[$key] : null;
-    }
-
-    /**
-     * Получить булево значение из массива данных.
-     *
-     * @param array  $data    Массив данных.
-     * @param string $key     Ключ.
-     * @param bool   $default Значение по умолчанию.
-     * @return bool
-     */
-    protected static function getBool(array $data, $key, $default = false)
+    protected static function getBool(array $data, string $key, bool $default = false): bool
     {
         return isset($data[$key]) ? (bool) $data[$key] : $default;
     }
 
     /**
-     * Получить массив из данных.
-     *
-     * @param array  $data    Массив данных.
-     * @param string $key     Ключ.
-     * @param array  $default Значение по умолчанию.
-     * @return array
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
      */
-    protected static function getArray(array $data, $key, array $default = [])
+    protected static function getArray(array $data, string $key): array
     {
-        return isset($data[$key]) && is_array($data[$key]) ? $data[$key] : $default;
+        return isset($data[$key]) && \is_array($data[$key]) ? $data[$key] : [];
     }
 
     /**
-     * Получить массив или null.
-     *
-     * @param array  $data Массив данных.
-     * @param string $key  Ключ.
-     * @return array|null
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>|null
      */
-    protected static function getArrayOrNull(array $data, $key)
+    protected static function getArrayOrNull(array $data, string $key): ?array
     {
-        return isset($data[$key]) && is_array($data[$key]) ? $data[$key] : null;
+        return isset($data[$key]) && \is_array($data[$key]) ? $data[$key] : null;
     }
 }

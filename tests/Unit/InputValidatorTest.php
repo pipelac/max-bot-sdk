@@ -1,116 +1,127 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Tests\Unit;
 
+use MaxBotSdk\Enum\UploadType;
 use MaxBotSdk\Exception\MaxValidationException;
 use MaxBotSdk\Utils\InputValidator;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Тесты для InputValidator.
- */
-class InputValidatorTest extends TestCase
+final class InputValidatorTest extends TestCase
 {
-    public function testValidateTextValid()
+    #[Test]
+    public function validateTextValid(): void
     {
         $result = InputValidator::validateText('Привет');
-        $this->assertEquals('Привет', $result);
+        self::assertSame('Привет', $result);
     }
 
-    public function testValidateTextEmptyThrows()
+    #[Test]
+    public function validateTextEmptyThrows(): void
     {
         $this->expectException(MaxValidationException::class);
         InputValidator::validateText('');
     }
 
-    public function testValidateTextWhitespaceThrows()
+    #[Test]
+    public function validateTextWhitespaceThrows(): void
     {
         $this->expectException(MaxValidationException::class);
         InputValidator::validateText('   ');
     }
 
-    public function testValidateTextTooLongThrows()
+    #[Test]
+    public function validateTextTooLongThrows(): void
     {
         $this->expectException(MaxValidationException::class);
-        InputValidator::validateText(str_repeat('а', 4001));
+        InputValidator::validateText(\str_repeat('а', 4001));
     }
 
-    public function testValidateTextExactLimit()
+    #[Test]
+    public function validateTextExactLimit(): void
     {
-        $text = str_repeat('a', 4000);
+        $text = \str_repeat('a', 4000);
         $result = InputValidator::validateText($text);
-        $this->assertEquals(4000, mb_strlen($result, 'UTF-8'));
+        self::assertSame(4000, \mb_strlen($result, 'UTF-8'));
     }
 
-    public function testValidateIdValid()
+    #[Test]
+    public function validateIdValid(): void
     {
-        $this->assertEquals(123, InputValidator::validateId(123, 'chat_id'));
-        $this->assertEquals(456, InputValidator::validateId('456', 'chat_id'));
+        self::assertSame(123, InputValidator::validateId(123, 'chat_id'));
+        self::assertSame(456, InputValidator::validateId('456', 'chat_id'));
     }
 
-    public function testValidateIdNullThrows()
+    #[Test]
+    public function validateIdNullThrows(): void
     {
         $this->expectException(MaxValidationException::class);
         InputValidator::validateId(null, 'chat_id');
     }
 
-    public function testValidateIdEmptyThrows()
+    #[Test]
+    public function validateIdEmptyThrows(): void
     {
         $this->expectException(MaxValidationException::class);
         InputValidator::validateId('', 'chat_id');
     }
 
-    public function testValidateIdStringThrows()
+    #[Test]
+    public function validateIdStringThrows(): void
     {
         $this->expectException(MaxValidationException::class);
         InputValidator::validateId('abc', 'chat_id');
     }
 
-    public function testValidateWebhookUrlValid()
+    #[Test]
+    public function validateWebhookUrlValid(): void
     {
         $result = InputValidator::validateWebhookUrl('https://example.com/webhook');
-        $this->assertEquals('https://example.com/webhook', $result);
+        self::assertSame('https://example.com/webhook', $result);
     }
 
-    public function testValidateWebhookUrlHttpThrows()
+    #[Test]
+    public function validateWebhookUrlHttpThrows(): void
     {
         $this->expectException(MaxValidationException::class);
         InputValidator::validateWebhookUrl('http://example.com/webhook');
     }
 
-    public function testValidateUploadTypeValid()
+    #[Test]
+    public function validateUploadTypeValid(): void
     {
-        $this->assertEquals('image', InputValidator::validateUploadType('image'));
-        $this->assertEquals('video', InputValidator::validateUploadType('video'));
-        $this->assertEquals('audio', InputValidator::validateUploadType('audio'));
-        $this->assertEquals('file', InputValidator::validateUploadType('file'));
+        self::assertSame(UploadType::Image, InputValidator::validateUploadType(UploadType::Image));
+        self::assertSame(UploadType::Video, InputValidator::validateUploadType(UploadType::Video));
+        self::assertSame(UploadType::Audio, InputValidator::validateUploadType(UploadType::Audio));
+        self::assertSame(UploadType::File, InputValidator::validateUploadType(UploadType::File));
     }
 
-    public function testValidateUploadTypeInvalidThrows()
-    {
-        $this->expectException(MaxValidationException::class);
-        InputValidator::validateUploadType('document');
-    }
-
-    public function testValidateCallbackIdValid()
+    #[Test]
+    public function validateCallbackIdValid(): void
     {
         $result = InputValidator::validateCallbackId('cb_123');
-        $this->assertEquals('cb_123', $result);
+        self::assertSame('cb_123', $result);
     }
 
-    public function testValidateCallbackIdEmptyThrows()
+    #[Test]
+    public function validateCallbackIdEmptyThrows(): void
     {
         $this->expectException(MaxValidationException::class);
         InputValidator::validateCallbackId('');
     }
 
-    public function testValidateNotEmptyValid()
+    #[Test]
+    public function validateNotEmptyValid(): void
     {
         $result = InputValidator::validateNotEmpty('hello', 'field');
-        $this->assertEquals('hello', $result);
+        self::assertSame('hello', $result);
     }
 
-    public function testValidateNotEmptyNullThrows()
+    #[Test]
+    public function validateNotEmptyNullThrows(): void
     {
         $this->expectException(MaxValidationException::class);
         InputValidator::validateNotEmpty(null, 'field');

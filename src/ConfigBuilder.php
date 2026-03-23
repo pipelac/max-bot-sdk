@@ -1,148 +1,79 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk;
 
 use MaxBotSdk\Contracts\LoggerInterface;
-use MaxBotSdk\Exception\MaxConfigException;
 
 /**
  * Fluent builder для создания иммутабельной конфигурации MAX Bot API SDK.
- *
- * Единственный способ создать Config с нестандартными параметрами.
- *
- * Пример:
- * <code>
- * $config = ConfigBuilder::create('TOKEN')
- *     ->withTimeout(60)
- *     ->withRetries(5)
- *     ->withLogger($logger)
- *     ->build();
- * </code>
  *
  * @since 1.0.0
  */
 final class ConfigBuilder
 {
-    /** @var string Токен бота. */
-    private $token;
+    private int $timeout = Config::DEFAULT_TIMEOUT;
+    private int $retries = Config::DEFAULT_RETRIES;
+    private int $rateLimit = Config::DEFAULT_RATE_LIMIT;
+    private bool $verifySsl = true;
+    private bool $logRequests = true;
+    private string $appName = 'MaxBot';
+    private ?LoggerInterface $logger = null;
 
-    /** @var int */
-    private $timeout = Config::DEFAULT_TIMEOUT;
-
-    /** @var int */
-    private $retries = Config::DEFAULT_RETRIES;
-
-    /** @var int */
-    private $rateLimit = Config::DEFAULT_RATE_LIMIT;
-
-    /** @var bool */
-    private $verifySsl = true;
-
-    /** @var bool */
-    private $logRequests = true;
-
-    /** @var string */
-    private $appName = 'MaxBot';
-
-    /** @var LoggerInterface|null */
-    private $logger;
-
-    /**
-     * @param string $token Токен бота.
-     */
-    private function __construct($token)
-    {
-        $this->token = $token;
+    private function __construct(
+        private readonly string $token,
+    ) {
     }
 
-    /**
-     * Создать builder с указанным токеном.
-     *
-     * @param string $token Токен бота MAX.
-     * @return self
-     */
-    public static function create($token)
+    public static function create(string $token): self
     {
         return new self($token);
     }
 
-    /**
-     * @param int $timeout Секунды.
-     * @return self
-     */
-    public function withTimeout($timeout)
+    public function withTimeout(int $timeout): self
     {
-        $this->timeout = (int) $timeout;
+        $this->timeout = $timeout;
         return $this;
     }
 
-    /**
-     * @param int $retries
-     * @return self
-     */
-    public function withRetries($retries)
+    public function withRetries(int $retries): self
     {
-        $this->retries = (int) $retries;
+        $this->retries = $retries;
         return $this;
     }
 
-    /**
-     * @param int $rateLimit
-     * @return self
-     */
-    public function withRateLimit($rateLimit)
+    public function withRateLimit(int $rateLimit): self
     {
-        $this->rateLimit = (int) $rateLimit;
+        $this->rateLimit = $rateLimit;
         return $this;
     }
 
-    /**
-     * @param bool $verify
-     * @return self
-     */
-    public function withVerifySsl($verify)
+    public function withVerifySsl(bool $verifySsl): self
     {
-        $this->verifySsl = (bool) $verify;
+        $this->verifySsl = $verifySsl;
         return $this;
     }
 
-    /**
-     * @param bool $log
-     * @return self
-     */
-    public function withLogRequests($log)
+    public function withLogRequests(bool $logRequests): self
     {
-        $this->logRequests = (bool) $log;
+        $this->logRequests = $logRequests;
         return $this;
     }
 
-    /**
-     * @param string $appName
-     * @return self
-     */
-    public function withAppName($appName)
+    public function withAppName(string $appName): self
     {
         $this->appName = $appName;
         return $this;
     }
 
-    /**
-     * @param LoggerInterface|null $logger
-     * @return self
-     */
-    public function withLogger($logger)
+    public function withLogger(LoggerInterface $logger): self
     {
         $this->logger = $logger;
         return $this;
     }
 
-    /**
-     * Собирает и возвращает иммутабельный объект Config.
-     *
-     * @return Config
-     * @throws MaxConfigException
-     */
-    public function build()
+    public function build(): Config
     {
         return new Config(
             $this->token,
@@ -152,7 +83,7 @@ final class ConfigBuilder
             $this->verifySsl,
             $this->logRequests,
             $this->appName,
-            $this->logger
+            $this->logger,
         );
     }
 }

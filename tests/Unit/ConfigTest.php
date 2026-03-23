@@ -1,272 +1,279 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Tests\Unit;
 
 use MaxBotSdk\Config;
 use MaxBotSdk\Contracts\ConfigInterface;
 use MaxBotSdk\Contracts\LoggerInterface;
 use MaxBotSdk\Exception\MaxConfigException;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Тесты для Config (иммутабельная конфигурация).
- */
-class ConfigTest extends TestCase
+final class ConfigTest extends TestCase
 {
-    // --- Конструктор ---
-
-    public function testConstructWithValidToken()
+    #[Test]
+    public function constructWithValidToken(): void
     {
         $config = new Config('valid_token');
-        $this->assertEquals('valid_token', $config->getToken());
+        self::assertSame('valid_token', $config->getToken());
     }
 
-    public function testConstructWithEmptyTokenThrows()
+    #[Test]
+    public function constructWithEmptyTokenThrows(): void
     {
         $this->expectException(MaxConfigException::class);
         new Config('');
     }
 
-    public function testConstructWithWhitespaceTokenThrows()
+    #[Test]
+    public function constructWithWhitespaceTokenThrows(): void
     {
         $this->expectException(MaxConfigException::class);
         new Config('   ');
     }
 
-    // --- Defaults ---
-
-    public function testDefaultValues()
+    #[Test]
+    public function defaultValues(): void
     {
         $config = new Config('token');
-        $this->assertEquals(30, $config->getTimeout());
-        $this->assertEquals(3, $config->getRetries());
-        $this->assertEquals(30, $config->getRateLimit());
-        $this->assertTrue($config->getVerifySsl());
-        $this->assertTrue($config->getLogRequests());
-        $this->assertEquals('MaxBot', $config->getAppName());
-        $this->assertNull($config->getLogger());
+        self::assertSame(30, $config->getTimeout());
+        self::assertSame(3, $config->getRetries());
+        self::assertSame(30, $config->getRateLimit());
+        self::assertTrue($config->getVerifySsl());
+        self::assertTrue($config->getLogRequests());
+        self::assertSame('MaxBot', $config->getAppName());
+        self::assertNull($config->getLogger());
     }
 
-    // --- Implements ConfigInterface ---
-
-    public function testImplementsConfigInterface()
+    #[Test]
+    public function implementsConfigInterface(): void
     {
         $config = new Config('token');
-        $this->assertInstanceOf(ConfigInterface::class, $config);
+        self::assertInstanceOf(ConfigInterface::class, $config);
     }
 
-    // --- Constructor validation (immutable — all set via constructor) ---
-
-    public function testConstructWithCustomTimeout()
+    #[Test]
+    public function constructWithCustomTimeout(): void
     {
         $config = new Config('token', 60);
-        $this->assertEquals(60, $config->getTimeout());
+        self::assertSame(60, $config->getTimeout());
     }
 
-    public function testConstructWithTimeoutTooLow()
+    #[Test]
+    public function constructWithTimeoutTooLow(): void
     {
         $this->expectException(MaxConfigException::class);
         new Config('token', 1);
     }
 
-    public function testConstructWithTimeoutTooHigh()
+    #[Test]
+    public function constructWithTimeoutTooHigh(): void
     {
         $this->expectException(MaxConfigException::class);
         new Config('token', 999);
     }
 
-    public function testConstructWithCustomRetries()
+    #[Test]
+    public function constructWithCustomRetries(): void
     {
         $config = new Config('token', 30, 5);
-        $this->assertEquals(5, $config->getRetries());
+        self::assertSame(5, $config->getRetries());
     }
 
-    public function testConstructWithRetriesTooHigh()
+    #[Test]
+    public function constructWithRetriesTooHigh(): void
     {
         $this->expectException(MaxConfigException::class);
         new Config('token', 30, 20);
     }
 
-    public function testConstructWithCustomRateLimit()
+    #[Test]
+    public function constructWithCustomRateLimit(): void
     {
         $config = new Config('token', 30, 3, 50);
-        $this->assertEquals(50, $config->getRateLimit());
+        self::assertSame(50, $config->getRateLimit());
     }
 
-    public function testConstructWithRateLimitTooHigh()
+    #[Test]
+    public function constructWithRateLimitTooHigh(): void
     {
         $this->expectException(MaxConfigException::class);
         new Config('token', 30, 3, 200);
     }
 
-    public function testConstructWithVerifySslFalse()
+    #[Test]
+    public function constructWithVerifySslFalse(): void
     {
         $config = new Config('token', 30, 3, 30, false);
-        $this->assertFalse($config->getVerifySsl());
+        self::assertFalse($config->getVerifySsl());
     }
 
-    public function testConstructWithLogRequestsFalse()
+    #[Test]
+    public function constructWithLogRequestsFalse(): void
     {
         $config = new Config('token', 30, 3, 30, true, false);
-        $this->assertFalse($config->getLogRequests());
+        self::assertFalse($config->getLogRequests());
     }
 
-    public function testConstructWithCustomAppName()
+    #[Test]
+    public function constructWithCustomAppName(): void
     {
         $config = new Config('token', 30, 3, 30, true, true, 'MyApp');
-        $this->assertEquals('MyApp', $config->getAppName());
+        self::assertSame('MyApp', $config->getAppName());
     }
 
-    public function testConstructWithLogger()
+    #[Test]
+    public function constructWithLogger(): void
     {
         $logger = $this->createMock(LoggerInterface::class);
         $config = new Config('token', 30, 3, 30, true, true, 'MaxBot', $logger);
-        $this->assertSame($logger, $config->getLogger());
+        self::assertSame($logger, $config->getLogger());
     }
 
-    // --- fromEnvironment ---
-
-    public function testFromEnvironmentValid()
+    #[Test]
+    public function fromEnvironmentValid(): void
     {
-        putenv('MAX_BOT_TOKEN=env_test_token');
-        putenv('MAX_BOT_TIMEOUT=60');
-        putenv('MAX_BOT_RETRIES=5');
-        putenv('MAX_BOT_RATE_LIMIT=50');
-        putenv('MAX_BOT_VERIFY_SSL=false');
-        putenv('MAX_BOT_LOG_REQUESTS=0');
-        putenv('MAX_BOT_APP_NAME=EnvApp');
+        \putenv('MAX_BOT_TOKEN=env_test_token');
+        \putenv('MAX_BOT_TIMEOUT=60');
+        \putenv('MAX_BOT_RETRIES=5');
+        \putenv('MAX_BOT_RATE_LIMIT=50');
+        \putenv('MAX_BOT_VERIFY_SSL=false');
+        \putenv('MAX_BOT_LOG_REQUESTS=0');
+        \putenv('MAX_BOT_APP_NAME=EnvApp');
 
         try {
             $config = Config::fromEnvironment();
-
-            $this->assertEquals('env_test_token', $config->getToken());
-            $this->assertEquals(60, $config->getTimeout());
-            $this->assertEquals(5, $config->getRetries());
-            $this->assertEquals(50, $config->getRateLimit());
-            $this->assertFalse($config->getVerifySsl());
-            $this->assertFalse($config->getLogRequests());
-            $this->assertEquals('EnvApp', $config->getAppName());
+            self::assertSame('env_test_token', $config->getToken());
+            self::assertSame(60, $config->getTimeout());
+            self::assertSame(5, $config->getRetries());
+            self::assertSame(50, $config->getRateLimit());
+            self::assertFalse($config->getVerifySsl());
+            self::assertFalse($config->getLogRequests());
+            self::assertSame('EnvApp', $config->getAppName());
         } finally {
-            putenv('MAX_BOT_TOKEN');
-            putenv('MAX_BOT_TIMEOUT');
-            putenv('MAX_BOT_RETRIES');
-            putenv('MAX_BOT_RATE_LIMIT');
-            putenv('MAX_BOT_VERIFY_SSL');
-            putenv('MAX_BOT_LOG_REQUESTS');
-            putenv('MAX_BOT_APP_NAME');
+            \putenv('MAX_BOT_TOKEN');
+            \putenv('MAX_BOT_TIMEOUT');
+            \putenv('MAX_BOT_RETRIES');
+            \putenv('MAX_BOT_RATE_LIMIT');
+            \putenv('MAX_BOT_VERIFY_SSL');
+            \putenv('MAX_BOT_LOG_REQUESTS');
+            \putenv('MAX_BOT_APP_NAME');
         }
     }
 
-    public function testFromEnvironmentTokenOnly()
+    #[Test]
+    public function fromEnvironmentTokenOnly(): void
     {
-        putenv('MAX_BOT_TOKEN=minimal_token');
-
+        \putenv('MAX_BOT_TOKEN=minimal_token');
         try {
             $config = Config::fromEnvironment();
-
-            $this->assertEquals('minimal_token', $config->getToken());
-            $this->assertEquals(30, $config->getTimeout());
-            $this->assertEquals(3, $config->getRetries());
+            self::assertSame('minimal_token', $config->getToken());
+            self::assertSame(30, $config->getTimeout());
+            self::assertSame(3, $config->getRetries());
         } finally {
-            putenv('MAX_BOT_TOKEN');
+            \putenv('MAX_BOT_TOKEN');
         }
     }
 
-    public function testFromEnvironmentMissingTokenThrows()
+    #[Test]
+    public function fromEnvironmentMissingTokenThrows(): void
     {
-        putenv('MAX_BOT_TOKEN'); // unset
+        \putenv('MAX_BOT_TOKEN');
         $this->expectException(MaxConfigException::class);
         Config::fromEnvironment();
     }
 
-    public function testFromEnvironmentBoolConversions()
+    #[Test]
+    public function fromEnvironmentBoolConversions(): void
     {
-        putenv('MAX_BOT_TOKEN=bool_test_token');
-        putenv('MAX_BOT_VERIFY_SSL=true');
-        putenv('MAX_BOT_LOG_REQUESTS=yes');
+        \putenv('MAX_BOT_TOKEN=bool_test_token');
+        \putenv('MAX_BOT_VERIFY_SSL=true');
+        \putenv('MAX_BOT_LOG_REQUESTS=yes');
 
         try {
             $config = Config::fromEnvironment();
-
-            $this->assertTrue($config->getVerifySsl());
-            $this->assertTrue($config->getLogRequests());
+            self::assertTrue($config->getVerifySsl());
+            self::assertTrue($config->getLogRequests());
         } finally {
-            putenv('MAX_BOT_TOKEN');
-            putenv('MAX_BOT_VERIFY_SSL');
-            putenv('MAX_BOT_LOG_REQUESTS');
+            \putenv('MAX_BOT_TOKEN');
+            \putenv('MAX_BOT_VERIFY_SSL');
+            \putenv('MAX_BOT_LOG_REQUESTS');
         }
     }
 
-    // --- fromIniFile ---
-
-    public function testFromIniFileValid()
+    #[Test]
+    public function fromIniFileValid(): void
     {
         $iniContent = "[max]\ntoken = ini_test_token\ntimeout = 45\nretries = 2\nrate_limit = 20\nverify_ssl = false\nlog_requests = true\napp_name = IniApp\n";
-        $tmpFile = tempnam(sys_get_temp_dir(), 'max_cfg_');
-        file_put_contents($tmpFile, $iniContent);
+        $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_cfg_');
+        \file_put_contents($tmpFile, $iniContent);
 
         try {
             $config = Config::fromIniFile($tmpFile);
-
-            $this->assertEquals('ini_test_token', $config->getToken());
-            $this->assertEquals(45, $config->getTimeout());
-            $this->assertEquals(2, $config->getRetries());
-            $this->assertEquals(20, $config->getRateLimit());
-            $this->assertFalse($config->getVerifySsl());
-            $this->assertTrue($config->getLogRequests());
-            $this->assertEquals('IniApp', $config->getAppName());
+            self::assertSame('ini_test_token', $config->getToken());
+            self::assertSame(45, $config->getTimeout());
+            self::assertSame(2, $config->getRetries());
+            self::assertSame(20, $config->getRateLimit());
+            self::assertFalse($config->getVerifySsl());
+            self::assertTrue($config->getLogRequests());
+            self::assertSame('IniApp', $config->getAppName());
         } finally {
-            unlink($tmpFile);
+            \unlink($tmpFile);
         }
     }
 
-    public function testFromIniFileTokenOnly()
+    #[Test]
+    public function fromIniFileTokenOnly(): void
     {
         $iniContent = "[max]\ntoken = simple_token\n";
-        $tmpFile = tempnam(sys_get_temp_dir(), 'max_cfg_');
-        file_put_contents($tmpFile, $iniContent);
+        $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_cfg_');
+        \file_put_contents($tmpFile, $iniContent);
 
         try {
             $config = Config::fromIniFile($tmpFile);
-
-            $this->assertEquals('simple_token', $config->getToken());
-            $this->assertEquals(30, $config->getTimeout()); // default
+            self::assertSame('simple_token', $config->getToken());
+            self::assertSame(30, $config->getTimeout());
         } finally {
-            unlink($tmpFile);
+            \unlink($tmpFile);
         }
     }
 
-    public function testFromIniFileNotFoundThrows()
+    #[Test]
+    public function fromIniFileNotFoundThrows(): void
     {
         $this->expectException(MaxConfigException::class);
         Config::fromIniFile('/nonexistent/path/config.ini');
     }
 
-    public function testFromIniFileMissingTokenThrows()
+    #[Test]
+    public function fromIniFileMissingTokenThrows(): void
     {
         $iniContent = "[max]\ntimeout = 30\n";
-        $tmpFile = tempnam(sys_get_temp_dir(), 'max_cfg_');
-        file_put_contents($tmpFile, $iniContent);
+        $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_cfg_');
+        \file_put_contents($tmpFile, $iniContent);
 
         try {
             $this->expectException(MaxConfigException::class);
             Config::fromIniFile($tmpFile);
         } finally {
-            unlink($tmpFile);
+            \unlink($tmpFile);
         }
     }
 
-    public function testFromIniFileMissingSectionThrowsForToken()
+    #[Test]
+    public function fromIniFileMissingSectionThrowsForToken(): void
     {
         $iniContent = "[other]\nfoo = bar\n";
-        $tmpFile = tempnam(sys_get_temp_dir(), 'max_cfg_');
-        file_put_contents($tmpFile, $iniContent);
+        $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_cfg_');
+        \file_put_contents($tmpFile, $iniContent);
 
         try {
             $this->expectException(MaxConfigException::class);
             Config::fromIniFile($tmpFile);
         } finally {
-            unlink($tmpFile);
+            \unlink($tmpFile);
         }
     }
 }

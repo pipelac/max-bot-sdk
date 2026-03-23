@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Resource;
 
 use MaxBotSdk\DTO\ActionResult;
@@ -18,13 +20,10 @@ final class Messages extends ResourceAbstract
     /**
      * Отправить сообщение в чат.
      *
-     * @param array    $body   Тело сообщения (text, attachments, ...).
-     * @param array|null $notify Настройки уведомления.
-     * @param int|null $chatId ID чата.
-     * @return Message
-     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @param array<string, mixed>      $body   Тело сообщения.
+     * @param array<string, mixed>|null $notify Настройки уведомления.
      */
-    public function sendMessage(array $body, array $notify = null, $chatId = null)
+    public function sendMessage(array $body, ?array $notify = null, ?int $chatId = null): Message
     {
         $query = [];
         if ($chatId !== null) {
@@ -40,17 +39,7 @@ final class Messages extends ResourceAbstract
         return Message::fromArray($data);
     }
 
-    /**
-     * Отправить текстовое сообщение (shortcut).
-     *
-     * @param string   $text   Текст.
-     * @param int      $chatId ID чата.
-     * @param string   $format Формат (markdown, html). По умолчанию markdown.
-     * @return Message
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
-     */
-    public function sendText($text, $chatId, $format = 'markdown')
+    public function sendText(string $text, int $chatId, string $format = 'markdown'): Message
     {
         $this->validateText($text);
         $chatId = $this->validateId($chatId, 'Chat ID');
@@ -58,16 +47,9 @@ final class Messages extends ResourceAbstract
     }
 
     /**
-     * Отправить текст с inline-клавиатурой (shortcut).
-     *
-     * @param string $text   Текст.
-     * @param int    $chatId ID чата.
-     * @param array  $rows   Ряды кнопок для KeyboardBuilder.
-     * @return Message
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
+     * @param list<list<array<string, mixed>>> $rows Ряды кнопок.
      */
-    public function sendTextWithKeyboard($text, $chatId, array $rows)
+    public function sendTextWithKeyboard(string $text, int $chatId, array $rows): Message
     {
         $this->validateText($text);
         $chatId = $this->validateId($chatId, 'Chat ID');
@@ -79,47 +61,33 @@ final class Messages extends ResourceAbstract
                 'attachments' => [$keyboard],
             ],
             null,
-            $chatId
+            $chatId,
         );
     }
 
     /**
-     * Получить сообщения из чата.
-     *
-     * @param int      $chatId ID чата.
-     * @param int|null $count  Количество.
-     * @param int|null $from   Начальная метка.
-     * @param int|null $to     Конечная метка.
-     * @return PaginatedResult Коллекция Message DTO.
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
+     * @return PaginatedResult<Message>
      */
-    public function getMessages($chatId, $count = null, $from = null, $to = null)
+    public function getMessages(int $chatId, ?int $count = null, ?int $from = null, ?int $to = null): PaginatedResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         $query = ['chat_id' => $chatId];
+
         if ($count !== null) {
-            $query['count'] = (int) $count;
+            $query['count'] = $count;
         }
         if ($from !== null) {
-            $query['from'] = (int) $from;
+            $query['from'] = $from;
         }
         if ($to !== null) {
-            $query['to'] = (int) $to;
+            $query['to'] = $to;
         }
 
         $data = $this->get('/messages', $query);
         return PaginatedResult::fromApiResponse($data, 'messages', Message::class);
     }
 
-    /**
-     * Получить сообщение по ID.
-     *
-     * @param string $messageId ID сообщения.
-     * @return Message
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     */
-    public function getMessage($messageId)
+    public function getMessage(string $messageId): Message
     {
         InputValidator::validateNotEmpty($messageId, 'Message ID');
         $data = $this->get('/messages/' . $messageId);
@@ -127,28 +95,16 @@ final class Messages extends ResourceAbstract
     }
 
     /**
-     * Редактировать сообщение.
-     *
-     * @param string $messageId ID сообщения.
-     * @param array  $body      Новое тело сообщения.
-     * @return Message
-     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @param array<string, mixed> $body
      */
-    public function editMessage($messageId, array $body)
+    public function editMessage(string $messageId, array $body): Message
     {
         InputValidator::validateNotEmpty($messageId, 'Message ID');
         $data = $this->put('/messages', $body, ['message_id' => $messageId]);
         return Message::fromArray($data);
     }
 
-    /**
-     * Удалить сообщение.
-     *
-     * @param string $messageId ID сообщения.
-     * @return ActionResult
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     */
-    public function deleteMessage($messageId)
+    public function deleteMessage(string $messageId): ActionResult
     {
         InputValidator::validateNotEmpty($messageId, 'Message ID');
         $data = $this->delete('/messages', ['message_id' => $messageId]);

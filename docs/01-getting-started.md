@@ -10,14 +10,24 @@ composer require pipelac/max-bot-sdk
 
 ### Вариант 1: С токеном напрямую
 
-```phpuse MaxBotSdk\ClientFactory;
+```php
+<?php
+
+declare(strict_types=1);
+
+use MaxBotSdk\ClientFactory;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН_БОТА');
 ```
 
 ### Вариант 2: С логгером
 
-```phpuse MaxBotSdk\ClientFactory;
+```php
+<?php
+
+declare(strict_types=1);
+
+use MaxBotSdk\ClientFactory;
 
 // $logger — объект, реализующий LoggerInterface (4 метода: debug, info, warning, error)
 $client = ClientFactory::create('ВАШ_ТОКЕН', $logger);
@@ -27,7 +37,12 @@ $client = ClientFactory::create('ВАШ_ТОКЕН', $logger);
 
 ### Вариант 3: С кастомным HTTP-клиентом
 
-```phpuse MaxBotSdk\ClientFactory;
+```php
+<?php
+
+declare(strict_types=1);
+
+use MaxBotSdk\ClientFactory;
 
 // $httpClient — объект, реализующий HttpClientInterface (3 метода: request, getLastStatusCode, getBaseUrl)
 $client = ClientFactory::create('ВАШ_ТОКЕН', null, $httpClient);
@@ -52,28 +67,40 @@ log_requests = true
 app_name = "MaxBot"
 ```
 
-```phpuse MaxBotSdk\ClientFactory;
+```php
+<?php
 
-// Автоматически ищет cfg/config.ini:
-$client = ClientFactory::createFromIni();
+declare(strict_types=1);
 
-// Или с указанием пути:
-$client = ClientFactory::createFromIni('/path/to/config.ini');
+use MaxBotSdk\ClientFactory;
+
+// С указанием пути:
+$client = ClientFactory::fromIni('/path/to/config.ini');
 ```
 
 ### Вариант 5: Из переменных окружения (12-Factor App)
 
-```phpuse MaxBotSdk\ClientFactory;
+```php
+<?php
+
+declare(strict_types=1);
+
+use MaxBotSdk\ClientFactory;
 
 // Требуется: MAX_BOT_TOKEN
 // Опционально: MAX_BOT_TIMEOUT, MAX_BOT_RETRIES, MAX_BOT_RATE_LIMIT,
 //              MAX_BOT_VERIFY_SSL, MAX_BOT_LOG_REQUESTS, MAX_BOT_APP_NAME
-$client = ClientFactory::createFromEnvironment();
+$client = ClientFactory::fromEnvironment();
 ```
 
 ### Вариант 6: Через ConfigBuilder (максимальная гибкость)
 
-```phpuse MaxBotSdk\ConfigBuilder;
+```php
+<?php
+
+declare(strict_types=1);
+
+use MaxBotSdk\ConfigBuilder;
 use MaxBotSdk\ClientFactory;
 
 $config = ConfigBuilder::create('TOKEN')
@@ -86,15 +113,16 @@ $config = ConfigBuilder::create('TOKEN')
     ->withLogger($logger)
     ->build();
 
-$client = ClientFactory::createFromConfig($config);
+$client = ClientFactory::fromConfig($config);
 
 // С кастомным HTTP-клиентом:
-$client = ClientFactory::createFromConfig($config, $httpClient);
+$client = ClientFactory::fromConfig($config, $httpClient);
 ```
 
 ## Проверка подключения
 
-```phptry {
+```php
+try {
     $me = $client->bot()->getMe();
     echo 'Бот подключён: ' . $me->getName() . ' (@' . $me->getUsername() . ')';
 } catch (\MaxBotSdk\Exception\MaxApiException $e) {
@@ -106,7 +134,8 @@ $client = ClientFactory::createFromConfig($config, $httpClient);
 
 ## Отправка сообщений
 
-```php// Текстовое сообщение в чат:
+```php
+// Текстовое сообщение в чат:
 $message = $client->messages()->sendMessage(
     ['text' => 'Привет из MAX Bot API SDK!'],
     null,    // notify (null = по умолчанию)
@@ -120,7 +149,8 @@ $message = $client->messages()->sendText('Привет!', $chatId);
 
 ## Доступные ресурсы
 
-```php$client->bot()           // Информация о боте → User DTO
+```php
+$client->bot()           // Информация о боте → User DTO
 $client->chats()         // Управление чатами → Chat / PaginatedResult
 $client->members()       // Участники чатов → ChatMember / PaginatedResult
 $client->messages()      // Сообщения → Message / PaginatedResult
@@ -131,7 +161,8 @@ $client->callbacks()     // Ответы на callback-кнопки → ActionRe
 
 ## Настройка Webhook
 
-```php// Подписка на все обновления:
+```php
+// Подписка на все обновления:
 $client->subscriptions()->subscribe('https://example.com/webhook');
 
 // Подписка на определённые типы:
@@ -145,14 +176,17 @@ $client->subscriptions()->subscribe(
 
 ## Обработка Webhook
 
-```phpuse MaxBotSdk\Utils\WebhookHandler;
+```php
+<?php
+
+declare(strict_types=1);
+
+use MaxBotSdk\Utils\WebhookHandler;
 
 $handler = new WebhookHandler();
 
 // Проверка подлинности
-$secret = isset($_SERVER['HTTP_X_MAX_BOT_API_SECRET'])
-    ? $_SERVER['HTTP_X_MAX_BOT_API_SECRET']
-    : '';
+$secret = $_SERVER['HTTP_X_MAX_BOT_API_SECRET'] ?? '';
 if (!$handler->verifySecret('my_secret_key', $secret)) {
     http_response_code(403);
     exit;
@@ -165,21 +199,11 @@ if ($update === null) {
     exit;
 }
 
-switch ($update->getUpdateType()) {
-    case 'message_created':
-        $text = $update->getMessage()->getText();
-        $chatId = $update->getMessage()->getChatId();
-        $client->messages()->sendMessage(
-            ['text' => 'Вы написали: ' . $text],
-            null, $chatId
-        );
-        break;
-
-    case 'message_callback':
-        $callbackId = $update->getCallbackId();
-        $client->callbacks()->answerCallback($callbackId, null, 'Принято!');
-        break;
-}
+match ($update->getUpdateType()) {
+    'message_created' => handleMessage($update),
+    'message_callback' => handleCallback($update),
+    default => null,
+};
 
 http_response_code(200);
 ```

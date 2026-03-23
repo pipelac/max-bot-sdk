@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
 /**
@@ -9,143 +11,108 @@ namespace MaxBotSdk\DTO;
  */
 final class Chat extends AbstractDto
 {
-    /** @var int */
-    private $chatId;
-
-    /** @var string */
-    private $type;
-
-    /** @var string */
-    private $status;
-
-    /** @var string */
-    private $title;
-
-    /** @var string|null */
-    private $description;
-
-    /** @var int */
-    private $participantsCount;
-
-    /** @var int|null */
-    private $ownerId;
-
-    /** @var bool */
-    private $isPublic;
-
-    /** @var string|null */
-    private $link;
-
-    /** @var array|null */
-    private $icon;
-
-    /** @var int|null */
-    private $lastEventTime;
+    private readonly int $chatId;
+    private readonly string $type;
+    private readonly string $status;
+    private readonly ?string $title;
+    private readonly ?string $description;
+    private readonly ?int $participantsCount;
+    private readonly ?User $owner;
+    private readonly bool $isPublic;
+    private readonly ?string $link;
+    /** @var array<string, mixed>|null */
+    private readonly ?array $icon;
+    private readonly ?int $lastEventTime;
 
     /**
-     * @param array $data
+     * @param array<string, mixed> $data
      */
     private function __construct(array $data)
     {
         $this->chatId = self::getInt($data, 'chat_id');
         $this->type = self::getString($data, 'type');
         $this->status = self::getString($data, 'status');
-        $this->title = self::getString($data, 'title');
+        $this->title = self::getStringOrNull($data, 'title');
         $this->description = self::getStringOrNull($data, 'description');
-        $this->participantsCount = self::getInt($data, 'participants_count');
-        $this->ownerId = self::getIntOrNull($data, 'owner_id');
+        $this->participantsCount = self::getIntOrNull($data, 'participants_count');
+        $this->owner = isset($data['owner_id']) || isset($data['owner'])
+            ? $this->parseOwner($data)
+            : null;
         $this->isPublic = self::getBool($data, 'is_public');
         $this->link = self::getStringOrNull($data, 'link');
         $this->icon = self::getArrayOrNull($data, 'icon');
         $this->lastEventTime = self::getIntOrNull($data, 'last_event_time');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArray(array $data)
+    public static function fromArray(array $data): static
     {
         return new self($data);
     }
 
-    /** @return int */
-    public function getChatId()
+    public function getChatId(): int
     {
         return $this->chatId;
     }
 
-    /** @return string */
-    public function getType()
+    public function getType(): string
     {
         return $this->type;
     }
 
-    /** @return string */
-    public function getStatus()
+    public function getStatus(): string
     {
         return $this->status;
     }
 
-    /** @return string */
-    public function getTitle()
+    public function getTitle(): ?string
     {
         return $this->title;
     }
 
-    /** @return string|null */
-    public function getDescription()
+    public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    /** @return int */
-    public function getParticipantsCount()
+    public function getParticipantsCount(): ?int
     {
         return $this->participantsCount;
     }
 
-    /** @return int|null */
-    public function getOwnerId()
+    public function getOwner(): ?User
     {
-        return $this->ownerId;
+        return $this->owner;
     }
 
-    /** @return bool */
-    public function isPublic()
+    public function isPublic(): bool
     {
         return $this->isPublic;
     }
 
-    /** @return string|null */
-    public function getLink()
+    public function getLink(): ?string
     {
         return $this->link;
     }
 
-    /** @return array|null */
-    public function getIcon()
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getIcon(): ?array
     {
         return $this->icon;
     }
 
-    /** @return int|null */
-    public function getLastEventTime()
+    public function getLastEventTime(): ?int
     {
         return $this->lastEventTime;
     }
 
-    /**
-     * @return string
-     */
-    public function __toString()
+    public function __toString(): string
     {
-        return sprintf('Chat#%d (%s)', $this->chatId, $this->title);
+        return \sprintf('Chat#%d (%s)', $this->chatId, $this->title ?? $this->type);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'chat_id'            => $this->chatId,
@@ -154,11 +121,25 @@ final class Chat extends AbstractDto
             'title'              => $this->title,
             'description'        => $this->description,
             'participants_count' => $this->participantsCount,
-            'owner_id'           => $this->ownerId,
+            'owner'              => $this->owner?->toArray(),
             'is_public'          => $this->isPublic,
             'link'               => $this->link,
             'icon'               => $this->icon,
             'last_event_time'    => $this->lastEventTime,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function parseOwner(array $data): ?User
+    {
+        if (isset($data['owner']) && \is_array($data['owner'])) {
+            return User::fromArray($data['owner']);
+        }
+        if (isset($data['owner_id'])) {
+            return User::fromArray(['user_id' => $data['owner_id'], 'name' => '']);
+        }
+        return null;
     }
 }

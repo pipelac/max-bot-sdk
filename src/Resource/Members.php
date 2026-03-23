@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Resource;
 
 use MaxBotSdk\DTO\ActionResult;
@@ -14,24 +16,17 @@ use MaxBotSdk\DTO\PaginatedResult;
 final class Members extends ResourceAbstract
 {
     /**
-     * Получить список участников чата.
-     *
-     * @param int      $chatId ID чата.
-     * @param int|null $count  Количество.
-     * @param int|null $marker Маркер для пагинации.
-     * @return PaginatedResult Коллекция ChatMember DTO.
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
+     * @return PaginatedResult<ChatMember>
      */
-    public function getMembers($chatId, $count = null, $marker = null)
+    public function getMembers(int $chatId, ?int $count = null, ?int $marker = null): PaginatedResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         $query = [];
         if ($count !== null) {
-            $query['count'] = (int) $count;
+            $query['count'] = $count;
         }
         if ($marker !== null) {
-            $query['marker'] = (int) $marker;
+            $query['marker'] = $marker;
         }
 
         $data = $this->get('/chats/' . $chatId . '/members', $query);
@@ -39,32 +34,16 @@ final class Members extends ResourceAbstract
     }
 
     /**
-     * Добавить участников в чат.
-     *
-     * @param int   $chatId  ID чата.
-     * @param int[] $userIds Массив ID пользователей.
-     * @return ActionResult
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
+     * @param list<int> $userIds
      */
-    public function addMembers($chatId, array $userIds)
+    public function addMembers(int $chatId, array $userIds): ActionResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         $data = $this->post('/chats/' . $chatId . '/members', ['user_ids' => $userIds]);
         return ActionResult::fromArray($data);
     }
 
-    /**
-     * Удалить участника из чата.
-     *
-     * @param int       $chatId ID чата.
-     * @param int       $userId ID пользователя.
-     * @param bool|null $block  Заблокировать ли пользователя.
-     * @return ActionResult
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
-     */
-    public function removeMember($chatId, $userId, $block = null)
+    public function removeMember(int $chatId, int $userId, ?bool $block = null): ActionResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         $userId = $this->validateId($userId, 'User ID');
@@ -76,30 +55,14 @@ final class Members extends ResourceAbstract
         return ActionResult::fromArray($data);
     }
 
-    /**
-     * Получить информацию об участии бота в чате.
-     *
-     * @param int $chatId ID чата.
-     * @return ChatMember
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
-     */
-    public function getMyMembership($chatId)
+    public function getMyMembership(int $chatId): ChatMember
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         $data = $this->get('/chats/' . $chatId . '/members/me');
         return ChatMember::fromArray($data);
     }
 
-    /**
-     * Покинуть чат.
-     *
-     * @param int $chatId ID чата.
-     * @return ActionResult
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
-     */
-    public function leaveChat($chatId)
+    public function leaveChat(int $chatId): ActionResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         $data = $this->delete('/chats/' . $chatId . '/members/me');
@@ -107,30 +70,16 @@ final class Members extends ResourceAbstract
     }
 
     /**
-     * Получить список админов чата.
-     *
-     * @param int $chatId ID чата.
-     * @return PaginatedResult Коллекция ChatMember DTO.
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
+     * @return PaginatedResult<ChatMember>
      */
-    public function getAdmins($chatId)
+    public function getAdmins(int $chatId): PaginatedResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         $data = $this->get('/chats/' . $chatId . '/members/admins');
         return PaginatedResult::fromApiResponse($data, 'members', ChatMember::class);
     }
 
-    /**
-     * Назначить пользователя администратором.
-     *
-     * @param int $chatId ID чата.
-     * @param int $userId ID пользователя.
-     * @return ActionResult
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
-     */
-    public function addAdmin($chatId, $userId)
+    public function addAdmin(int $chatId, int $userId): ActionResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         $userId = $this->validateId($userId, 'User ID');
@@ -138,16 +87,7 @@ final class Members extends ResourceAbstract
         return ActionResult::fromArray($data);
     }
 
-    /**
-     * Снять с пользователя права администратора.
-     *
-     * @param int $chatId ID чата.
-     * @param int $userId ID пользователя.
-     * @return ActionResult
-     * @throws \MaxBotSdk\Exception\MaxApiException
-     * @throws \MaxBotSdk\Exception\MaxValidationException
-     */
-    public function removeAdmin($chatId, $userId)
+    public function removeAdmin(int $chatId, int $userId): ActionResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         $userId = $this->validateId($userId, 'User ID');

@@ -1,9 +1,9 @@
 parameters:
-    level: 5
+    level: 9
     paths:
         - src
     bootstrapFiles:
         - vendor/autoload.php
-    # Целевая версия PHP для анализа — 8.1 (минимально поддерживаемая в v2.x)
-    # Level 6 будет включён после рефакторинга кода на typed properties
     phpVersion: 80100
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: true

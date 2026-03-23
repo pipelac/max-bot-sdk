@@ -1,54 +1,37 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Exception;
 
 /**
  * Исключение для ошибок MAX Bot API (HTTP 4xx/5xx).
  *
- * Содержит HTTP-код, описание ошибки и код ошибки из ответа API.
- *
  * @since 1.0.0
  */
 final class MaxApiException extends MaxException
 {
-    /** @var int HTTP статус код ответа */
-    private $statusCode;
-
-    /** @var string|null Описание ошибки из ответа API */
-    private $description;
-
-    /** @var string|null Код ошибки из ответа API */
-    private $errorCode;
-
-    /**
-     * @param string          $message     Сообщение об ошибке.
-     * @param int             $statusCode  HTTP статус код.
-     * @param string|null     $description Описание ошибки от API.
-     * @param string|null     $errorCode   Код ошибки от API.
-     * @param \Exception|null $previous    Предыдущее исключение.
-     */
-    public function __construct($message, $statusCode = 0, $description = null, $errorCode = null, $previous = null)
-    {
+    public function __construct(
+        string $message,
+        private readonly int $statusCode = 0,
+        private readonly ?string $description = null,
+        private readonly ?string $errorCode = null,
+        ?\Throwable $previous = null,
+    ) {
         parent::__construct($message, $statusCode, $previous);
-        $this->statusCode = $statusCode;
-        $this->description = $description;
-        $this->errorCode = $errorCode;
     }
 
-    /** @return int */
-    public function getStatusCode()
+    public function getStatusCode(): int
     {
         return $this->statusCode;
     }
 
-    /** @return string|null */
-    public function getDescription()
+    public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    /** @return string|null */
-    public function getErrorCode()
+    public function getErrorCode(): ?string
     {
         return $this->errorCode;
     }

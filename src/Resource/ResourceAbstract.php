@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Resource;
 
 use MaxBotSdk\Contracts\ClientInterface;
@@ -9,116 +11,74 @@ use MaxBotSdk\Utils\InputValidator;
 /**
  * Абстрактный базовый класс для ресурсов MAX Bot API.
  *
- * Предоставляет общую точку доступа к Client (через интерфейс) и унифицированные
- * методы для HTTP-запросов с валидацией.
- *
  * @since 1.0.0
  */
 abstract class ResourceAbstract implements ResourceInterface
 {
-    /**
-     * @var ClientInterface Экземпляр клиента.
-     */
-    protected $client;
-
-    /**
-     * @param ClientInterface $client Клиент MAX Bot API.
-     */
-    public function __construct(ClientInterface $client)
-    {
-        $this->client = $client;
+    public function __construct(
+        protected readonly ClientInterface $client,
+    ) {
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getClient()
+    public function getClient(): ClientInterface
     {
         return $this->client;
     }
 
     /**
-     * GET-запрос через Client.
-     *
-     * @param string $endpoint Эндпоинт.
-     * @param array  $query    Query-параметры.
-     * @return array
+     * @param array<string, mixed> $query
+     * @return array<string, mixed>
      */
-    protected function get($endpoint, array $query = [])
+    protected function get(string $endpoint, array $query = []): array
     {
         return $this->client->get($endpoint, $query);
     }
 
     /**
-     * POST-запрос через Client.
-     *
-     * @param string     $endpoint Эндпоинт.
-     * @param array|null $json     JSON-тело.
-     * @param array      $query    Query-параметры.
-     * @return array
+     * @param array<string, mixed>|null $json
+     * @param array<string, mixed>      $query
+     * @return array<string, mixed>
      */
-    protected function post($endpoint, array $json = null, array $query = [])
+    protected function post(string $endpoint, ?array $json = null, array $query = []): array
     {
         return $this->client->post($endpoint, $json, $query);
     }
 
     /**
-     * PUT-запрос через Client.
-     *
-     * @param string     $endpoint Эндпоинт.
-     * @param array|null $json     JSON-тело.
-     * @param array      $query    Query-параметры.
-     * @return array
+     * @param array<string, mixed>|null $json
+     * @param array<string, mixed>      $query
+     * @return array<string, mixed>
      */
-    protected function put($endpoint, array $json = null, array $query = [])
+    protected function put(string $endpoint, ?array $json = null, array $query = []): array
     {
         return $this->client->put($endpoint, $json, $query);
     }
 
     /**
-     * PATCH-запрос через Client.
-     *
-     * @param string     $endpoint Эндпоинт.
-     * @param array|null $json     JSON-тело.
-     * @param array      $query    Query-параметры.
-     * @return array
+     * @param array<string, mixed>|null $json
+     * @param array<string, mixed>      $query
+     * @return array<string, mixed>
      */
-    protected function patch($endpoint, array $json = null, array $query = [])
+    protected function patch(string $endpoint, ?array $json = null, array $query = []): array
     {
         return $this->client->patch($endpoint, $json, $query);
     }
 
     /**
-     * DELETE-запрос через Client.
-     *
-     * @param string $endpoint Эндпоинт.
-     * @param array  $query    Query-параметры.
-     * @return array
+     * @param array<string, mixed> $query
+     * @return array<string, mixed>
      */
-    protected function delete($endpoint, array $query = [])
+    protected function delete(string $endpoint, array $query = []): array
     {
         return $this->client->delete($endpoint, $query);
     }
 
-    /**
-     * Валидирует числовой ID.
-     *
-     * @param mixed  $id   Значение.
-     * @param string $name Имя параметра.
-     * @return int
-     */
-    protected function validateId($id, $name = 'ID')
+    protected function validateId(mixed $id, string $name = 'ID'): int
     {
         return InputValidator::validateId($id, $name);
     }
 
-    /**
-     * Валидирует текст сообщения.
-     *
-     * @param string $text Текст.
-     * @return string
-     */
-    protected function validateText($text)
+    protected function validateText(string $text): string
     {
         return InputValidator::validateText($text);
     }

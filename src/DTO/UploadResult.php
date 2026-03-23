@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
 /**
@@ -9,14 +11,11 @@ namespace MaxBotSdk\DTO;
  */
 final class UploadResult extends AbstractDto
 {
-    /** @var string */
-    private $url;
-
-    /** @var string */
-    private $token;
+    private readonly string $url;
+    private readonly string $token;
 
     /**
-     * @param array $data
+     * @param array<string, mixed> $data
      */
     private function __construct(array $data)
     {
@@ -24,52 +23,32 @@ final class UploadResult extends AbstractDto
         $this->token = self::getString($data, 'token');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArray(array $data)
+    public static function fromArray(array $data): static
     {
         return new self($data);
     }
 
-    /**
-     * Создать из URL загрузки (результат getUploadUrl).
-     *
-     * @param string $url
-     * @return self
-     */
-    public static function fromUrl($url)
+    public static function fromUrl(string $url): self
     {
         return new self(['url' => $url]);
     }
 
-    /**
-     * Создать из токена (результат uploadFileToUrl).
-     *
-     * @param string $token
-     * @return self
-     */
-    public static function fromToken($token)
+    public static function fromToken(string $token): self
     {
         return new self(['token' => $token]);
     }
 
-    /** @return string */
-    public function getUrl()
+    public function getUrl(): string
     {
         return $this->url;
     }
 
-    /** @return string */
-    public function getToken()
+    public function getToken(): string
     {
         return $this->token;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'url'   => $this->url,

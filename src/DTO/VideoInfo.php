@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\DTO;
 
 /**
@@ -9,26 +11,16 @@ namespace MaxBotSdk\DTO;
  */
 final class VideoInfo extends AbstractDto
 {
-    /** @var string */
-    private $token;
-
-    /** @var string */
-    private $url;
-
-    /** @var int|null */
-    private $width;
-
-    /** @var int|null */
-    private $height;
-
-    /** @var int|null */
-    private $duration;
-
-    /** @var array|null */
-    private $thumbnail;
+    private readonly string $token;
+    private readonly string $url;
+    private readonly ?int $width;
+    private readonly ?int $height;
+    private readonly ?int $duration;
+    /** @var array<string, mixed>|null */
+    private readonly ?array $thumbnail;
 
     /**
-     * @param array $data
+     * @param array<string, mixed> $data
      */
     private function __construct(array $data)
     {
@@ -40,54 +32,45 @@ final class VideoInfo extends AbstractDto
         $this->thumbnail = self::getArrayOrNull($data, 'thumbnail');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function fromArray(array $data)
+    public static function fromArray(array $data): static
     {
         return new self($data);
     }
 
-    /** @return string */
-    public function getToken()
+    public function getToken(): string
     {
         return $this->token;
     }
 
-    /** @return string */
-    public function getUrl()
+    public function getUrl(): string
     {
         return $this->url;
     }
 
-    /** @return int|null */
-    public function getWidth()
+    public function getWidth(): ?int
     {
         return $this->width;
     }
 
-    /** @return int|null */
-    public function getHeight()
+    public function getHeight(): ?int
     {
         return $this->height;
     }
 
-    /** @return int|null */
-    public function getDuration()
+    public function getDuration(): ?int
     {
         return $this->duration;
     }
 
-    /** @return array|null */
-    public function getThumbnail()
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getThumbnail(): ?array
     {
         return $this->thumbnail;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function toArray()
+    public function toArray(): array
     {
         return [
             'token'     => $this->token,

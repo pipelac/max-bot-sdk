@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MaxBotSdk\Tests\Unit;
 
 use MaxBotSdk\Client;
@@ -14,110 +16,164 @@ use MaxBotSdk\Resource\Subscriptions;
 use MaxBotSdk\Resource\Uploads;
 use MaxBotSdk\ResponseDecoder;
 use MaxBotSdk\Tests\Helper\MockHttpClient;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * Тесты для Client (фасад).
- */
-class ClientTest extends TestCase
+final class ClientTest extends TestCase
 {
-    /** @var MockHttpClient */
-    private $mockHttp;
-
-    /** @var Client */
-    private $client;
+    private MockHttpClient $mockHttp;
+    private Client $client;
 
     protected function setUp(): void
     {
         $this->mockHttp = new MockHttpClient();
         $config = new Config('test_token');
         $decoder = new ResponseDecoder();
-        $retryHandler = new RetryHandler(0); // без повторов для тестов
+        $retryHandler = new RetryHandler(0);
         $this->client = new Client($config, $this->mockHttp, $decoder, $retryHandler);
     }
 
-    public function testBotReturnsResource()
+    #[Test]
+    public function botReturnsResource(): void
     {
-        $this->assertInstanceOf(Bot::class, $this->client->bot());
+        self::assertInstanceOf(Bot::class, $this->client->bot());
     }
 
-    public function testChatsReturnsResource()
+    #[Test]
+    public function chatsReturnsResource(): void
     {
-        $this->assertInstanceOf(Chats::class, $this->client->chats());
+        self::assertInstanceOf(Chats::class, $this->client->chats());
     }
 
-    public function testMembersReturnsResource()
+    #[Test]
+    public function membersReturnsResource(): void
     {
-        $this->assertInstanceOf(Members::class, $this->client->members());
+        self::assertInstanceOf(Members::class, $this->client->members());
     }
 
-    public function testMessagesReturnsResource()
+    #[Test]
+    public function messagesReturnsResource(): void
     {
-        $this->assertInstanceOf(Messages::class, $this->client->messages());
+        self::assertInstanceOf(Messages::class, $this->client->messages());
     }
 
-    public function testSubscriptionsReturnsResource()
+    #[Test]
+    public function subscriptionsReturnsResource(): void
     {
-        $this->assertInstanceOf(Subscriptions::class, $this->client->subscriptions());
+        self::assertInstanceOf(Subscriptions::class, $this->client->subscriptions());
     }
 
-    public function testUploadsReturnsResource()
+    #[Test]
+    public function uploadsReturnsResource(): void
     {
-        $this->assertInstanceOf(Uploads::class, $this->client->uploads());
+        self::assertInstanceOf(Uploads::class, $this->client->uploads());
     }
 
-    public function testCallbacksReturnsResource()
+    #[Test]
+    public function callbacksReturnsResource(): void
     {
-        $this->assertInstanceOf(Callbacks::class, $this->client->callbacks());
+        self::assertInstanceOf(Callbacks::class, $this->client->callbacks());
     }
 
-    public function testResourceReturnsSameInstance()
+    #[Test]
+    public function resourceReturnsSameInstance(): void
     {
         $bot1 = $this->client->bot();
         $bot2 = $this->client->bot();
-        $this->assertSame($bot1, $bot2);
+        self::assertSame($bot1, $bot2);
     }
 
-    public function testGetSendsRequest()
+    #[Test]
+    public function getSendsRequest(): void
     {
         $this->mockHttp->setResponse(200, '{"user_id": 1}');
         $result = $this->client->get('/me');
 
-        $this->assertEquals(['user_id' => 1], $result);
+        self::assertSame(['user_id' => 1], $result);
         $requests = $this->mockHttp->getRequests();
-        $this->assertCount(1, $requests);
-        $this->assertEquals('GET', $requests[0]['method']);
-        $this->assertEquals('/me', $requests[0]['url']);
+        self::assertCount(1, $requests);
+        self::assertSame('GET', $requests[0]['method']);
+        self::assertSame('/me', $requests[0]['url']);
     }
 
-    public function testPostSendsRequest()
+    #[Test]
+    public function postSendsRequest(): void
     {
         $this->mockHttp->setResponse(200, '{"message": {"body": {"mid": "abc"}}}');
-        $result = $this->client->post('/messages', ['text' => 'hello'], ['chat_id' => 123]);
+        $this->client->post('/messages', ['text' => 'hello'], ['chat_id' => 123]);
 
         $requests = $this->mockHttp->getRequests();
-        $this->assertCount(1, $requests);
-        $this->assertEquals('POST', $requests[0]['method']);
+        self::assertCount(1, $requests);
+        self::assertSame('POST', $requests[0]['method']);
     }
 
-    public function testDeleteSendsRequest()
+    #[Test]
+    public function deleteSendsRequest(): void
     {
         $this->mockHttp->setResponse(200, '{"success": true}');
-        $result = $this->client->delete('/messages', ['message_id' => 'abc']);
+        $this->client->delete('/messages', ['message_id' => 'abc']);
 
         $requests = $this->mockHttp->getRequests();
-        $this->assertEquals('DELETE', $requests[0]['method']);
+        self::assertSame('DELETE', $requests[0]['method']);
     }
 
-    public function testGetHttpClient()
+    #[Test]
+    public function getHttpClient(): void
     {
-        $this->assertSame($this->mockHttp, $this->client->getHttpClient());
+        self::assertSame($this->mockHttp, $this->client->getHttpClient());
     }
 
-    public function testGetConfig()
+    #[Test]
+    public function getConfig(): void
     {
         $config = $this->client->getConfig();
-        $this->assertInstanceOf(Config::class, $config);
-        $this->assertEquals('test_token', $config->getToken());
+        self::assertInstanceOf(Config::class, $config);
+        self::assertSame('test_token', $config->getToken());
+    }
+
+    #[Test]
+    public function putSendsRequest(): void
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+        $this->client->put('/chats/123', ['title' => 'Updated']);
+
+        $req = $this->mockHttp->getLastRequest();
+        self::assertSame('PUT', $req['method']);
+        self::assertSame('/chats/123', $req['url']);
+        self::assertSame(['title' => 'Updated'], $req['options']['json']);
+    }
+
+    #[Test]
+    public function patchSendsRequest(): void
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+        $this->client->patch('/chats/123', ['title' => 'Patched']);
+
+        $req = $this->mockHttp->getLastRequest();
+        self::assertSame('PATCH', $req['method']);
+        self::assertSame('/chats/123', $req['url']);
+        self::assertSame(['title' => 'Patched'], $req['options']['json']);
+    }
+
+    #[Test]
+    public function postWithoutJsonBody(): void
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+        $this->client->post('/endpoint');
+
+        $req = $this->mockHttp->getLastRequest();
+        self::assertSame('POST', $req['method']);
+        self::assertArrayNotHasKey('json', $req['options']);
+    }
+
+    #[Test]
+    public function getWithQueryParams(): void
+    {
+        $this->mockHttp->setResponse(200, '{"items": []}');
+        $this->client->get('/chats', ['count' => 10, 'marker' => 'abc']);
+
+        $req = $this->mockHttp->getLastRequest();
+        self::assertSame('GET', $req['method']);
+        self::assertSame(['count' => 10, 'marker' => 'abc'], $req['options']['query']);
     }
 }
