@@ -19,7 +19,7 @@ final class WebhookHandler
             return null;
         }
 
-        $decoded = \json_decode($rawBody, true);
+        $decoded = json_decode($rawBody, true);
         if (!\is_array($decoded)) {
             return null;
         }
@@ -35,6 +35,6 @@ final class WebhookHandler
         if ($expectedSecret === '' || $actualSecret === '') {
             return false;
         }
-        return \hash_equals($expectedSecret, $actualSecret);
+        return hash_equals($expectedSecret, $actualSecret);
     }
 }

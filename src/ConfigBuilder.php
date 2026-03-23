@@ -23,8 +23,7 @@ final class ConfigBuilder
 
     private function __construct(
         private readonly string $token,
-    ) {
-    }
+    ) {}
 
     public static function create(string $token): self
     {

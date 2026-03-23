@@ -32,7 +32,7 @@ final class CurlHttpClient implements HttpClientInterface
         private readonly ?LoggerInterface $logger = null,
         ?string $baseUrl = null,
     ) {
-        $this->baseUrl = $baseUrl !== null ? \rtrim($baseUrl, '/') : self::BASE_URL;
+        $this->baseUrl = $baseUrl !== null ? rtrim($baseUrl, '/') : self::BASE_URL;
     }
 
     /**
@@ -45,7 +45,7 @@ final class CurlHttpClient implements HttpClientInterface
         $this->tempFiles = [];
         $fullUrl = $this->buildUrl($url, $options);
 
-        $ch = \curl_init();
+        $ch = curl_init();
         if (!$ch instanceof CurlHandle) {
             throw new MaxConnectionException('Не удалось инициализировать cURL.');
         }
@@ -53,18 +53,18 @@ final class CurlHttpClient implements HttpClientInterface
         try {
             $this->configureCurl($ch, $method, $fullUrl, $options);
 
-            $responseBody = \curl_exec($ch);
+            $responseBody = curl_exec($ch);
 
             if ($responseBody === false) {
-                $error = \curl_error($ch);
-                $errno = \curl_errno($ch);
+                $error = curl_error($ch);
+                $errno = curl_errno($ch);
                 throw new MaxConnectionException(
                     \sprintf('Ошибка cURL [%s %s]: %s (код %d)', $method, $url, $error, $errno),
                     $errno,
                 );
             }
 
-            $this->lastStatusCode = (int) \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $this->lastStatusCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $this->logRequest($method, $url, $this->lastStatusCode);
 
             return [
@@ -72,7 +72,7 @@ final class CurlHttpClient implements HttpClientInterface
                 'body'        => (string) $responseBody,
             ];
         } finally {
-            \curl_close($ch);
+            curl_close($ch);
             $this->cleanupTempFiles();
         }
     }
@@ -92,13 +92,13 @@ final class CurlHttpClient implements HttpClientInterface
      */
     private function buildUrl(string $url, array $options): string
     {
-        $fullUrl = \str_starts_with($url, 'http://') || \str_starts_with($url, 'https://')
+        $fullUrl = str_starts_with($url, 'http://') || str_starts_with($url, 'https://')
             ? $url
-            : $this->baseUrl . '/' . \ltrim($url, '/');
+            : $this->baseUrl . '/' . ltrim($url, '/');
 
         if (isset($options['query']) && \is_array($options['query']) && $options['query'] !== []) {
-            $separator = \str_contains($fullUrl, '?') ? '&' : '?';
-            $fullUrl .= $separator . \http_build_query($options['query']);
+            $separator = str_contains($fullUrl, '?') ? '&' : '?';
+            $fullUrl .= $separator . http_build_query($options['query']);
         }
 
         return $fullUrl;
@@ -109,29 +109,29 @@ final class CurlHttpClient implements HttpClientInterface
      */
     private function configureCurl(CurlHandle $ch, string $method, string $fullUrl, array $options): void
     {
-        \curl_setopt($ch, CURLOPT_URL, $fullUrl);
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, $this->config->getTimeout());
-        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, \min($this->config->getTimeout(), 10));
-        \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->config->getVerifySsl());
-        \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $this->config->getVerifySsl() ? 2 : 0);
-        \curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
+        curl_setopt($ch, CURLOPT_URL, $fullUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $this->config->getTimeout());
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, min($this->config->getTimeout(), 10));
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, $this->config->getVerifySsl());
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, $this->config->getVerifySsl() ? 2 : 0);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
 
         $this->setMethod($ch, $method);
 
         $headers = $this->buildHeaders($method, $options);
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         $this->setBody($ch, $method, $options);
     }
 
     private function setMethod(CurlHandle $ch, string $method): void
     {
-        $upper = \strtoupper($method);
+        $upper = strtoupper($method);
         match ($upper) {
-            'GET'  => \curl_setopt($ch, CURLOPT_HTTPGET, true),
-            'POST' => \curl_setopt($ch, CURLOPT_POST, true),
-            default => \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $upper),
+            'GET'  => curl_setopt($ch, CURLOPT_HTTPGET, true),
+            'POST' => curl_setopt($ch, CURLOPT_POST, true),
+            default => curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $upper),
         };
     }
 
@@ -142,7 +142,7 @@ final class CurlHttpClient implements HttpClientInterface
     private function buildHeaders(string $method, array $options): array
     {
         /** @var array{version: string} $curlVersion */
-        $curlVersion = \curl_version();
+        $curlVersion = curl_version();
         $headers = [
             'Authorization: ' . $this->config->getToken(),
             'User-Agent: MaxBotSDK/' . self::SDK_VERSION . ' PHP/' . PHP_VERSION . ' cURL/' . $curlVersion['version'],
@@ -150,7 +150,7 @@ final class CurlHttpClient implements HttpClientInterface
 
         if (isset($options['headers']) && \is_array($options['headers'])) {
             foreach ($options['headers'] as $name => $value) {
-                if (\strtolower((string) $name) !== 'authorization') {
+                if (strtolower((string) $name) !== 'authorization') {
                     $headers[] = $name . ': ' . $value;
                 }
             }
@@ -174,12 +174,12 @@ final class CurlHttpClient implements HttpClientInterface
     {
         if (isset($options['multipart']) && \is_array($options['multipart'])) {
             $postFields = $this->buildMultipart($options['multipart']);
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
         } elseif (isset($options['json'])) {
-            $json = \json_encode($options['json'], JSON_UNESCAPED_UNICODE);
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
+            $json = json_encode($options['json'], JSON_UNESCAPED_UNICODE);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
         } elseif ($method === 'POST' || $method === 'PUT' || $method === 'PATCH') {
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, '');
+            curl_setopt($ch, CURLOPT_POSTFIELDS, '');
         }
     }
 
@@ -195,14 +195,14 @@ final class CurlHttpClient implements HttpClientInterface
             $name = isset($part['name']) && \is_string($part['name']) ? $part['name'] : 'file';
             $filename = isset($part['filename']) && \is_string($part['filename']) ? $part['filename'] : null;
 
-            if (isset($part['filepath']) && \is_string($part['filepath']) && \is_file($part['filepath'])) {
+            if (isset($part['filepath']) && \is_string($part['filepath']) && is_file($part['filepath'])) {
                 $mimeType = isset($part['mime_type']) && \is_string($part['mime_type']) ? $part['mime_type'] : 'application/octet-stream';
                 $postFields[$name] = new CURLFile($part['filepath'], $mimeType, $filename ?? '');
             } elseif (isset($part['contents'])) {
                 if ($filename !== null) {
-                    $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_upload_');
+                    $tmpFile = tempnam(sys_get_temp_dir(), 'max_upload_');
                     if ($tmpFile !== false) {
-                        \file_put_contents($tmpFile, $part['contents']);
+                        file_put_contents($tmpFile, $part['contents']);
                         $this->tempFiles[] = $tmpFile;
                         $mimeType = isset($part['mime_type']) && \is_string($part['mime_type']) ? $part['mime_type'] : 'application/octet-stream';
                         $postFields[$name] = new CURLFile($tmpFile, $mimeType, $filename);
@@ -219,8 +219,8 @@ final class CurlHttpClient implements HttpClientInterface
     private function cleanupTempFiles(): void
     {
         foreach ($this->tempFiles as $file) {
-            if (\is_file($file)) {
-                @\unlink($file);
+            if (is_file($file)) {
+                @unlink($file);
             }
         }
         $this->tempFiles = [];

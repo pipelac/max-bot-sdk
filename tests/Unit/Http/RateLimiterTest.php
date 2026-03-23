@@ -7,6 +7,7 @@ namespace MaxBotSdk\Tests\Unit\Http;
 use MaxBotSdk\Http\RateLimiter;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 /**
  * Тесты RateLimiter (final class — тестируем через публичный API).
@@ -58,7 +59,7 @@ final class RateLimiterTest extends TestCase
         $limiter->throttle();
 
         // Проверяем через Reflection что timestamps записываются
-        $ref = new \ReflectionProperty($limiter, 'timestamps');
+        $ref = new ReflectionProperty($limiter, 'timestamps');
         $timestamps = $ref->getValue($limiter);
 
         self::assertCount(3, $timestamps);
@@ -74,7 +75,7 @@ final class RateLimiterTest extends TestCase
         usleep(1000); // 1ms
         $limiter->throttle();
 
-        $ref = new \ReflectionProperty($limiter, 'timestamps');
+        $ref = new ReflectionProperty($limiter, 'timestamps');
         $timestamps = $ref->getValue($limiter);
 
         self::assertCount(2, $timestamps);
@@ -89,7 +90,7 @@ final class RateLimiterTest extends TestCase
 
         $limiter1->throttle();
 
-        $ref = new \ReflectionProperty(RateLimiter::class, 'timestamps');
+        $ref = new ReflectionProperty(RateLimiter::class, 'timestamps');
 
         $ts1 = $ref->getValue($limiter1);
         $ts2 = $ref->getValue($limiter2);

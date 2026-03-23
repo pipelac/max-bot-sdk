@@ -46,7 +46,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function botGetMeReturnsUserDto(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'user_id'  => 42,
             'name'     => 'TestBot',
             'username' => 'testbot',
@@ -68,7 +68,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function chatsGetChatsReturnsPaginatedResult(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'chats'  => [
                 ['chat_id' => 1, 'type' => 'chat', 'title' => 'Group1'],
                 ['chat_id' => 2, 'type' => 'chat', 'title' => 'Group2'],
@@ -88,7 +88,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function chatsGetChatReturnsChatDto(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'chat_id' => 123,
             'type'    => 'dialog',
             'title'   => 'Private',
@@ -102,7 +102,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function chatsEditChatReturnsChatDto(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'chat_id' => 123,
             'title'   => 'Updated',
         ]));
@@ -135,7 +135,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function chatsGetPinnedMessageReturnsMessage(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'message' => [
                 'mid'  => 'msg_1',
                 'text' => 'Pinned',
@@ -178,7 +178,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function membersGetMembersReturnsPaginatedResult(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'members' => [
                 ['user_id' => 10, 'name' => 'User1'],
             ],
@@ -213,7 +213,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function membersGetMyMembershipReturnsChatMemberDto(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'user_id'  => 99,
             'name'     => 'Bot',
             'is_admin' => true,
@@ -237,7 +237,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function membersGetAdminsReturnsPaginatedResult(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'members' => [
                 ['user_id' => 5, 'name' => 'Admin1', 'is_admin' => true],
             ],
@@ -273,7 +273,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function messagesSendMessageReturnsMessageDto(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'message' => [
                 'mid'  => 'm1',
                 'text' => 'Hello',
@@ -292,7 +292,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function messagesGetMessageReturnsMessageDto(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'message' => ['mid' => 'mid_123', 'text' => 'Hi'],
         ]));
         $msg = $this->client->messages()->getMessage('mid_123');
@@ -302,7 +302,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function messagesGetMessagesReturnsPaginatedResult(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'messages' => [
                 ['message' => ['mid' => 'm1', 'text' => 'Msg1']],
             ],
@@ -315,7 +315,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function messagesEditMessageReturnsMessageDto(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'message' => ['mid' => 'mid_123', 'text' => 'Updated'],
         ]));
         $msg = $this->client->messages()->editMessage('mid_123', ['text' => 'Updated']);
@@ -335,7 +335,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function messagesSendTextReturnsMessageDto(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'message' => ['mid' => 'm2', 'text' => 'Привет'],
         ]));
         $msg = $this->client->messages()->sendText('Привет', 123);
@@ -348,7 +348,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function messagesSendTextWithKeyboardReturnsMessageDto(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'message' => ['mid' => 'm4'],
         ]));
         $keyboard = [
@@ -368,7 +368,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function subscriptionsSubscribeReturnsSubscription(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'url'  => 'https://example.com/webhook',
             'time' => 1234567890,
         ]));
@@ -380,7 +380,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function subscriptionsGetSubscriptionsReturnsArray(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'subscriptions' => [
                 ['url' => 'https://example.com', 'time' => 1234567890],
             ],
@@ -403,7 +403,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function subscriptionsGetUpdatesReturnsUpdatesResult(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'updates' => [
                 ['update_type' => 'message_created', 'timestamp' => 1234567890],
             ],
@@ -465,7 +465,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function uploadsGetUploadUrlReturnsUploadResult(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'url' => 'https://upload.max.ru/abc123',
         ]));
         $result = $this->client->uploads()->getUploadUrl(UploadType::Image);
@@ -477,7 +477,7 @@ final class ResourceTest extends TestCase
     #[Test]
     public function uploadsGetVideoInfoReturnsVideoInfoDto(): void
     {
-        $this->mockHttp->setResponse(200, \json_encode([
+        $this->mockHttp->setResponse(200, json_encode([
             'token'    => 'vid_abc',
             'url'      => 'https://cdn.max.ru/video.mp4',
             'width'    => 1920,

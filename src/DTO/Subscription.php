@@ -24,7 +24,7 @@ final class Subscription extends AbstractDto
     {
         $this->url = self::getString($data, 'url');
         $this->time = self::getIntOrNull($data, 'time');
-        $this->updateTypes = \array_values(\array_map(
+        $this->updateTypes = array_values(array_map(
             static fn(mixed $v): string => \is_scalar($v) ? (string) $v : '',
             self::getArray($data, 'update_types'),
         ));

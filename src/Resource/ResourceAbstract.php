@@ -17,8 +17,7 @@ abstract class ResourceAbstract implements ResourceInterface
 {
     public function __construct(
         protected readonly ClientInterface $client,
-    ) {
-    }
+    ) {}
 
     public function getClient(): ClientInterface
     {

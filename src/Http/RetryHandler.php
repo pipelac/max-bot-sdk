@@ -23,9 +23,9 @@ class RetryHandler
         int $baseDelayMs = 1000,
         int $maxDelayMs = 30000,
     ) {
-        $this->maxRetries = \max(0, $maxRetries);
-        $this->baseDelayMs = \max(100, $baseDelayMs);
-        $this->maxDelayMs = \max($this->baseDelayMs, $maxDelayMs);
+        $this->maxRetries = max(0, $maxRetries);
+        $this->baseDelayMs = max(100, $baseDelayMs);
+        $this->maxDelayMs = max($this->baseDelayMs, $maxDelayMs);
     }
 
     /**
@@ -68,18 +68,18 @@ class RetryHandler
 
     private function calculateDelay(int $attempt): int
     {
-        $delay = $this->baseDelayMs * (int) \pow(2, $attempt - 1);
-        $delay = \min($delay, $this->maxDelayMs);
+        $delay = $this->baseDelayMs * (int) pow(2, $attempt - 1);
+        $delay = min($delay, $this->maxDelayMs);
 
         // Jitter: ±10%
         $jitter = (int) ($delay * 0.1);
-        $delay += \random_int(-$jitter, $jitter);
+        $delay += random_int(-$jitter, $jitter);
 
-        return \max(0, $delay);
+        return max(0, $delay);
     }
 
     protected function sleep(int $milliseconds): void
     {
-        \usleep($milliseconds * 1000);
+        usleep($milliseconds * 1000);
     }
 }

@@ -135,13 +135,13 @@ final class ConfigTest extends TestCase
     #[Test]
     public function fromEnvironmentValid(): void
     {
-        \putenv('MAX_BOT_TOKEN=env_test_token');
-        \putenv('MAX_BOT_TIMEOUT=60');
-        \putenv('MAX_BOT_RETRIES=5');
-        \putenv('MAX_BOT_RATE_LIMIT=50');
-        \putenv('MAX_BOT_VERIFY_SSL=false');
-        \putenv('MAX_BOT_LOG_REQUESTS=0');
-        \putenv('MAX_BOT_APP_NAME=EnvApp');
+        putenv('MAX_BOT_TOKEN=env_test_token');
+        putenv('MAX_BOT_TIMEOUT=60');
+        putenv('MAX_BOT_RETRIES=5');
+        putenv('MAX_BOT_RATE_LIMIT=50');
+        putenv('MAX_BOT_VERIFY_SSL=false');
+        putenv('MAX_BOT_LOG_REQUESTS=0');
+        putenv('MAX_BOT_APP_NAME=EnvApp');
 
         try {
             $config = Config::fromEnvironment();
@@ -153,34 +153,34 @@ final class ConfigTest extends TestCase
             self::assertFalse($config->getLogRequests());
             self::assertSame('EnvApp', $config->getAppName());
         } finally {
-            \putenv('MAX_BOT_TOKEN');
-            \putenv('MAX_BOT_TIMEOUT');
-            \putenv('MAX_BOT_RETRIES');
-            \putenv('MAX_BOT_RATE_LIMIT');
-            \putenv('MAX_BOT_VERIFY_SSL');
-            \putenv('MAX_BOT_LOG_REQUESTS');
-            \putenv('MAX_BOT_APP_NAME');
+            putenv('MAX_BOT_TOKEN');
+            putenv('MAX_BOT_TIMEOUT');
+            putenv('MAX_BOT_RETRIES');
+            putenv('MAX_BOT_RATE_LIMIT');
+            putenv('MAX_BOT_VERIFY_SSL');
+            putenv('MAX_BOT_LOG_REQUESTS');
+            putenv('MAX_BOT_APP_NAME');
         }
     }
 
     #[Test]
     public function fromEnvironmentTokenOnly(): void
     {
-        \putenv('MAX_BOT_TOKEN=minimal_token');
+        putenv('MAX_BOT_TOKEN=minimal_token');
         try {
             $config = Config::fromEnvironment();
             self::assertSame('minimal_token', $config->getToken());
             self::assertSame(30, $config->getTimeout());
             self::assertSame(3, $config->getRetries());
         } finally {
-            \putenv('MAX_BOT_TOKEN');
+            putenv('MAX_BOT_TOKEN');
         }
     }
 
     #[Test]
     public function fromEnvironmentMissingTokenThrows(): void
     {
-        \putenv('MAX_BOT_TOKEN');
+        putenv('MAX_BOT_TOKEN');
         $this->expectException(MaxConfigException::class);
         Config::fromEnvironment();
     }
@@ -188,18 +188,18 @@ final class ConfigTest extends TestCase
     #[Test]
     public function fromEnvironmentBoolConversions(): void
     {
-        \putenv('MAX_BOT_TOKEN=bool_test_token');
-        \putenv('MAX_BOT_VERIFY_SSL=true');
-        \putenv('MAX_BOT_LOG_REQUESTS=yes');
+        putenv('MAX_BOT_TOKEN=bool_test_token');
+        putenv('MAX_BOT_VERIFY_SSL=true');
+        putenv('MAX_BOT_LOG_REQUESTS=yes');
 
         try {
             $config = Config::fromEnvironment();
             self::assertTrue($config->getVerifySsl());
             self::assertTrue($config->getLogRequests());
         } finally {
-            \putenv('MAX_BOT_TOKEN');
-            \putenv('MAX_BOT_VERIFY_SSL');
-            \putenv('MAX_BOT_LOG_REQUESTS');
+            putenv('MAX_BOT_TOKEN');
+            putenv('MAX_BOT_VERIFY_SSL');
+            putenv('MAX_BOT_LOG_REQUESTS');
         }
     }
 
@@ -207,8 +207,8 @@ final class ConfigTest extends TestCase
     public function fromIniFileValid(): void
     {
         $iniContent = "[max]\ntoken = ini_test_token\ntimeout = 45\nretries = 2\nrate_limit = 20\nverify_ssl = false\nlog_requests = true\napp_name = IniApp\n";
-        $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_cfg_');
-        \file_put_contents($tmpFile, $iniContent);
+        $tmpFile = tempnam(sys_get_temp_dir(), 'max_cfg_');
+        file_put_contents($tmpFile, $iniContent);
 
         try {
             $config = Config::fromIniFile($tmpFile);
@@ -220,7 +220,7 @@ final class ConfigTest extends TestCase
             self::assertTrue($config->getLogRequests());
             self::assertSame('IniApp', $config->getAppName());
         } finally {
-            \unlink($tmpFile);
+            unlink($tmpFile);
         }
     }
 
@@ -228,15 +228,15 @@ final class ConfigTest extends TestCase
     public function fromIniFileTokenOnly(): void
     {
         $iniContent = "[max]\ntoken = simple_token\n";
-        $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_cfg_');
-        \file_put_contents($tmpFile, $iniContent);
+        $tmpFile = tempnam(sys_get_temp_dir(), 'max_cfg_');
+        file_put_contents($tmpFile, $iniContent);
 
         try {
             $config = Config::fromIniFile($tmpFile);
             self::assertSame('simple_token', $config->getToken());
             self::assertSame(30, $config->getTimeout());
         } finally {
-            \unlink($tmpFile);
+            unlink($tmpFile);
         }
     }
 
@@ -251,14 +251,14 @@ final class ConfigTest extends TestCase
     public function fromIniFileMissingTokenThrows(): void
     {
         $iniContent = "[max]\ntimeout = 30\n";
-        $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_cfg_');
-        \file_put_contents($tmpFile, $iniContent);
+        $tmpFile = tempnam(sys_get_temp_dir(), 'max_cfg_');
+        file_put_contents($tmpFile, $iniContent);
 
         try {
             $this->expectException(MaxConfigException::class);
             Config::fromIniFile($tmpFile);
         } finally {
-            \unlink($tmpFile);
+            unlink($tmpFile);
         }
     }
 
@@ -266,14 +266,14 @@ final class ConfigTest extends TestCase
     public function fromIniFileMissingSectionThrowsForToken(): void
     {
         $iniContent = "[other]\nfoo = bar\n";
-        $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_cfg_');
-        \file_put_contents($tmpFile, $iniContent);
+        $tmpFile = tempnam(sys_get_temp_dir(), 'max_cfg_');
+        file_put_contents($tmpFile, $iniContent);
 
         try {
             $this->expectException(MaxConfigException::class);
             Config::fromIniFile($tmpFile);
         } finally {
-            \unlink($tmpFile);
+            unlink($tmpFile);
         }
     }
 }

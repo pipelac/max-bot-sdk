@@ -52,13 +52,13 @@ final class ClientFactoryTest extends TestCase
     #[Test]
     public function fromEnvironment(): void
     {
-        \putenv('MAX_BOT_TOKEN=env_factory_token');
+        putenv('MAX_BOT_TOKEN=env_factory_token');
         try {
             $client = ClientFactory::fromEnvironment();
             self::assertInstanceOf(Client::class, $client);
             self::assertSame('env_factory_token', $client->getConfig()->getToken());
         } finally {
-            \putenv('MAX_BOT_TOKEN');
+            putenv('MAX_BOT_TOKEN');
         }
     }
 
@@ -66,8 +66,8 @@ final class ClientFactoryTest extends TestCase
     public function fromIni(): void
     {
         $iniContent = "[max]\ntoken = ini_factory_token\ntimeout = 45\n";
-        $tmpFile = \tempnam(\sys_get_temp_dir(), 'max_cfg_');
-        \file_put_contents($tmpFile, $iniContent);
+        $tmpFile = tempnam(sys_get_temp_dir(), 'max_cfg_');
+        file_put_contents($tmpFile, $iniContent);
 
         try {
             $client = ClientFactory::fromIni($tmpFile);
@@ -75,7 +75,7 @@ final class ClientFactoryTest extends TestCase
             self::assertSame('ini_factory_token', $client->getConfig()->getToken());
             self::assertSame(45, $client->getConfig()->getTimeout());
         } finally {
-            \unlink($tmpFile);
+            unlink($tmpFile);
         }
     }
 }

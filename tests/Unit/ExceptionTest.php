@@ -12,6 +12,8 @@ use MaxBotSdk\Exception\MaxFileException;
 use MaxBotSdk\Exception\MaxValidationException;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use RuntimeException;
 
 final class ExceptionTest extends TestCase
 {
@@ -19,7 +21,7 @@ final class ExceptionTest extends TestCase
     public function maxExceptionExtendsRuntimeException(): void
     {
         $e = new MaxException('test');
-        self::assertInstanceOf(\RuntimeException::class, $e);
+        self::assertInstanceOf(RuntimeException::class, $e);
     }
 
     #[Test]
@@ -42,7 +44,7 @@ final class ExceptionTest extends TestCase
     #[Test]
     public function apiExceptionPrevious(): void
     {
-        $prev = new \RuntimeException('original');
+        $prev = new RuntimeException('original');
         $e = new MaxApiException('msg', 500, null, null, $prev);
         self::assertSame($prev, $e->getPrevious());
     }
@@ -103,7 +105,7 @@ final class ExceptionTest extends TestCase
         ];
 
         foreach ($leafClasses as $class) {
-            $ref = new \ReflectionClass($class);
+            $ref = new ReflectionClass($class);
             self::assertTrue($ref->isFinal(), "$class должен быть final");
         }
     }
@@ -127,7 +129,7 @@ final class ExceptionTest extends TestCase
     #[Test]
     public function fileExceptionWithPrevious(): void
     {
-        $prev = new \RuntimeException('disk error');
+        $prev = new RuntimeException('disk error');
         $e = new MaxFileException('Upload failed', 0, $prev);
         self::assertSame($prev, $e->getPrevious());
         self::assertSame('Upload failed', $e->getMessage());
@@ -136,7 +138,7 @@ final class ExceptionTest extends TestCase
     #[Test]
     public function connectionExceptionWithPrevious(): void
     {
-        $prev = new \RuntimeException('curl error');
+        $prev = new RuntimeException('curl error');
         $e = new MaxConnectionException('Connection failed', 0, $prev);
         self::assertSame($prev, $e->getPrevious());
     }

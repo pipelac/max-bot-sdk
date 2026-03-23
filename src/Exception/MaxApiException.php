@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MaxBotSdk\Exception;
 
+use Throwable;
+
 /**
  * Исключение для ошибок MAX Bot API (HTTP 4xx/5xx).
  *
@@ -16,7 +18,7 @@ final class MaxApiException extends MaxException
         private readonly int $statusCode = 0,
         private readonly ?string $description = null,
         private readonly ?string $errorCode = null,
-        ?\Throwable $previous = null,
+        ?Throwable $previous = null,
     ) {
         parent::__construct($message, $statusCode, $previous);
     }

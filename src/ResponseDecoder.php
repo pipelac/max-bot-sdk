@@ -27,8 +27,7 @@ final class ResponseDecoder implements ResponseDecoderInterface
 
     public function __construct(
         private readonly ?LoggerInterface $logger = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -40,12 +39,12 @@ final class ResponseDecoder implements ResponseDecoderInterface
             $this->handleError($statusCode, $body, $method, $endpoint);
         }
 
-        if ($statusCode === 204 || \trim($body) === '') {
+        if ($statusCode === 204 || trim($body) === '') {
             return [];
         }
 
-        $decoded = \json_decode($body, true);
-        if ($decoded === null && \json_last_error() !== JSON_ERROR_NONE) {
+        $decoded = json_decode($body, true);
+        if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
             $this->logger?->error('MaxBot: Некорректный JSON в ответе', [
                 'method'   => $method,
                 'endpoint' => $endpoint,
@@ -68,7 +67,7 @@ final class ResponseDecoder implements ResponseDecoderInterface
         $description = null;
         $errorCode = null;
 
-        $decoded = \json_decode($body, true);
+        $decoded = json_decode($body, true);
         if (\is_array($decoded)) {
             $description = isset($decoded['message']) ? (string) $decoded['message'] : null;
             $errorCode = isset($decoded['code']) ? (string) $decoded['code'] : null;

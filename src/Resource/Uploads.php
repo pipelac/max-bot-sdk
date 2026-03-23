@@ -9,6 +9,7 @@ use MaxBotSdk\DTO\VideoInfo;
 use MaxBotSdk\Enum\UploadType;
 use MaxBotSdk\Exception\MaxFileException;
 use MaxBotSdk\Utils\InputValidator;
+use Throwable;
 
 /**
  * Ресурс: загрузка файлов MAX Bot API.
@@ -35,7 +36,7 @@ final class Uploads extends ResourceAbstract
     {
         InputValidator::validateNotEmpty($url, 'Upload URL');
 
-        if (!\is_file($filePath) || !\is_readable($filePath)) {
+        if (!is_file($filePath) || !is_readable($filePath)) {
             throw new MaxFileException('Файл не найден или недоступен: ' . $filePath);
         }
 
@@ -46,12 +47,12 @@ final class Uploads extends ResourceAbstract
                 'multipart' => [
                     [
                         'name'     => 'data',
-                        'filename' => \basename($filePath),
+                        'filename' => basename($filePath),
                         'filepath' => $filePath,
                     ],
                 ],
             ]);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             throw new MaxFileException(
                 'Ошибка загрузки файла: ' . $e->getMessage(),
                 0,
@@ -60,7 +61,7 @@ final class Uploads extends ResourceAbstract
         }
 
         $body = $response['body'] ?? '';
-        $decoded = \json_decode($body, true);
+        $decoded = json_decode($body, true);
         if (!\is_array($decoded)) {
             throw new MaxFileException('Некорректный ответ сервера при загрузке файла.');
         }

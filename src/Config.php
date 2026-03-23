@@ -48,7 +48,7 @@ final class Config implements ConfigInterface
         string $appName = 'MaxBot',
         ?LoggerInterface $logger = null,
     ) {
-        $token = \trim($token);
+        $token = trim($token);
         if ($token === '') {
             throw new MaxConfigException('Токен MAX бота не указан.');
         }
@@ -81,7 +81,7 @@ final class Config implements ConfigInterface
 
         $this->verifySsl = $verifySsl;
         $this->logRequests = $logRequests;
-        $this->appName = \trim($appName) !== '' ? \trim($appName) : 'MaxBot';
+        $this->appName = trim($appName) !== '' ? trim($appName) : 'MaxBot';
         $this->logger = $logger;
     }
 
@@ -132,27 +132,27 @@ final class Config implements ConfigInterface
      */
     public static function fromEnvironment(): self
     {
-        $token = \getenv('MAX_BOT_TOKEN');
-        if ($token === false || \trim($token) === '') {
+        $token = getenv('MAX_BOT_TOKEN');
+        if ($token === false || trim($token) === '') {
             throw new MaxConfigException('Переменная окружения MAX_BOT_TOKEN не задана.');
         }
 
-        $envTimeout = \getenv('MAX_BOT_TIMEOUT');
+        $envTimeout = getenv('MAX_BOT_TIMEOUT');
         $timeout = ($envTimeout !== false && $envTimeout !== '') ? (int) $envTimeout : self::DEFAULT_TIMEOUT;
 
-        $envRetries = \getenv('MAX_BOT_RETRIES');
+        $envRetries = getenv('MAX_BOT_RETRIES');
         $retries = ($envRetries !== false && $envRetries !== '') ? (int) $envRetries : self::DEFAULT_RETRIES;
 
-        $envRateLimit = \getenv('MAX_BOT_RATE_LIMIT');
+        $envRateLimit = getenv('MAX_BOT_RATE_LIMIT');
         $rateLimit = ($envRateLimit !== false && $envRateLimit !== '') ? (int) $envRateLimit : self::DEFAULT_RATE_LIMIT;
 
-        $envVerifySsl = \getenv('MAX_BOT_VERIFY_SSL');
+        $envVerifySsl = getenv('MAX_BOT_VERIFY_SSL');
         $verifySsl = ($envVerifySsl !== false && $envVerifySsl !== '') ? self::toBool($envVerifySsl) : true;
 
-        $envLogRequests = \getenv('MAX_BOT_LOG_REQUESTS');
+        $envLogRequests = getenv('MAX_BOT_LOG_REQUESTS');
         $logRequests = ($envLogRequests !== false && $envLogRequests !== '') ? self::toBool($envLogRequests) : true;
 
-        $envAppName = \getenv('MAX_BOT_APP_NAME');
+        $envAppName = getenv('MAX_BOT_APP_NAME');
         $appName = ($envAppName !== false && $envAppName !== '') ? $envAppName : 'MaxBot';
 
         return new self($token, $timeout, $retries, $rateLimit, $verifySsl, $logRequests, $appName);
@@ -170,11 +170,11 @@ final class Config implements ConfigInterface
             $path = $sdkDir . \DIRECTORY_SEPARATOR . 'cfg' . \DIRECTORY_SEPARATOR . 'config.ini';
         }
 
-        if (!\is_file($path) || !\is_readable($path)) {
+        if (!is_file($path) || !is_readable($path)) {
             throw new MaxConfigException('INI файл конфигурации не найден: ' . $path);
         }
 
-        $data = \parse_ini_file($path, true);
+        $data = parse_ini_file($path, true);
         if ($data === false) {
             throw new MaxConfigException('Не удалось разобрать INI файл: ' . $path);
         }
@@ -218,7 +218,7 @@ final class Config implements ConfigInterface
         if (\is_bool($value)) {
             return $value;
         }
-        $v = \is_scalar($value) ? \strtolower(\trim((string) $value)) : '';
+        $v = \is_scalar($value) ? strtolower(trim((string) $value)) : '';
 
         return match ($v) {
             '1', 'true', 'yes', 'on' => true,

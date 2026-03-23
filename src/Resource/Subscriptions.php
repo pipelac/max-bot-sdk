@@ -90,7 +90,7 @@ final class Subscriptions extends ResourceAbstract
             $query['marker'] = $marker;
         }
         if ($types !== null) {
-            $query['types'] = \implode(',', $types);
+            $query['types'] = implode(',', $types);
         }
 
         $data = $this->get('/updates', $query);

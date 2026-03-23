@@ -16,16 +16,15 @@ final class RateLimiter
 
     public function __construct(
         private readonly int $maxRequestsPerSecond,
-    ) {
-    }
+    ) {}
 
     public function throttle(): void
     {
-        $now = \microtime(true);
+        $now = microtime(true);
         $this->cleanup($now);
 
         if (\count($this->timestamps) >= $this->maxRequestsPerSecond) {
-            $oldest = \reset($this->timestamps);
+            $oldest = reset($this->timestamps);
             if ($oldest !== false) {
                 $waitUntil = $oldest + 1.0;
                 $delay = $waitUntil - $now;
@@ -33,10 +32,10 @@ final class RateLimiter
                     $this->sleep($delay);
                 }
             }
-            $this->cleanup(\microtime(true));
+            $this->cleanup(microtime(true));
         }
 
-        $this->timestamps[] = \microtime(true);
+        $this->timestamps[] = microtime(true);
     }
 
     public function getMaxRequestsPerSecond(): int
@@ -47,8 +46,8 @@ final class RateLimiter
     private function cleanup(float $now): void
     {
         $cutoff = $now - 1.0;
-        $this->timestamps = \array_values(
-            \array_filter(
+        $this->timestamps = array_values(
+            array_filter(
                 $this->timestamps,
                 static fn(float $ts): bool => $ts > $cutoff,
             ),
@@ -57,6 +56,6 @@ final class RateLimiter
 
     protected function sleep(float $seconds): void
     {
-        \usleep((int) ($seconds * 1_000_000));
+        usleep((int) ($seconds * 1_000_000));
     }
 }

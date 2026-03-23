@@ -9,6 +9,4 @@ namespace MaxBotSdk\Exception;
  *
  * @since 1.0.0
  */
-final class MaxConfigException extends MaxException
-{
-}
+final class MaxConfigException extends MaxException {}

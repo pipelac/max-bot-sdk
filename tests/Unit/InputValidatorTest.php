@@ -37,15 +37,15 @@ final class InputValidatorTest extends TestCase
     public function validateTextTooLongThrows(): void
     {
         $this->expectException(MaxValidationException::class);
-        InputValidator::validateText(\str_repeat('а', 4001));
+        InputValidator::validateText(str_repeat('а', 4001));
     }
 
     #[Test]
     public function validateTextExactLimit(): void
     {
-        $text = \str_repeat('a', 4000);
+        $text = str_repeat('a', 4000);
         $result = InputValidator::validateText($text);
-        self::assertSame(4000, \mb_strlen($result, 'UTF-8'));
+        self::assertSame(4000, mb_strlen($result, 'UTF-8'));
     }
 
     #[Test]

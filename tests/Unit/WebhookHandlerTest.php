@@ -31,7 +31,7 @@ final class WebhookHandlerTest extends TestCase
     #[Test]
     public function parseUpdateWithMessage(): void
     {
-        $json = \json_encode([
+        $json = json_encode([
             'update_type' => 'message_created',
             'timestamp'   => 456,
             'message'     => [

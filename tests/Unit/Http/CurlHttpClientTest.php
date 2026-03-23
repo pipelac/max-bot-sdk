@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace MaxBotSdk\Tests\Unit\Http;
 
+use CURLFile;
 use MaxBotSdk\Config;
 use MaxBotSdk\Http\CurlHttpClient;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 
 /**
  * Unit-тесты для CurlHttpClient.
@@ -88,7 +91,7 @@ final class CurlHttpClientTest extends TestCase
     public function buildUrlCustomBaseUrl(): void
     {
         $client = new CurlHttpClient($this->config, null, 'https://custom-api.example.com/');
-        $ref = new \ReflectionClass($client);
+        $ref = new ReflectionClass($client);
         $method = $ref->getMethod('buildUrl');
         $method->setAccessible(true);
         $result = $method->invoke($client, '/test', []);
@@ -122,7 +125,7 @@ final class CurlHttpClientTest extends TestCase
         ]]);
         $hasContentType = false;
         foreach ($headers as $header) {
-            if (\stripos($header, 'Content-Type:') !== false) {
+            if (stripos($header, 'Content-Type:') !== false) {
                 $hasContentType = true;
             }
         }
@@ -143,7 +146,7 @@ final class CurlHttpClientTest extends TestCase
         self::assertContains('X-Custom: value1', $headers);
         $authCount = 0;
         foreach ($headers as $header) {
-            if (\stripos($header, 'Authorization:') === 0) {
+            if (stripos($header, 'Authorization:') === 0) {
                 $authCount++;
             }
         }
@@ -157,7 +160,7 @@ final class CurlHttpClientTest extends TestCase
         $headers = $this->invokePrivate('buildHeaders', ['GET', []]);
         $hasContentType = false;
         foreach ($headers as $header) {
-            if (\stripos($header, 'Content-Type:') !== false) {
+            if (stripos($header, 'Content-Type:') !== false) {
                 $hasContentType = true;
             }
         }
@@ -169,8 +172,8 @@ final class CurlHttpClientTest extends TestCase
     #[Test]
     public function buildMultipartWithFilepath(): void
     {
-        $tmpFile = \tempnam(\sys_get_temp_dir(), 'test_');
-        \file_put_contents($tmpFile, 'test content');
+        $tmpFile = tempnam(sys_get_temp_dir(), 'test_');
+        file_put_contents($tmpFile, 'test content');
 
         try {
             $result = $this->invokePrivate('buildMultipart', [[
@@ -182,9 +185,9 @@ final class CurlHttpClientTest extends TestCase
             ]]);
 
             self::assertArrayHasKey('data', $result);
-            self::assertInstanceOf(\CURLFile::class, $result['data']);
+            self::assertInstanceOf(CURLFile::class, $result['data']);
         } finally {
-            @\unlink($tmpFile);
+            @unlink($tmpFile);
         }
     }
 
@@ -214,16 +217,16 @@ final class CurlHttpClientTest extends TestCase
         ]]);
 
         self::assertArrayHasKey('data', $result);
-        self::assertInstanceOf(\CURLFile::class, $result['data']);
+        self::assertInstanceOf(CURLFile::class, $result['data']);
 
-        $ref = new \ReflectionClass($this->client);
+        $ref = new ReflectionClass($this->client);
         $prop = $ref->getProperty('tempFiles');
         $prop->setAccessible(true);
         $tempFiles = $prop->getValue($this->client);
         self::assertNotEmpty($tempFiles);
 
         foreach ($tempFiles as $file) {
-            @\unlink($file);
+            @unlink($file);
         }
     }
 
@@ -241,12 +244,12 @@ final class CurlHttpClientTest extends TestCase
     #[Test]
     public function cleanupTempFiles(): void
     {
-        $tmpFile1 = \tempnam(\sys_get_temp_dir(), 'cleanup_');
-        $tmpFile2 = \tempnam(\sys_get_temp_dir(), 'cleanup_');
-        \file_put_contents($tmpFile1, 'a');
-        \file_put_contents($tmpFile2, 'b');
+        $tmpFile1 = tempnam(sys_get_temp_dir(), 'cleanup_');
+        $tmpFile2 = tempnam(sys_get_temp_dir(), 'cleanup_');
+        file_put_contents($tmpFile1, 'a');
+        file_put_contents($tmpFile2, 'b');
 
-        $ref = new \ReflectionClass($this->client);
+        $ref = new ReflectionClass($this->client);
         $prop = $ref->getProperty('tempFiles');
         $prop->setAccessible(true);
         $prop->setValue($this->client, [$tmpFile1, $tmpFile2]);
@@ -261,7 +264,7 @@ final class CurlHttpClientTest extends TestCase
     #[Test]
     public function cleanupTempFilesIgnoresMissingFiles(): void
     {
-        $ref = new \ReflectionClass($this->client);
+        $ref = new ReflectionClass($this->client);
         $prop = $ref->getProperty('tempFiles');
         $prop->setAccessible(true);
         $prop->setValue($this->client, ['/nonexistent/file/path']);
@@ -302,7 +305,7 @@ final class CurlHttpClientTest extends TestCase
 
     private function invokePrivate(string $method, array $args = []): mixed
     {
-        $ref = new \ReflectionMethod(CurlHttpClient::class, $method);
+        $ref = new ReflectionMethod(CurlHttpClient::class, $method);
         $ref->setAccessible(true);
         return $ref->invokeArgs($this->client, $args);
     }

@@ -136,7 +136,7 @@ final class Message extends AbstractDto
             'format'      => $this->format,
             'sender'      => $this->sender?->toArray(),
             'recipient'   => $this->recipient,
-            'attachments' => \array_map(
+            'attachments' => array_map(
                 static fn(Attachment $a): array => $a->toArray(),
                 $this->attachments,
             ),

@@ -25,8 +25,7 @@ final class PaginatedResult extends AbstractDto implements Countable, IteratorAg
     private function __construct(
         private readonly array $items,
         private readonly ?int $marker,
-    ) {
-    }
+    ) {}
 
     public static function fromArray(array $data): static
     {
@@ -95,7 +94,7 @@ final class PaginatedResult extends AbstractDto implements Countable, IteratorAg
     public function toArray(): array
     {
         return [
-            'items'  => \array_map(
+            'items'  => array_map(
                 static fn(AbstractDto $item): array => $item->toArray(),
                 $this->items,
             ),

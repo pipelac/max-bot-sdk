@@ -23,8 +23,7 @@ final class UpdatesResult extends AbstractDto implements Countable, IteratorAggr
     private function __construct(
         private readonly array $updates,
         private readonly ?int $marker,
-    ) {
-    }
+    ) {}
 
     public static function fromArray(array $data): static
     {
@@ -78,7 +77,7 @@ final class UpdatesResult extends AbstractDto implements Countable, IteratorAggr
     public function toArray(): array
     {
         return [
-            'updates' => \array_map(
+            'updates' => array_map(
                 static fn(Update $u): array => $u->toArray(),
                 $this->updates,
             ),

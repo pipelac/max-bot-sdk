@@ -18,10 +18,10 @@ final class InputValidator
 
     public static function validateText(string $text): string
     {
-        if (\trim($text) === '') {
+        if (trim($text) === '') {
             throw new MaxValidationException('Текст сообщения не может быть пустым.');
         }
-        $length = \mb_strlen($text, 'UTF-8');
+        $length = mb_strlen($text, 'UTF-8');
         if ($length > self::MAX_TEXT_LENGTH) {
             throw new MaxValidationException(\sprintf(
                 'Текст превышает максимум %d символов (текущий: %d).',
@@ -34,7 +34,7 @@ final class InputValidator
 
     public static function validateId(mixed $id, string $name = 'ID'): int
     {
-        if ($id === null || $id === '' || (!\is_int($id) && !\is_numeric($id))) {
+        if ($id === null || $id === '' || (!\is_int($id) && !is_numeric($id))) {
             throw new MaxValidationException($name . ' должен быть числом.');
         }
         return (int) $id;
@@ -42,7 +42,7 @@ final class InputValidator
 
     public static function validateWebhookUrl(string $url): string
     {
-        if (!\str_starts_with($url, 'https://')) {
+        if (!str_starts_with($url, 'https://')) {
             throw new MaxValidationException('URL webhook должен начинаться с https://');
         }
         return $url;
@@ -63,7 +63,7 @@ final class InputValidator
 
     public static function validateNotEmpty(?string $value, string $fieldName = 'Поле'): string
     {
-        if ($value === null || \trim($value) === '') {
+        if ($value === null || trim($value) === '') {
             throw new MaxValidationException($fieldName . ' не может быть пустым.');
         }
         return $value;
@@ -73,8 +73,8 @@ final class InputValidator
     {
         $length = \strlen($token);
         if ($length <= 6) {
-            return \str_repeat('*', $length);
+            return str_repeat('*', $length);
         }
-        return \str_repeat('*', $length - 6) . \substr($token, -6);
+        return str_repeat('*', $length - 6) . substr($token, -6);
     }
 }
