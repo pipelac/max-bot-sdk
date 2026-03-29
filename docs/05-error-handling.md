@@ -13,7 +13,8 @@ MaxException (базовый)
 
 ## Обработка ошибок API
 
-```phpuse MaxBotSdk\Exception\MaxApiException;
+```php
+use MaxBotSdk\Exception\MaxApiException;
 
 try {
     $me = $client->bot()->getMe();
@@ -34,7 +35,8 @@ try {
 
 ## Обработка ошибок конфигурации
 
-```phpuse MaxBotSdk\Exception\MaxConfigException;
+```php
+use MaxBotSdk\Exception\MaxConfigException;
 
 try {
     $config = new Config(''); // Пустой токен
@@ -51,7 +53,8 @@ try {
 
 ## Обработка сетевых ошибок
 
-```phpuse MaxBotSdk\Exception\MaxConnectionException;
+```php
+use MaxBotSdk\Exception\MaxConnectionException;
 
 try {
     $chats = $client->chats()->getChats();
@@ -63,10 +66,11 @@ try {
 
 ## Обработка ошибок загрузки
 
-```phpuse MaxBotSdk\Exception\MaxFileException;
+```php
+use MaxBotSdk\Exception\MaxFileException;
 
 try {
-    $token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');
+    $token = $client->uploads()->uploadFile(UploadType::Image, '/path/to/photo.jpg');
 } catch (MaxFileException $e) {
     echo 'Ошибка файла: ' . $e->getMessage();
     // Файл не найден, не читается, ошибка при загрузке
@@ -75,7 +79,8 @@ try {
 
 ## Обработка ошибок валидации
 
-```phpuse MaxBotSdk\Exception\MaxValidationException;
+```php
+use MaxBotSdk\Exception\MaxValidationException;
 use MaxBotSdk\Utils\KeyboardBuilder;
 
 try {
@@ -88,7 +93,8 @@ try {
 
 ## Полный обработчик (рекомендуемый шаблон)
 
-```phpuse MaxBotSdk\Exception\MaxException;
+```php
+use MaxBotSdk\Exception\MaxException;
 use MaxBotSdk\Exception\MaxApiException;
 use MaxBotSdk\Exception\MaxConnectionException;
 
@@ -124,12 +130,13 @@ SDK автоматически повторяет запросы при тран
 
 Стратегия: exponential backoff с jitter. Количество повторов задаётся через `ConfigBuilder`:
 
-```phpuse MaxBotSdk\ConfigBuilder;
+```php
+use MaxBotSdk\ConfigBuilder;
 use MaxBotSdk\ClientFactory;
 
 $config = ConfigBuilder::create('TOKEN')
     ->withRetries(5) // По умолчанию 3
     ->build();
 
-$client = ClientFactory::createFromConfig($config);
+$client = ClientFactory::fromConfig($config);
 ```

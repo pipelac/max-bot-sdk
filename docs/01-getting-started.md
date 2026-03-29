@@ -10,14 +10,16 @@ composer require pipelac/max-bot-sdk
 
 ### Вариант 1: С токеном напрямую
 
-```phpuse MaxBotSdk\ClientFactory;
+```php
+use MaxBotSdk\ClientFactory;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН_БОТА');
 ```
 
 ### Вариант 2: С логгером
 
-```phpuse MaxBotSdk\ClientFactory;
+```php
+use MaxBotSdk\ClientFactory;
 
 // $logger — объект, реализующий LoggerInterface (4 метода: debug, info, warning, error)
 $client = ClientFactory::create('ВАШ_ТОКЕН', $logger);
@@ -27,7 +29,8 @@ $client = ClientFactory::create('ВАШ_ТОКЕН', $logger);
 
 ### Вариант 3: С кастомным HTTP-клиентом
 
-```phpuse MaxBotSdk\ClientFactory;
+```php
+use MaxBotSdk\ClientFactory;
 
 // $httpClient — объект, реализующий HttpClientInterface (3 метода: request, getLastStatusCode, getBaseUrl)
 $client = ClientFactory::create('ВАШ_ТОКЕН', null, $httpClient);
@@ -52,7 +55,8 @@ log_requests = true
 app_name = "MaxBot"
 ```
 
-```phpuse MaxBotSdk\ClientFactory;
+```php
+use MaxBotSdk\ClientFactory;
 
 // Автоматически ищет cfg/config.ini:
 $client = ClientFactory::createFromIni();
@@ -63,7 +67,8 @@ $client = ClientFactory::createFromIni('/path/to/config.ini');
 
 ### Вариант 5: Из переменных окружения (12-Factor App)
 
-```phpuse MaxBotSdk\ClientFactory;
+```php
+use MaxBotSdk\ClientFactory;
 
 // Требуется: MAX_BOT_TOKEN
 // Опционально: MAX_BOT_TIMEOUT, MAX_BOT_RETRIES, MAX_BOT_RATE_LIMIT,
@@ -73,7 +78,8 @@ $client = ClientFactory::createFromEnvironment();
 
 ### Вариант 6: Через ConfigBuilder (максимальная гибкость)
 
-```phpuse MaxBotSdk\ConfigBuilder;
+```php
+use MaxBotSdk\ConfigBuilder;
 use MaxBotSdk\ClientFactory;
 
 $config = ConfigBuilder::create('TOKEN')
@@ -94,7 +100,8 @@ $client = ClientFactory::createFromConfig($config, $httpClient);
 
 ## Проверка подключения
 
-```phptry {
+```php
+try {
     $me = $client->bot()->getMe();
     echo 'Бот подключён: ' . $me->getName() . ' (@' . $me->getUsername() . ')';
 } catch (\MaxBotSdk\Exception\MaxApiException $e) {
@@ -106,7 +113,8 @@ $client = ClientFactory::createFromConfig($config, $httpClient);
 
 ## Отправка сообщений
 
-```php// Текстовое сообщение в чат:
+```php
+// Текстовое сообщение в чат:
 $message = $client->messages()->sendMessage(
     ['text' => 'Привет из MAX Bot API SDK!'],
     null,    // notify (null = по умолчанию)
@@ -120,7 +128,8 @@ $message = $client->messages()->sendText('Привет!', $chatId);
 
 ## Доступные ресурсы
 
-```php$client->bot()           // Информация о боте → User DTO
+```php
+$client->bot()           // Информация о боте → User DTO
 $client->chats()         // Управление чатами → Chat / PaginatedResult
 $client->members()       // Участники чатов → ChatMember / PaginatedResult
 $client->messages()      // Сообщения → Message / PaginatedResult
@@ -131,7 +140,8 @@ $client->callbacks()     // Ответы на callback-кнопки → ActionRe
 
 ## Настройка Webhook
 
-```php// Подписка на все обновления:
+```php
+// Подписка на все обновления:
 $client->subscriptions()->subscribe('https://example.com/webhook');
 
 // Подписка на определённые типы:
@@ -145,7 +155,8 @@ $client->subscriptions()->subscribe(
 
 ## Обработка Webhook
 
-```phpuse MaxBotSdk\Utils\WebhookHandler;
+```php
+use MaxBotSdk\Utils\WebhookHandler;
 
 $handler = new WebhookHandler();
 

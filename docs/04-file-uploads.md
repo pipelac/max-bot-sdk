@@ -11,7 +11,8 @@
 
 Метод `uploadFile()` выполняет оба шага автоматически:
 
-```php// Загрузить изображение и получить token
+```php
+// Загрузить изображение и получить token
 $token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');
 
 // Отправить с вложением
@@ -20,9 +21,9 @@ $client->messages()->sendMessage([
     'attachments' => [
         [
             'type'    => 'image',
-            'payload' => ['token' => $token),
-        ),
-    ),
+            'payload' => ['token' => $token],
+        ],
+    ],
 ], null, $chatId);
 ```
 
@@ -30,31 +31,35 @@ $client->messages()->sendMessage([
 
 ### Шаг 1: Получить URL для загрузки
 
-```php$result = $client->uploads()->getUploadUrl('image');
+```php
+$result = $client->uploads()->getUploadUrl('image');
 $uploadUrl = $result->getUrl();
 ```
 
 ### Шаг 2: Загрузить файл по URL
 
-```php$uploadResult = $client->uploads()->uploadFileToUrl($uploadUrl, '/path/to/photo.jpg');
+```php
+$uploadResult = $client->uploads()->uploadFileToUrl($uploadUrl, '/path/to/photo.jpg');
 $token = $uploadResult->getToken();
 ```
 
 ### Шаг 3: Использовать token при отправке
 
-```php$client->messages()->sendMessage([
+```php
+$client->messages()->sendMessage([
     'attachments' => [
         [
             'type'    => 'image',
-            'payload' => ['token' => $token),
-        ),
-    ),
+            'payload' => ['token' => $token],
+        ],
+    ],
 ], null, $chatId);
 ```
 
 ## Загрузка разных типов файлов
 
-```php// Видео
+```php
+// Видео
 $token = $client->uploads()->uploadFile('video', '/path/to/video.mp4');
 
 // Аудио
@@ -66,12 +71,14 @@ $token = $client->uploads()->uploadFile('file', '/path/to/document.pdf');
 
 ## Информация о видео
 
-```php$info = $client->uploads()->getVideoInfo($videoToken);
+```php
+$info = $client->uploads()->getVideoInfo($videoToken);
 ```
 
 ## Обработка ошибок загрузки
 
-```phpuse MaxBotSdk\Exception\MaxFileException;
+```php
+use MaxBotSdk\Exception\MaxFileException;
 
 try {
     $token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');

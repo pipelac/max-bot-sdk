@@ -4,7 +4,8 @@
 
 ### Настройка webhook
 
-```php// Подписка на все основные типы событий
+```php
+// Подписка на все основные типы событий
 $client->subscriptions()->subscribe(
     'https://your-domain.com/max-webhook',
     [
@@ -33,12 +34,11 @@ $client->subscriptions()->subscribe(
 
 ### Безопасность webhook
 
-```phpuse MaxBotSdk\Utils\WebhookHandler;
+```php
+use MaxBotSdk\Utils\WebhookHandler;
 
 $handler = new WebhookHandler();
-$secret = isset($_SERVER['HTTP_X_MAX_BOT_API_SECRET'])
-    ? $_SERVER['HTTP_X_MAX_BOT_API_SECRET']
-    : '';
+$secret = $_SERVER['HTTP_X_MAX_BOT_API_SECRET'] ?? '';
 
 if (!$handler->verifySecret('your_secret_key', $secret)) {
     http_response_code(403);
@@ -50,7 +50,8 @@ MAX API передаёт секрет в заголовке `X-Max-Bot-Api-Secre
 
 ### Обработка webhook
 
-```phpuse MaxBotSdk\Utils\WebhookHandler;
+```php
+use MaxBotSdk\Utils\WebhookHandler;
 
 $handler = new WebhookHandler();
 $update = $handler->parseUpdate(file_get_contents('php://input'));
@@ -65,19 +66,20 @@ switch ($update->getUpdateType()) {
         $message = $update->getMessage();
         $text = $message->getText();
         $senderId = $message->getSender()->getUserId();
-        $chatId = $message->getChatId();
+        $chatId = $message->getRecipient()['chat_id'] ?? null;
         // Обработка...
         break;
 
     case 'message_callback':
-        $callbackId = $update->getCallbackId();
-        $payload = $update->getCallbackPayload();
+        $callback = $update->getCallback();
+        $callbackId = $callback['callback_id'] ?? '';
+        $payload = $callback['payload'] ?? '';
         $client->callbacks()->answerCallback($callbackId, null, 'Обработано: ' . $payload);
         break;
 
     case 'bot_started':
         $userId = $update->getUser()->getUserId();
-        $chatId = $update->getChatId();
+        // chatId из данных update
         $client->messages()->sendMessage(
             ['text' => 'Добро пожаловать!'],
             null,
@@ -91,7 +93,7 @@ switch ($update->getUpdateType()) {
 
     case 'message_removed':
         // Сообщение удалено
-        $removedId = $update->getMessageId();
+        // Информация доступна через $update->toArray()
         break;
 
     case 'bot_added':
@@ -112,7 +114,8 @@ http_response_code(200);
 
 ### Управление подписками
 
-```php// Получить список подписок → Subscription[]
+```php
+// Получить список подписок → Subscription[]
 $subscriptions = $client->subscriptions()->getSubscriptions();
 foreach ($subscriptions as $sub) {
     echo $sub->getUrl() . ' — ' . implode(', ', $sub->getUpdateTypes()) . "\n";
@@ -128,7 +131,8 @@ $client->subscriptions()->unsubscribe('https://your-domain.com/max-webhook');
 
 ### Базовый цикл
 
-```php$marker = null;
+```php
+$marker = null;
 
 while (true) {
     try {
@@ -152,7 +156,8 @@ while (true) {
 
 ### С фильтрацией типов
 
-```php$result = $client->subscriptions()->getUpdates(
+```php
+$result = $client->subscriptions()->getUpdates(
     50,     // limit
     30,     // timeout
     $marker,

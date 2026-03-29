@@ -95,4 +95,59 @@ class ResponseDecoderTest extends TestCase
         $this->assertCount(2, $result['chats']);
         $this->assertEquals('abc', $result['marker']);
     }
+
+    public function testDecodeUnknownErrorCodeThrows()
+    {
+        try {
+            $this->decoder->decode(418, '{"message": "Teapot"}', 'GET', '/me');
+            $this->fail('Expected MaxApiException');
+        } catch (MaxApiException $e) {
+            $this->assertEquals(418, $e->getStatusCode());
+            $this->assertStringContainsString('HTTP ошибка', $e->getMessage());
+        }
+    }
+
+    public function testDecode204ReturnsEmptyArray()
+    {
+        $result = $this->decoder->decode(204, '', 'DELETE', '/messages');
+        $this->assertEquals([], $result);
+    }
+
+    public function testDecodeEmptyBodyReturnsEmptyArray()
+    {
+        $result = $this->decoder->decode(200, '   ', 'GET', '/me');
+        $this->assertEquals([], $result);
+    }
+
+    public function testErrorLogsWhenLoggerPresent()
+    {
+        $logger = $this->createMock(\MaxBotSdk\Contracts\LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with($this->stringContains('API вернул ошибку'));
+
+        $decoder = new ResponseDecoder($logger);
+
+        try {
+            $decoder->decode(500, '{"message": "Server error"}', 'POST', '/messages');
+        } catch (MaxApiException $e) {
+            $this->assertEquals(500, $e->getStatusCode());
+        }
+    }
+
+    public function testInvalidJsonLogsWhenLoggerPresent()
+    {
+        $logger = $this->createMock(\MaxBotSdk\Contracts\LoggerInterface::class);
+        $logger->expects($this->once())
+            ->method('error')
+            ->with($this->stringContains('Некорректный JSON'));
+
+        $decoder = new ResponseDecoder($logger);
+
+        try {
+            $decoder->decode(200, 'NOT_JSON{{{', 'GET', '/me');
+        } catch (MaxApiException $e) {
+            // expected
+        }
+    }
 }

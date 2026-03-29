@@ -488,4 +488,140 @@ class DtoTest extends TestCase
         $this->assertEquals(720, $arr['height']);
         $this->assertEquals(60, $arr['duration']);
     }
+
+    // --- AbstractDto: protected helper methods via concrete DTOs ---
+
+    public function testAbstractDtoGetStringDefault()
+    {
+        // User::fromArray with missing 'name' → getString returns ''
+        $user = User::fromArray(['user_id' => 1]);
+        $this->assertEquals('', $user->getName());
+    }
+
+    public function testAbstractDtoGetIntDefault()
+    {
+        // User::fromArray with missing 'user_id' → getInt returns 0
+        $user = User::fromArray([]);
+        $this->assertEquals(0, $user->getUserId());
+    }
+
+    public function testAbstractDtoGetBoolDefault()
+    {
+        // User::fromArray with missing 'is_bot' → getBool returns false
+        $user = User::fromArray(['user_id' => 1]);
+        $this->assertFalse($user->isBot());
+    }
+
+    public function testAbstractDtoGetArrayDefault()
+    {
+        // Subscription::fromArray with missing 'update_types' → getArray returns []
+        $sub = Subscription::fromArray(['url' => 'https://ex.com']);
+        $this->assertEquals([], $sub->getUpdateTypes());
+    }
+
+    // --- Subscription: round-trip toArray ---
+
+    public function testSubscriptionToArrayRoundTrip()
+    {
+        $sub = Subscription::fromArray([
+            'url'          => 'https://example.com/wh',
+            'time'         => 1234567890,
+            'update_types' => ['message_created'],
+            'version'      => '0.1.8',
+        ]);
+
+        $arr = $sub->toArray();
+        $this->assertEquals('https://example.com/wh', $arr['url']);
+        $this->assertEquals(1234567890, $arr['time']);
+        $this->assertCount(1, $arr['update_types']);
+    }
+
+    // --- ChatMember: additional fields ---
+
+    public function testChatMemberToString()
+    {
+        $member = ChatMember::fromArray([
+            'user_id' => 789,
+            'name'    => 'TestUser',
+        ]);
+        $str = (string) $member;
+        $this->assertStringContainsString('TestUser', $str);
+    }
+
+    public function testChatMemberFromEmptyArray()
+    {
+        $member = ChatMember::fromArray([]);
+        $this->assertEquals(0, $member->getUserId());
+        $this->assertEquals('', $member->getName());
+        $this->assertFalse($member->isAdmin());
+        $this->assertFalse($member->isOwner());
+    }
+
+    // --- User: toString ---
+
+    public function testUserToString()
+    {
+        $user = User::fromArray([
+            'user_id' => 42,
+            'name'    => 'BotName',
+        ]);
+        $str = (string) $user;
+        $this->assertStringContainsString('BotName', $str);
+    }
+
+    // --- Chat: toString ---
+
+    public function testChatToString()
+    {
+        $chat = Chat::fromArray([
+            'chat_id' => 123,
+            'title'   => 'MyChat',
+        ]);
+        $str = (string) $chat;
+        $this->assertStringContainsString('MyChat', $str);
+    }
+
+    // --- Chat: toArray round-trip ---
+
+    public function testChatToArrayRoundTrip()
+    {
+        $chat = Chat::fromArray([
+            'chat_id' => 456,
+            'type'    => 'chat',
+            'title'   => 'Test',
+            'status'  => 'active',
+        ]);
+        $arr = $chat->toArray();
+        $this->assertEquals(456, $arr['chat_id']);
+        $this->assertEquals('chat', $arr['type']);
+        $this->assertEquals('Test', $arr['title']);
+    }
+
+    // --- ActionResult: failure ---
+
+    public function testActionResultFailure()
+    {
+        $result = ActionResult::fromArray(['success' => false, 'message' => 'Ошибка']);
+        $this->assertFalse($result->isSuccess());
+        $this->assertEquals('Ошибка', $result->getMessage());
+    }
+
+    // --- UpdatesResult: IteratorAggregate ---
+
+    public function testUpdatesResultIteratorAggregate()
+    {
+        $result = UpdatesResult::fromArray([
+            'updates' => [
+                ['update_type' => 'message_created', 'timestamp' => 123],
+                ['update_type' => 'message_callback', 'timestamp' => 456],
+            ],
+        ]);
+
+        $collected = [];
+        foreach ($result as $update) {
+            $collected[] = $update;
+        }
+        $this->assertCount(2, $collected);
+        $this->assertInstanceOf(Update::class, $collected[0]);
+    }
 }

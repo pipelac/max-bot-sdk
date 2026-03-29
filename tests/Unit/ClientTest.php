@@ -120,4 +120,68 @@ class ClientTest extends TestCase
         $this->assertInstanceOf(Config::class, $config);
         $this->assertEquals('test_token', $config->getToken());
     }
+
+    // --- performRequest: rate limiter integration ---
+
+    public function testPerformRequestWithRateLimiter()
+    {
+        // Config с rateLimit > 0 → создаёт RateLimiter
+        $config = new Config('test_token', 30, 3, 10);
+        $decoder = new ResponseDecoder();
+        $retryHandler = new RetryHandler(0);
+        $client = new Client($config, $this->mockHttp, $decoder, $retryHandler);
+
+        $this->mockHttp->setResponse(200, '{"ok": true}');
+        $result = $client->get('/me');
+        $this->assertEquals(['ok' => true], $result);
+    }
+
+    // --- log: with logger ---
+
+    public function testLogDelegatesWithPrefix()
+    {
+        $logger = $this->createMock(\MaxBotSdk\Contracts\LoggerInterface::class);
+        $logger->expects($this->atLeastOnce())
+            ->method('debug')
+            ->with($this->stringContains('MyBot: '));
+
+        $config = new Config('test_token', 30, 3, 30, true, true, 'MyBot', $logger);
+        $decoder = new ResponseDecoder();
+        $retryHandler = new RetryHandler(0);
+        $mockHttp = new MockHttpClient();
+        $mockHttp->setResponse(200, '{"ok": true}');
+
+        $client = new Client($config, $mockHttp, $decoder, $retryHandler);
+        $client->get('/me');
+    }
+
+    // --- getResource: lazy init multiple ---
+
+    public function testAllResourcesCachedLazily()
+    {
+        $this->assertSame($this->client->chats(), $this->client->chats());
+        $this->assertSame($this->client->messages(), $this->client->messages());
+        $this->assertSame($this->client->members(), $this->client->members());
+        $this->assertSame($this->client->subscriptions(), $this->client->subscriptions());
+        $this->assertSame($this->client->uploads(), $this->client->uploads());
+        $this->assertSame($this->client->callbacks(), $this->client->callbacks());
+    }
+
+    // --- PUT/PATCH ---
+
+    public function testPutSendsRequest()
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+        $this->client->put('/chats/123/pin', ['message_id' => 'mid']);
+        $req = $this->mockHttp->getLastRequest();
+        $this->assertEquals('PUT', $req['method']);
+    }
+
+    public function testPatchSendsRequest()
+    {
+        $this->mockHttp->setResponse(200, '{"chat_id": 123}');
+        $this->client->patch('/chats/123', ['title' => 'New']);
+        $req = $this->mockHttp->getLastRequest();
+        $this->assertEquals('PATCH', $req['method']);
+    }
 }

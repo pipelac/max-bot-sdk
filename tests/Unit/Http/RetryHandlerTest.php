@@ -153,6 +153,103 @@ class RetryHandlerTest extends TestCase
             $this->assertEquals(1, $attempts); // Без повторов
         }
     }
+
+    // --- isRetryableApi: Reflection тест приватного метода ---
+
+    public function testIsRetryableApiFor502()
+    {
+        $handler = new RetryHandler(3);
+        $method = new \ReflectionMethod($handler, 'isRetryableApi');
+        $method->setAccessible(true);
+
+        $e502 = new MaxApiException('Bad gateway', 502);
+        $this->assertTrue($method->invoke($handler, $e502));
+    }
+
+    public function testIsRetryableApiFor404()
+    {
+        $handler = new RetryHandler(3);
+        $method = new \ReflectionMethod($handler, 'isRetryableApi');
+        $method->setAccessible(true);
+
+        $e404 = new MaxApiException('Not found', 404);
+        $this->assertFalse($method->invoke($handler, $e404));
+    }
+
+    public function testIsRetryableApiFor429()
+    {
+        $handler = new RetryHandler(3);
+        $method = new \ReflectionMethod($handler, 'isRetryableApi');
+        $method->setAccessible(true);
+
+        $e429 = new MaxApiException('Rate limit', 429);
+        $this->assertTrue($method->invoke($handler, $e429));
+    }
+
+    // --- calculateDelay: Reflection тест ---
+
+    public function testCalculateDelayExponentialBackoff()
+    {
+        $handler = new RetryHandler(3, 1000, 30000);
+        $method = new \ReflectionMethod($handler, 'calculateDelay');
+        $method->setAccessible(true);
+
+        $delay1 = $method->invoke($handler, 1); // base * 2^0 = 1000 ± jitter
+        $delay2 = $method->invoke($handler, 2); // base * 2^1 = 2000 ± jitter
+        $delay3 = $method->invoke($handler, 3); // base * 2^2 = 4000 ± jitter
+
+        $this->assertGreaterThanOrEqual(900, $delay1);
+        $this->assertLessThanOrEqual(1100, $delay1);
+        $this->assertGreaterThanOrEqual(1800, $delay2);
+        $this->assertLessThanOrEqual(2200, $delay2);
+        $this->assertGreaterThanOrEqual(3600, $delay3);
+        $this->assertLessThanOrEqual(4400, $delay3);
+    }
+
+    public function testCalculateDelayMaxCap()
+    {
+        $handler = new RetryHandler(3, 10000, 15000);
+        $method = new \ReflectionMethod($handler, 'calculateDelay');
+        $method->setAccessible(true);
+
+        // attempt 3: 10000 * 2^2 = 40000 → capped at 15000 ± jitter
+        $delay = $method->invoke($handler, 3);
+        $this->assertLessThanOrEqual(16500, $delay);
+    }
+
+    // --- Sleep recording ---
+
+    public function testSleepIsCalledDuringRetry()
+    {
+        $handler = new TestRetryHandler(2);
+        $attempts = 0;
+
+        $handler->execute(function () use (&$attempts) {
+            $attempts++;
+            if ($attempts < 2) {
+                throw new MaxApiException('Server error', 500);
+            }
+            return 'ok';
+        });
+
+        $this->assertNotEmpty($handler->sleepCalls);
+        $this->assertCount(1, $handler->sleepCalls);
+        $this->assertGreaterThan(0, $handler->sleepCalls[0]);
+    }
+
+    // --- Constructor validation ---
+
+    public function testConstructorMinValues()
+    {
+        $handler = new RetryHandler(-5, 50, 10);
+        $method = new \ReflectionProperty($handler, 'maxRetries');
+        $method->setAccessible(true);
+        $this->assertEquals(0, $method->getValue($handler));
+
+        $baseDelay = new \ReflectionProperty($handler, 'baseDelayMs');
+        $baseDelay->setAccessible(true);
+        $this->assertEquals(100, $baseDelay->getValue($handler)); // min 100
+    }
 }
 
 /**

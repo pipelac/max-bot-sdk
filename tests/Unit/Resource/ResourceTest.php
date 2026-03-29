@@ -500,4 +500,216 @@ class ResourceTest extends TestCase
         $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
         $this->client->uploads()->getUploadUrl('invalid_type');
     }
+
+    // =====================================================================
+    // Chats — дополнительные edge cases
+    // =====================================================================
+
+    public function testChatsGetChatsWithPagination()
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'chats'  => [
+                ['chat_id' => 1, 'type' => 'chat', 'title' => 'G1'],
+            ],
+            'marker' => 42,
+        ]));
+        $result = $this->client->chats()->getChats(5, 10);
+        $req = $this->mockHttp->getLastRequest();
+        $query = isset($req['options']['query']) ? $req['options']['query'] : [];
+        $this->assertEquals(5, $query['count']);
+        $this->assertEquals(10, $query['marker']);
+    }
+
+    public function testChatsSendActionEmptyActionThrows()
+    {
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
+        $this->client->chats()->sendAction(123, '');
+    }
+
+    public function testChatsPinMessageEmptyMessageIdThrows()
+    {
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
+        $this->client->chats()->pinMessage(123, '');
+    }
+
+    // =====================================================================
+    // Members — дополнительные edge cases
+    // =====================================================================
+
+    public function testMembersGetMembersWithPagination()
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'members' => [
+                ['user_id' => 10, 'name' => 'U1'],
+            ],
+        ]));
+        $this->client->members()->getMembers(123, 5, 10);
+        $req = $this->mockHttp->getLastRequest();
+        $query = isset($req['options']['query']) ? $req['options']['query'] : [];
+        $this->assertEquals(5, $query['count']);
+        $this->assertEquals(10, $query['marker']);
+    }
+
+    public function testMembersRemoveMemberWithBlock()
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+        $this->client->members()->removeMember(123, 456, true);
+        $req = $this->mockHttp->getLastRequest();
+        $query = isset($req['options']['query']) ? $req['options']['query'] : [];
+        $this->assertEquals('true', $query['block']);
+    }
+
+    // =====================================================================
+    // Messages — дополнительные edge cases
+    // =====================================================================
+
+    public function testMessagesGetMessageEmptyIdThrows()
+    {
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
+        $this->client->messages()->getMessage('');
+    }
+
+    public function testMessagesEditMessageEmptyIdThrows()
+    {
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
+        $this->client->messages()->editMessage('', ['text' => 'new']);
+    }
+
+    public function testMessagesDeleteMessageEmptyIdThrows()
+    {
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
+        $this->client->messages()->deleteMessage('');
+    }
+
+    public function testMessagesSendTextEmptyThrows()
+    {
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
+        $this->client->messages()->sendText('', 123);
+    }
+
+    public function testMessagesGetMessagesWithAllParams()
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'messages' => [],
+        ]));
+        $this->client->messages()->getMessages(123, 10, 100, 200);
+        $req = $this->mockHttp->getLastRequest();
+        $query = isset($req['options']['query']) ? $req['options']['query'] : [];
+        $this->assertEquals(10, $query['count']);
+        $this->assertEquals(100, $query['from']);
+        $this->assertEquals(200, $query['to']);
+    }
+
+    // =====================================================================
+    // Subscriptions — дополнительные edge cases
+    // =====================================================================
+
+    public function testSubscriptionsSubscribeWithAllOptions()
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'url' => 'https://example.com/wh',
+        ]));
+        $this->client->subscriptions()->subscribe(
+            'https://example.com/wh',
+            ['message_created'],
+            '0.1.8',
+            'my_secret'
+        );
+        $req = $this->mockHttp->getLastRequest();
+        $json = isset($req['options']['json']) ? $req['options']['json'] : [];
+        $this->assertArrayHasKey('update_types', $json);
+        $this->assertArrayHasKey('version', $json);
+        $this->assertArrayHasKey('secret_key', $json);
+        $this->assertEquals('my_secret', $json['secret_key']);
+    }
+
+    public function testSubscriptionsGetSubscriptionsEmpty()
+    {
+        $this->mockHttp->setResponse(200, '{}');
+        $subs = $this->client->subscriptions()->getSubscriptions();
+        $this->assertEmpty($subs);
+    }
+
+    public function testSubscriptionsGetUpdatesWithAllParams()
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'updates' => [],
+            'marker'  => null,
+        ]));
+        $this->client->subscriptions()->getUpdates(50, 30, 100, ['message_created']);
+        $req = $this->mockHttp->getLastRequest();
+        $query = isset($req['options']['query']) ? $req['options']['query'] : [];
+        $this->assertEquals(50, $query['limit']);
+        $this->assertEquals(30, $query['timeout']);
+        $this->assertEquals(100, $query['marker']);
+        $this->assertEquals('message_created', $query['types']);
+    }
+
+    // =====================================================================
+    // Callbacks — дополнительные edge cases
+    // =====================================================================
+
+    public function testCallbacksAnswerCallbackWithNotification()
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+        $this->client->callbacks()->answerCallback('cb_123', null, 'Уведомление!');
+        $req = $this->mockHttp->getLastRequest();
+        $json = isset($req['options']['json']) ? $req['options']['json'] : [];
+        $this->assertArrayHasKey('notification', $json);
+        $this->assertEquals('Уведомление!', $json['notification']);
+    }
+
+    // =====================================================================
+    // Uploads — дополнительные edge cases
+    // =====================================================================
+
+    public function testUploadsUploadFileToUrlFileNotFoundThrows()
+    {
+        $this->expectException(\MaxBotSdk\Exception\MaxFileException::class);
+        $this->client->uploads()->uploadFileToUrl('https://upload.max.ru/abc', '/nonexistent/file.txt');
+    }
+
+    public function testUploadsUploadFileToUrlEmptyUrlThrows()
+    {
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
+        $this->client->uploads()->uploadFileToUrl('', '/tmp/file.txt');
+    }
+
+    public function testUploadsUploadFileToUrlBadResponseThrows()
+    {
+        // Mock HttpClient вернёт не-JSON ответ
+        $this->mockHttp->setResponse(200, 'NOT_JSON');
+        $tmpFile = tempnam(sys_get_temp_dir(), 'upload_test_');
+        file_put_contents($tmpFile, 'test content');
+
+        try {
+            $this->expectException(\MaxBotSdk\Exception\MaxFileException::class);
+            $this->client->uploads()->uploadFileToUrl('https://upload.max.ru/abc', $tmpFile);
+        } finally {
+            @unlink($tmpFile);
+        }
+    }
+
+    public function testUploadsUploadFileToUrlSuccess()
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'token' => 'tok_uploaded',
+        ]));
+        $tmpFile = tempnam(sys_get_temp_dir(), 'upload_test_');
+        file_put_contents($tmpFile, 'test content');
+
+        try {
+            $result = $this->client->uploads()->uploadFileToUrl('https://upload.max.ru/abc', $tmpFile);
+            $this->assertInstanceOf(UploadResult::class, $result);
+            $this->assertEquals('tok_uploaded', $result->getToken());
+        } finally {
+            @unlink($tmpFile);
+        }
+    }
+
+    public function testUploadsGetVideoInfoEmptyTokenThrows()
+    {
+        $this->expectException(\MaxBotSdk\Exception\MaxValidationException::class);
+        $this->client->uploads()->getVideoInfo('');
+    }
 }

@@ -269,4 +269,116 @@ class ConfigTest extends TestCase
             unlink($tmpFile);
         }
     }
+
+    // --- Private method: toBool via fromEnvironment ---
+
+    public function testToBoolOnValue()
+    {
+        putenv('MAX_BOT_TOKEN=tobool_test');
+        putenv('MAX_BOT_VERIFY_SSL=on');
+        try {
+            $config = Config::fromEnvironment();
+            $this->assertTrue($config->getVerifySsl());
+        } finally {
+            putenv('MAX_BOT_TOKEN');
+            putenv('MAX_BOT_VERIFY_SSL');
+        }
+    }
+
+    public function testToBoolYesValue()
+    {
+        putenv('MAX_BOT_TOKEN=tobool_test');
+        putenv('MAX_BOT_VERIFY_SSL=YES');
+        try {
+            $config = Config::fromEnvironment();
+            $this->assertTrue($config->getVerifySsl());
+        } finally {
+            putenv('MAX_BOT_TOKEN');
+            putenv('MAX_BOT_VERIFY_SSL');
+        }
+    }
+
+    public function testToBoolNoValue()
+    {
+        putenv('MAX_BOT_TOKEN=tobool_test');
+        putenv('MAX_BOT_VERIFY_SSL=no');
+        try {
+            $config = Config::fromEnvironment();
+            $this->assertFalse($config->getVerifySsl());
+        } finally {
+            putenv('MAX_BOT_TOKEN');
+            putenv('MAX_BOT_VERIFY_SSL');
+        }
+    }
+
+    public function testToBoolOffValue()
+    {
+        putenv('MAX_BOT_TOKEN=tobool_test');
+        putenv('MAX_BOT_VERIFY_SSL=off');
+        try {
+            $config = Config::fromEnvironment();
+            $this->assertFalse($config->getVerifySsl());
+        } finally {
+            putenv('MAX_BOT_TOKEN');
+            putenv('MAX_BOT_VERIFY_SSL');
+        }
+    }
+
+    public function testToBoolZeroValue()
+    {
+        putenv('MAX_BOT_TOKEN=tobool_test');
+        putenv('MAX_BOT_VERIFY_SSL=0');
+        try {
+            $config = Config::fromEnvironment();
+            $this->assertFalse($config->getVerifySsl());
+        } finally {
+            putenv('MAX_BOT_TOKEN');
+            putenv('MAX_BOT_VERIFY_SSL');
+        }
+    }
+
+    // --- Private method: iniVal via fromIniFile ---
+
+    public function testIniValMissingKeyReturnsDefault()
+    {
+        $iniContent = "[max]\ntoken = inikey_test\n";
+        $tmpFile = tempnam(sys_get_temp_dir(), 'max_cfg_');
+        file_put_contents($tmpFile, $iniContent);
+
+        try {
+            $config = Config::fromIniFile($tmpFile);
+            // timeout not set → default
+            $this->assertEquals(Config::DEFAULT_TIMEOUT, $config->getTimeout());
+            $this->assertEquals(Config::DEFAULT_RETRIES, $config->getRetries());
+            $this->assertEquals(Config::DEFAULT_RATE_LIMIT, $config->getRateLimit());
+        } finally {
+            unlink($tmpFile);
+        }
+    }
+
+    // --- Boundary validations ---
+
+    public function testConstructWithNegativeRetriesThrows()
+    {
+        $this->expectException(MaxConfigException::class);
+        new Config('token', 30, -1);
+    }
+
+    public function testConstructWithRateLimitZeroThrows()
+    {
+        $this->expectException(MaxConfigException::class);
+        new Config('token', 30, 3, 0);
+    }
+
+    public function testConstructWithEmptyAppNameHasDefault()
+    {
+        $config = new Config('token', 30, 3, 30, true, true, '');
+        $this->assertEquals('MaxBot', $config->getAppName());
+    }
+
+    public function testConstructWithWhitespaceAppNameHasDefault()
+    {
+        $config = new Config('token', 30, 3, 30, true, true, '   ');
+        $this->assertEquals('MaxBot', $config->getAppName());
+    }
 }

@@ -10,7 +10,7 @@ namespace MaxBotSdk\Http;
  *
  * @since 1.0.0
  */
-final class RateLimiter
+class RateLimiter
 {
     /** @var int Максимальное количество запросов в секунду. */
     private $maxRequestsPerSecond;
