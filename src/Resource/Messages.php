@@ -87,10 +87,14 @@ final class Messages extends ResourceAbstract
         return PaginatedResult::fromApiResponse($data, 'messages', Message::class);
     }
 
-    public function getMessage(string $messageId): Message
+    public function getMessage(string $messageId, ?int $chatId = null): Message
     {
         InputValidator::validateNotEmpty($messageId, 'Message ID');
-        $data = $this->get('/messages/' . $messageId);
+        $query = [];
+        if ($chatId !== null) {
+            $query['chat_id'] = $this->validateId($chatId, 'Chat ID');
+        }
+        $data = $this->get('/messages/' . $messageId, $query);
         return Message::fromArray($data);
     }
 

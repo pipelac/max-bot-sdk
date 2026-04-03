@@ -461,7 +461,9 @@ $me = $client->bot()->getMe();
 $client->chats()->deleteChat($chatId);
 
 // Отправить действие (typing indicator)
-$client->chats()->sendAction($chatId, 'typing_on');
+// Примечание: В текущей версии MAX API этот метод может возвращать ошибку 
+// HTTP 400 "Can't deserialize body" из-за внутренней недокументированной специфики парсинга JSON на сервере MAX.
+$client->chats()->sendAction($chatId, 'typing');
 
 // Закрепить сообщение
 $client->chats()->pinMessage($chatId, $messageId);

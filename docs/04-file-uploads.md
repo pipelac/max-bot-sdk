@@ -40,6 +40,8 @@ $uploadUrl = $result->getUrl();
 
 ### Шаг 2: Загрузить файл по URL
 
+> **Примечание:** В MAX API ответ сервера при загрузке может отдавать `token` во вложенных структурах (например, `{"photos": {"file_id": {"token": "..."}}}`). SDK версии v2 **автоматически парсит** любые уровни вложенности и безошибочно извлекает итоговый `token`.
+
 ```php
 $uploadResult = $client->uploads()->uploadFileToUrl($uploadUrl, '/path/to/photo.jpg');
 $token = $uploadResult->getToken();
