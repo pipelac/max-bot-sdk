@@ -38,7 +38,7 @@ $config = ConfigBuilder::create('TOKEN')
     ->withRetries(5)  // Максимум 5 повторных попыток (по умолчанию 3, макс. 10)
     ->build();
 
-$client = ClientFactory::createFromConfig($config);
+$client = ClientFactory::fromConfig($config);
 ```
 
 Поведение retry:
@@ -114,12 +114,13 @@ if ($update !== null) {
     switch ($update->getUpdateType()) {
         case 'message_created':
             $text = $update->getMessage()->getText();
-            $chatId = $update->getMessage()->getChatId();
+            $chatId = $update->getMessage()->getRecipient()['chat_id'] ?? null;
             break;
 
         case 'message_callback':
-            $callbackId = $update->getCallbackId();
-            $payload = $update->getCallbackPayload();
+            $callback = $update->getCallback();
+            $callbackId = $callback['callback_id'] ?? '';
+            $payload = $callback['payload'] ?? '';
             $client->callbacks()->answerCallback($callbackId, null, 'Принято!');
             break;
 
@@ -136,11 +137,13 @@ if ($update !== null) {
 Полный 3-этапный процесс:
 
 ```php
+use MaxBotSdk\Enum\UploadType;
+
 // Способ 1: Автоматический (шаги 1+2)
-$token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');
+$token = $client->uploads()->uploadFile(UploadType::Image, '/path/to/photo.jpg');
 
 // Способ 2: Пошаговый
-$uploadResult = $client->uploads()->getUploadUrl('video');
+$uploadResult = $client->uploads()->getUploadUrl(UploadType::Video);
 $fileResult = $client->uploads()->uploadFileToUrl($uploadResult->getUrl(), '/path/to/video.mp4');
 $token = $fileResult->getToken();
 
@@ -295,7 +298,7 @@ $config = ConfigBuilder::create('TOKEN')
     ->withAppName('МойБот')   // Префикс в логах: "МойБот: ..."
     ->build();
 
-$client = ClientFactory::createFromConfig($config);
+$client = ClientFactory::fromConfig($config);
 ```
 
 ### Вариант 4: Null-логгер (отключить логирование)
@@ -398,7 +401,7 @@ $client = ClientFactory::create('TOKEN', null, $httpClient);
 $client = ClientFactory::create('TOKEN', $logger, $httpClient);
 
 // Через Config:
-$client = ClientFactory::createFromConfig($config, $httpClient);
+$client = ClientFactory::fromConfig($config, $httpClient);
 ```
 
 ### Мок-клиент для тестирования
@@ -458,7 +461,9 @@ $me = $client->bot()->getMe();
 $client->chats()->deleteChat($chatId);
 
 // Отправить действие (typing indicator)
-$client->chats()->sendAction($chatId, 'typing_on');
+// Примечание: В текущей версии MAX API этот метод может возвращать ошибку 
+// HTTP 400 "Can't deserialize body" из-за внутренней недокументированной специфики парсинга JSON на сервере MAX.
+$client->chats()->sendAction($chatId, 'typing');
 
 // Закрепить сообщение
 $client->chats()->pinMessage($chatId, $messageId);

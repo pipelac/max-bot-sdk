@@ -44,6 +44,8 @@ final class Message extends AbstractDto
         // ID сообщения может быть в разных местах
         if (isset($data['body']['mid'])) {
             $this->messageId = (string) $data['body']['mid'];
+        } elseif (isset($data['mid'])) {
+            $this->messageId = (string) $data['mid'];
         } elseif (isset($data['message_id'])) {
             $this->messageId = (string) $data['message_id'];
         } else {
@@ -84,6 +86,31 @@ final class Message extends AbstractDto
      */
     public static function fromArray(array $data)
     {
+        if (isset($data['message']) && is_array($data['message'])) {
+            $messageData = $data['message'];
+
+            // Достаем текст, вложения и mid из 'body', если они там есть
+            if (isset($messageData['body']) && is_array($messageData['body'])) {
+                $innerBody = $messageData['body'];
+                $fieldsToExtract = ['mid', 'text', 'format', 'attachments'];
+                foreach ($fieldsToExtract as $field) {
+                    if (isset($innerBody[$field]) && !isset($messageData[$field])) {
+                        $messageData[$field] = $innerBody[$field];
+                    }
+                }
+            }
+
+            // Переносим поля из верхнего уровня, не перезаписывая вложенные
+            $outerFields = ['message_id', 'timestamp', 'sender', 'recipient', 'link', 'stat'];
+            foreach ($outerFields as $field) {
+                if (!isset($messageData[$field]) && isset($data[$field])) {
+                    $messageData[$field] = $data[$field];
+                }
+            }
+
+            return new self($messageData);
+        }
+
         return new self($data);
     }
 

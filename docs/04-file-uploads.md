@@ -12,8 +12,10 @@
 Метод `uploadFile()` выполняет оба шага автоматически:
 
 ```php
+use MaxBotSdk\Enum\UploadType;
+
 // Загрузить изображение и получить token
-$token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');
+$token = $client->uploads()->uploadFile(UploadType::Image, '/path/to/photo.jpg');
 
 // Отправить с вложением
 $client->messages()->sendMessage([
@@ -32,11 +34,13 @@ $client->messages()->sendMessage([
 ### Шаг 1: Получить URL для загрузки
 
 ```php
-$result = $client->uploads()->getUploadUrl('image');
+$result = $client->uploads()->getUploadUrl(UploadType::Image);
 $uploadUrl = $result->getUrl();
 ```
 
 ### Шаг 2: Загрузить файл по URL
+
+> **Примечание:** В MAX API ответ сервера при загрузке может отдавать `token` во вложенных структурах (например, `{"photos": {"file_id": {"token": "..."}}}`). SDK версии v2 **автоматически парсит** любые уровни вложенности и безошибочно извлекает итоговый `token`.
 
 ```php
 $uploadResult = $client->uploads()->uploadFileToUrl($uploadUrl, '/path/to/photo.jpg');
@@ -60,13 +64,13 @@ $client->messages()->sendMessage([
 
 ```php
 // Видео
-$token = $client->uploads()->uploadFile('video', '/path/to/video.mp4');
+$token = $client->uploads()->uploadFile(UploadType::Video, '/path/to/video.mp4');
 
 // Аудио
-$token = $client->uploads()->uploadFile('audio', '/path/to/audio.mp3');
+$token = $client->uploads()->uploadFile(UploadType::Audio, '/path/to/audio.mp3');
 
 // Файл
-$token = $client->uploads()->uploadFile('file', '/path/to/document.pdf');
+$token = $client->uploads()->uploadFile(UploadType::File, '/path/to/document.pdf');
 ```
 
 ## Информация о видео
@@ -81,7 +85,7 @@ $info = $client->uploads()->getVideoInfo($videoToken);
 use MaxBotSdk\Exception\MaxFileException;
 
 try {
-    $token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');
+    $token = $client->uploads()->uploadFile(UploadType::Image, '/path/to/photo.jpg');
 } catch (MaxFileException $e) {
     // Файл не найден, ошибка загрузки, некорректный ответ
     echo 'Ошибка загрузки: ' . $e->getMessage();

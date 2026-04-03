@@ -51,8 +51,8 @@ $client->messages()->sendMessage([
 $client->messages()->sendMessage([
     'text' => 'Это ответ на ваше сообщение',
     'link' => [
-        'type'    => 'reply',
-        'mid'     => $originalMessageId,
+        'type' => 'reply',
+        'mid'  => $originalMessageId,
     ],
 ], null, $chatId);
 ```
@@ -63,8 +63,8 @@ $client->messages()->sendMessage([
 $client->messages()->sendMessage([
     'text' => 'Пересланное сообщение',
     'link' => [
-        'type'    => 'forward',
-        'mid'     => $originalMessageId,
+        'type' => 'forward',
+        'mid'  => $originalMessageId,
     ],
 ], null, $chatId);
 ```
@@ -130,8 +130,10 @@ $keyboard = KeyboardBuilder::build([
 
 ### Одно сообщение по ID
 
+> **Примечание:** Рекомендуется передавать `$chatId`, так как API MAX v2 может возвращать HTTP 404 при попытке получить сообщение только по ID без указания чата.
+
 ```php
-$message = $client->messages()->getMessage($messageId);
+$message = $client->messages()->getMessage($messageId, $chatId);
 echo $message->getText();
 echo $message->getSender()->getName();
 echo $message->getSender()->getUsername();

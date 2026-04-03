@@ -115,14 +115,20 @@ final class Messages extends ResourceAbstract
     /**
      * Получить сообщение по ID.
      *
-     * @param string $messageId ID сообщения.
+     * @param string   $messageId ID сообщения.
+     * @param int|null $chatId    ID чата (рекомендуется).
      * @return Message
      * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
      */
-    public function getMessage($messageId)
+    public function getMessage($messageId, $chatId = null)
     {
         InputValidator::validateNotEmpty($messageId, 'Message ID');
-        $data = $this->get('/messages/' . $messageId);
+        $query = [];
+        if ($chatId !== null) {
+            $query['chat_id'] = $this->validateId($chatId, 'Chat ID');
+        }
+        $data = $this->get('/messages/' . $messageId, $query);
         return Message::fromArray($data);
     }
 

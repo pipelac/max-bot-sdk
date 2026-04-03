@@ -21,7 +21,7 @@
 - [x] Ленивая инициализация ресурсов (lazy loading)
   > `Client::getResource()` с кэшем в `$resourceInstances[]`.
 - [x] Фабрики для создания сложных объектов (Factory pattern)
-  > `ClientFactory` с 5 фабричными методами: `create()`, `createFromIni()`, `createFromEnvironment()`, `createFromBuilder()`, `createFromConfig()`.
+  > `ClientFactory` с 5 фабричными методами: `create()`, `fromIni()`, `fromEnvironment()`, `fromBuilder()`, `fromConfig()`.
 
 ## 2. Контракты и интерфейсы
 
@@ -124,7 +124,7 @@
 ## 8. Тестирование
 
 - [x] Unit-тесты на все классы
-  > 214 тестов, 430 assertions. Классы: Config, ConfigBuilder, ClientFactory, Client, ResponseDecoder, RetryHandler, CurlHttpClient, InputValidator, KeyboardBuilder, WebhookHandler, все DTO, все Resources.
+  > 275 тестов, 569 assertions. Классы: Config, ConfigBuilder, ClientFactory, Client, ResponseDecoder, RetryHandler, CurlHttpClient, InputValidator, KeyboardBuilder, WebhookHandler, все DTO, все Resources, все Enums, RateLimiter.
 - [x] Тесты DTO (fromArray, toArray, getters, immutability)
   > `DtoTest.php` — 35+ тестов на все 13 DTO.
 - [x] Тесты ресурсов (все эндпоинты, параметры, HTTP-методы)
@@ -150,14 +150,14 @@
   > `"MaxBotSdk\\": "src/"`, scripts: `test`, `phpstan`, `cs-check`, `cs-fix`.
 - [x] Composer scripts: `test`, `analyse`, `cs-check`, `cs-fix`
   > `"test"`, `"phpstan"`, `"cs-check"`, `"cs-fix"` в `composer.json`.
-- [x] PHPStan — уровень ≥5
-  > `phpstan.neon`: `level: 5`, paths: `src/`.
+- [x] PHPStan — уровень 9
+  > `phpstan.neon`: `level: 9`, paths: `src/`, phpVersion: `80100`.
 - [x] PHP-CS-Fixer — актуальная версия (v3+) с `.php-cs-fixer.dist.php`
-  > `.php-cs-fixer.dist.php` с PSR-2 правилами.
+  > `.php-cs-fixer.dist.php` с PER-CS 2.0 правилами.
 - [x] PHPUnit — актуальная версия с современной XML-схемой
-  > PHPUnit 9.6.34, `phpunit.xml.dist` с XML schema.
-- [x] CI/CD — GitHub Actions с матрицей PHP версий (7.3, 7.4, 8.0, 8.1, 8.2, 8.3)
-  > `.github/workflows/ci.yml` — 6 PHP версий, `fail-fast: false`.
+  > PHPUnit 10.5, `phpunit.xml.dist` с XML schema.
+- [x] CI/CD — GitHub Actions с матрицей PHP версий (8.1, 8.2, 8.3)
+  > `.github/workflows/ci.yml` — 3 PHP версии, `fail-fast: false`.
 - [x] CI — отдельные jobs для тестов, статического анализа, code style
   > 3 jobs: `phpunit`, `phpstan`, `code-style`.
 - [x] `.gitignore` — vendor, coverage, cache, IDE, OS

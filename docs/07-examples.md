@@ -40,7 +40,7 @@ if ($update === null) {
 if ($update->getUpdateType() === 'message_created') {
     $message = $update->getMessage();
     $text = $message->getText();
-    $chatId = $message->getChatId();
+    $chatId = $message->getRecipient()['chat_id'] ?? null;
 
     if ($text !== null && $chatId !== null) {
         $client->messages()->sendMessage(
@@ -88,7 +88,7 @@ switch ($update->getUpdateType()) {
 
     case 'bot_started':
         // Приветствие нового пользователя
-        $chatId = $update->getChatId();
+        $chatId = $update->toArray()['chat_id'] ?? null;
         if ($chatId !== null) {
             $client->messages()->sendMessage(
                 ['text' => '👋 Добро пожаловать! Напишите /help для списка команд.'],
@@ -110,7 +110,7 @@ function handleCommand($client, $update)
     }
 
     $text = $message->getText();
-    $chatId = $message->getChatId();
+    $chatId = $message->getRecipient()['chat_id'] ?? null;
 
     if ($text === null || $chatId === null) {
         return;
@@ -173,8 +173,9 @@ function handleCommand($client, $update)
 // --- Обработка callback-нажатий ---
 function handleCallback($client, $update)
 {
-    $callbackId = $update->getCallbackId();
-    $payload = $update->getCallbackPayload();
+    $callback = $update->getCallback();
+    $callbackId = $callback['callback_id'] ?? '';
+    $payload = $callback['payload'] ?? '';
 
     if ($callbackId === null) {
         return;
@@ -211,7 +212,7 @@ function handleCallback($client, $update)
             break;
 
         case 'about':
-            $client->callbacks()->answerCallback($callbackId, null, '🤖 MAX Bot SDK v1.0.0');
+            $client->callbacks()->answerCallback($callbackId, null, '🤖 MAX Bot SDK v2.0.0');
             break;
 
         default:
@@ -232,6 +233,7 @@ function handleCallback($client, $update)
 require_once 'vendor/autoload.php';
 
 use MaxBotSdk\ClientFactory;
+use MaxBotSdk\Enum\UploadType;
 use MaxBotSdk\Exception\MaxFileException;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН');
@@ -241,7 +243,7 @@ $chatId = 12345;
 
 try {
     // uploadFile() объединяет getUploadUrl() + uploadFileToUrl()
-    $token = $client->uploads()->uploadFile('image', '/path/to/photo.jpg');
+    $token = $client->uploads()->uploadFile(UploadType::Image, '/path/to/photo.jpg');
 
     $client->messages()->sendMessage([
         'text'        => '📷 Вот ваше фото!',
@@ -261,7 +263,7 @@ try {
 
 try {
     // Шаг 1: Получить URL для загрузки
-    $uploadResult = $client->uploads()->getUploadUrl('video');
+    $uploadResult = $client->uploads()->getUploadUrl(UploadType::Video);
     $uploadUrl = $uploadResult->getUrl();
 
     // Шаг 2: Загрузить файл по полученному URL
@@ -286,10 +288,10 @@ try {
 // --- Загрузка разных типов ---
 
 // Аудио
-$audioToken = $client->uploads()->uploadFile('audio', '/path/to/music.mp3');
+$audioToken = $client->uploads()->uploadFile(UploadType::Audio, '/path/to/music.mp3');
 
 // Документ
-$docToken = $client->uploads()->uploadFile('file', '/path/to/report.pdf');
+$docToken = $client->uploads()->uploadFile(UploadType::File, '/path/to/report.pdf');
 
 // Отправка нескольких вложений
 $client->messages()->sendMessage([
@@ -361,7 +363,7 @@ function processUpdate($client, $update)
                 break;
             }
             $text = $message->getText();
-            $chatId = $message->getChatId();
+            $chatId = $message->getRecipient()['chat_id'] ?? null;
             echo "  Текст: {$text}\n";
 
             if ($text !== null && $chatId !== null) {
@@ -375,8 +377,9 @@ function processUpdate($client, $update)
             break;
 
         case 'message_callback':
-            $callbackId = $update->getCallbackId();
-            $payload = $update->getCallbackPayload();
+            $callback = $update->getCallback();
+            $callbackId = $callback['callback_id'] ?? '';
+            $payload = $callback['payload'] ?? '';
             echo "  Callback: {$payload}\n";
 
             if ($callbackId !== null) {
@@ -466,7 +469,7 @@ $config = ConfigBuilder::create('ВАШ_ТОКЕН')
     ->withRateLimit(20)
     ->build();
 
-$client = ClientFactory::createFromConfig($config);
+$client = ClientFactory::fromConfig($config);
 
 /**
  * Отправить сообщение с обработкой всех ошибок.

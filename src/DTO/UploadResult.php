@@ -21,7 +21,16 @@ final class UploadResult extends AbstractDto
     private function __construct(array $data)
     {
         $this->url = self::getString($data, 'url');
-        $this->token = self::getString($data, 'token');
+        
+        $token = self::getString($data, 'token');
+        if (empty($token)) {
+            array_walk_recursive($data, function ($value, $key) use (&$token) {
+                if ($key === 'token') {
+                    $token = (string) $value;
+                }
+            });
+        }
+        $this->token = (string) $token;
     }
 
     /**
