@@ -63,10 +63,30 @@ final class Uploads extends ResourceAbstract
         $body = $response['body'] ?? '';
         $decoded = json_decode($body, true);
         if (!\is_array($decoded)) {
-            throw new MaxFileException('Некорректный ответ сервера при загрузке файла.');
+            throw new MaxFileException('Некорректный ответ сервера при загрузке файла: ' . $body);
         }
 
-        return UploadResult::fromArray($decoded);
+        $token = $decoded['token'] ?? '';
+        if ($token === '') {
+            // MAX API often nests tokens: {"photos": {"file_id": {"token": "..."}}}
+            foreach ($decoded as $group) {
+                if (\is_array($group)) {
+                    foreach ($group as $item) {
+                        if (\is_array($item) && isset($item['token'])) {
+                            $token = $item['token'];
+                            break 2;
+                        }
+                    }
+                }
+            }
+        }
+
+        $result = UploadResult::fromToken($token);
+        if ($result->getToken() === '') {
+            throw new MaxFileException('Token не получен после загрузки файла. Сырой ответ: ' . $body);
+        }
+
+        return $result;
     }
 
     /**
@@ -85,7 +105,9 @@ final class Uploads extends ResourceAbstract
         $uploadResult = $this->uploadFileToUrl($url, $filePath);
         $token = $uploadResult->getToken();
         if ($token === '') {
-            throw new MaxFileException('Token не получен после загрузки файла.');
+            // Добавим вывод оригинального ответа
+            $responseArray = $uploadResult->toArray();
+            throw new MaxFileException('Token не получен после загрузки файла. Ответил так: ' . json_encode($responseArray));
         }
 
         return $token;
