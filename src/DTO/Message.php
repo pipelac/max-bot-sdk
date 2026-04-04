@@ -86,32 +86,30 @@ final class Message extends AbstractDto
      */
     public static function fromArray(array $data)
     {
-        if (isset($data['message']) && is_array($data['message'])) {
-            $messageData = $data['message'];
+        $messageData = isset($data['message']) && is_array($data['message']) ? $data['message'] : $data;
 
-            // Достаем текст, вложения и mid из 'body', если они там есть
-            if (isset($messageData['body']) && is_array($messageData['body'])) {
-                $innerBody = $messageData['body'];
-                $fieldsToExtract = ['mid', 'text', 'format', 'attachments'];
-                foreach ($fieldsToExtract as $field) {
-                    if (isset($innerBody[$field]) && !isset($messageData[$field])) {
-                        $messageData[$field] = $innerBody[$field];
-                    }
+        // Достаем текст, вложения и mid из 'body', если они там есть
+        if (isset($messageData['body']) && is_array($messageData['body'])) {
+            $innerBody = $messageData['body'];
+            $fieldsToExtract = ['mid', 'text', 'format', 'attachments'];
+            foreach ($fieldsToExtract as $field) {
+                if (isset($innerBody[$field]) && !isset($messageData[$field])) {
+                    $messageData[$field] = $innerBody[$field];
                 }
             }
+        }
 
-            // Переносим поля из верхнего уровня, не перезаписывая вложенные
+        // Переносим поля из верхнего уровня, если $data имел 'message'
+        if (isset($data['message']) && is_array($data['message'])) {
             $outerFields = ['message_id', 'timestamp', 'sender', 'recipient', 'link', 'stat'];
             foreach ($outerFields as $field) {
                 if (!isset($messageData[$field]) && isset($data[$field])) {
                     $messageData[$field] = $data[$field];
                 }
             }
-
-            return new self($messageData);
         }
 
-        return new self($data);
+        return new self($messageData);
     }
 
     /** @return string|null */
