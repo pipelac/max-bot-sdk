@@ -64,7 +64,16 @@ final class Update extends AbstractDto
 
     public function getChatId(): ?int
     {
-        return $this->chatId;
+        if ($this->chatId !== null) {
+            return $this->chatId;
+        }
+
+        $msg = $this->getMessage();
+        if ($msg !== null) {
+            return $msg->getChatId();
+        }
+
+        return null;
     }
 
     public function getUserId(): ?int
