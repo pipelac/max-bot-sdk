@@ -70,7 +70,10 @@ final class Update extends AbstractDto
 
         $msg = $this->getMessage();
         if ($msg !== null) {
-            return $msg->getChatId();
+            $recipient = $msg->getRecipient();
+            if (isset($recipient['chat_id'])) {
+                return (int)$recipient['chat_id'];
+            }
         }
 
         return null;
