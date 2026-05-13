@@ -5,6 +5,15 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 проект следует [семантическому версионированию](https://semver.org/lang/ru/).
 
+## [1.1.0] — 2026-05-13
+
+### Добавлено
+- `ContactValidator`: новая утилита для безопасной верификации контактов (тип `request_contact`) через механизм HMAC-SHA256, с защитой от тайминг-атак при помощи `hash_equals()`.
+
+### Изменено
+- `KeyboardBuilder`: обновлена логика построения inline-клавиатур. Теперь строго соблюдается лимит в 3 кнопки на ряд для типов `link`, `open_app`, `request_geo_location` и `request_contact` (для остальных типов лимит остаётся 7). При превышении выбрасывается `MaxValidationException`.
+- Документация (`docs/02-working-with-messages.md`, `docs/06-advanced-features.md`): добавлены примеры работы с новыми типами кнопок (`open_app`, `message`, `clipboard`) и инструкция по верификации контактов `request_contact`.
+
 ## [1.0.1] — 2026-04-04
 
 ### Исправлено

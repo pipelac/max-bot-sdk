@@ -124,7 +124,25 @@ $keyboard = KeyboardBuilder::build([
 
 - Максимум **210 кнопок** в одном сообщении
 - Максимум **30 рядов**
-- Максимум **7 кнопок** в ряду
+- Максимум **7 кнопок** в ряду (для кнопок типа `callback` и `message`)
+- **Максимум 3 кнопки в ряду**, если используются типы `link`, `open_app`, `request_geo_location` или `request_contact`
+
+### Другие типы кнопок (message, open_app, clipboard)
+
+API поддерживает отправку кнопок, которые вставляют текст в поле ввода пользователя, открывают mini-app или копируют текст в буфер обмена.
+
+```php
+$keyboard = KeyboardBuilder::build([
+    [
+        ['type' => 'message', 'text' => '📝 Написать', 'payload' => 'Шаблон сообщения...'],
+        ['type' => 'open_app', 'text' => '🚀 Mini App', 'payload' => 'app_id_123'],
+    ],
+    [
+        // Кнопка типа clipboard копирует текст из свойства payload
+        ['type' => 'clipboard', 'text' => '📋 Скопировать промокод', 'payload' => 'PROMO2026'],
+    ]
+]);
+```
 
 ## Получение сообщений
 

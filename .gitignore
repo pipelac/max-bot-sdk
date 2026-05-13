@@ -22,3 +22,6 @@ composer.lock
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Черновики рефакторинга
+docs/refactoring/

@@ -30,6 +30,9 @@ final class KeyboardBuilder
     /** @var int Макс. кнопок в ряду */
     const MAX_PER_ROW = 7;
 
+    /** @var int Строгий макс. кнопок в ряду для специфичных типов */
+    const MAX_PER_ROW_STRICT = 3;
+
     /**
      * Сформировать вложение inline-клавиатуры.
      *
@@ -50,10 +53,23 @@ final class KeyboardBuilder
             if (!is_array($row)) {
                 throw new MaxValidationException('Каждый ряд кнопок должен быть массивом.');
             }
-            if (count($row) > self::MAX_PER_ROW) {
-                throw new MaxValidationException(
-                    'Превышено макс. кнопок в ряду: ' . self::MAX_PER_ROW
-                );
+
+            $limit = self::MAX_PER_ROW;
+            foreach ($row as $button) {
+                if (is_array($button) && isset($button['type'])) {
+                    if (in_array($button['type'], array('link', 'open_app', 'request_geo_location', 'request_contact'), true)) {
+                        $limit = self::MAX_PER_ROW_STRICT;
+                        break;
+                    }
+                }
+            }
+
+            if (count($row) > $limit) {
+                if ($limit === self::MAX_PER_ROW_STRICT) {
+                    throw new MaxValidationException('Превышено макс. кнопок в ряду (лимит 3 из-за специфичных типов)');
+                } else {
+                    throw new MaxValidationException('Превышено макс. кнопок в ряду: ' . self::MAX_PER_ROW);
+                }
             }
             $totalButtons += count($row);
         }

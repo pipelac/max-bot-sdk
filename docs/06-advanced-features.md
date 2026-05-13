@@ -132,6 +132,32 @@ if ($update !== null) {
 }
 ```
 
+### Верификация контактов (request_contact)
+
+При получении сообщения с прикрепленным контактом, MAX API присылает `vcf_info` и `hash` в полезной нагрузке (payload) вложения. Для проверки подлинности контакта (чтобы избежать подмены от злоумышленников), используйте встроенную утилиту `ContactValidator`.
+
+```php
+use MaxBotSdk\Utils\ContactValidator;
+
+if ($update !== null && $update->getUpdateType() === 'message_created') {
+    $attachments = $update->getMessage()->getAttachments();
+    
+    if (!empty($attachments) && $attachments[0]->getType() === 'contact') {
+        $payload = $attachments[0]->getPayloadValue();
+        $vcfInfo = $payload['vcf_info'] ?? '';
+        $hash    = $payload['hash'] ?? '';
+        
+        $isValid = ContactValidator::verifyContactHash('ВАШ_ТОКЕН_БОТА', $vcfInfo, $hash);
+        
+        if ($isValid) {
+            echo "Контакт подтвержден API!";
+        } else {
+            echo "Внимание! Подделка контакта!";
+        }
+    }
+}
+```
+
 ## Загрузка файлов
 
 Полный 3-этапный процесс:

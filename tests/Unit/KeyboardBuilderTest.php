@@ -81,4 +81,36 @@ class KeyboardBuilderTest extends TestCase
         $result = KeyboardBuilder::build($rows);
         $this->assertEquals('inline_keyboard', $result['type']);
     }
+
+    public function testBuildStrictTypeLimitPositive()
+    {
+        $rows = array(
+            array(
+                array('type' => 'link', 'text' => 'Link 1', 'url' => 'https://a.com'),
+                array('type' => 'link', 'text' => 'Link 2', 'url' => 'https://b.com'),
+                array('type' => 'link', 'text' => 'Link 3', 'url' => 'https://c.com'),
+            ),
+        );
+
+        $result = KeyboardBuilder::build($rows);
+        $this->assertEquals('inline_keyboard', $result['type']);
+        $this->assertCount(1, $result['payload']['buttons']);
+        $this->assertCount(3, $result['payload']['buttons'][0]);
+    }
+
+    public function testBuildStrictTypeLimitNegativeThrows()
+    {
+        $rows = array(
+            array(
+                array('type' => 'link', 'text' => 'Link 1', 'url' => 'https://a.com'),
+                array('type' => 'link', 'text' => 'Link 2', 'url' => 'https://b.com'),
+                array('type' => 'link', 'text' => 'Link 3', 'url' => 'https://c.com'),
+                array('type' => 'link', 'text' => 'Link 4', 'url' => 'https://d.com'),
+            ),
+        );
+
+        $this->expectException(MaxValidationException::class);
+        $this->expectExceptionMessage('Превышено макс. кнопок в ряду (лимит 3 из-за специфичных типов)');
+        KeyboardBuilder::build($rows);
+    }
 }
