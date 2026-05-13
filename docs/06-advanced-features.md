@@ -132,6 +132,38 @@ if ($update !== null) {
 }
 ```
 
+## Верификация контактов (request_contact)
+
+При получении номера телефона от пользователя (через кнопку типа `request_contact`) API передает специальный хеш для защиты от подмены. SDK предоставляет утилиту `ContactValidator` для его проверки.
+
+```php
+use MaxBotSdk\Utils\ContactValidator;
+
+$update = $handler->parseUpdate(file_get_contents('php://input'));
+
+if ($update !== null && $update->getUpdateType() === 'message_created') {
+    $attachments = $update->getMessage()->getAttachments();
+    
+    foreach ($attachments as $attachment) {
+        if ($attachment->getType() === 'contact') {
+            $hash = $attachment->getPayloadValue('hash', '');
+            $vcfInfo = $attachment->getPayloadValue('vcf_info', '');
+            
+            // Если хэш присутствует, верифицируем его
+            if ($hash !== '') {
+                $isValid = ContactValidator::verifyContactHash('YOUR_BOT_TOKEN', $vcfInfo, $hash);
+                
+                if ($isValid) {
+                    echo "Контакт подтвержден!";
+                } else {
+                    echo "ОШИБКА: Контакт подделан!";
+                }
+            }
+        }
+    }
+}
+```
+
 ## Загрузка файлов
 
 Полный 3-этапный процесс:
@@ -177,7 +209,7 @@ $keyboard = KeyboardBuilder::build([
 // Лимиты MAX API:
 // - Максимум 210 кнопок
 // - Максимум 30 рядов
-// - Максимум 7 кнопок в ряду
+// - Максимум 7 кнопок в ряду (лимит 3 кнопки для типов: link, open_app, request_geo_location, request_contact)
 ```
 
 ## Подключение логгера

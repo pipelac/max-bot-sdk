@@ -16,6 +16,7 @@ final class KeyboardBuilder
     public const MAX_BUTTONS = 210;
     public const MAX_ROWS = 30;
     public const MAX_PER_ROW = 7;
+    public const MAX_PER_ROW_STRICT = 3;
 
     /**
      * @param list<list<array<string, mixed>>> $rows
@@ -35,7 +36,26 @@ final class KeyboardBuilder
             if (!\is_array($row)) {
                 throw new MaxValidationException('Каждый ряд кнопок должен быть массивом.');
             }
-            if (\count($row) > self::MAX_PER_ROW) {
+
+            $hasRestrictedType = false;
+            foreach ($row as $button) {
+                if (\is_array($button)) {
+                    $type = $button['type'] ?? '';
+                    if (\in_array($type, ['link', 'open_app', 'request_geo_location', 'request_contact'], true)) {
+                        $hasRestrictedType = true;
+                        break;
+                    }
+                }
+            }
+
+            $limit = $hasRestrictedType ? self::MAX_PER_ROW_STRICT : self::MAX_PER_ROW;
+
+            if (\count($row) > $limit) {
+                if ($hasRestrictedType) {
+                    throw new MaxValidationException(
+                        'Превышено макс. кнопок в ряду (лимит 3 из-за специфичных типов).'
+                    );
+                }
                 throw new MaxValidationException(
                     'Превышено макс. кнопок в ряду: ' . self::MAX_PER_ROW,
                 );
