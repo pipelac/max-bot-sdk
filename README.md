@@ -2,11 +2,11 @@
 
 [![PHP](https://img.shields.io/badge/PHP-5.6%2B-blue.svg)](https://php.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](https://github.com/pipelac/max-bot-sdk/releases/tag/v1.0.0)
+[![Version](https://img.shields.io/badge/version-1.1.0-orange.svg)](https://github.com/pipelac/max-bot-sdk/releases/tag/v1.1.0)
 
 PHP SDK для создания ботов в мессенджере **MAX** через официальный [MAX Bot API](https://dev.max.ru/docs-api).
 
-**Версия:** 1.0.0 | **PHP:** ≥ 5.6 | **Лицензия:** MIT
+**Версия:** 1.1.0 | **PHP:** ≥ 5.6 | **Лицензия:** MIT
 
 ---
 
@@ -470,7 +470,7 @@ $keyboard = KeyboardBuilder::build([
     ),
 ]);
 
-// Лимиты MAX API: 210 кнопок, 30 рядов, 7 кнопок в ряду
+// Лимиты MAX API: 210 кнопок, 30 рядов, 7 кнопок в ряду (строгий лимит 3 кнопки для спец. типов)
 ```
 
 ## Структура проекта
