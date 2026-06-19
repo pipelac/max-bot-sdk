@@ -396,9 +396,9 @@ function processUpdate($client, $update)
 
 ---
 
-## 5. Рассылка по чатам с пагинацией
+## 5. Выгрузка участников чата с пагинацией
 
-Перебирает все чаты бота и отправляет объявление.
+Перебирает всех участников группы для формирования отчета.
 
 ```php
 <?php
@@ -408,40 +408,29 @@ use MaxBotSdk\ClientFactory;
 use MaxBotSdk\Exception\MaxApiException;
 
 $client = ClientFactory::create('ВАШ_ТОКЕН');
+$chatId = 12345;
 
-$announcement = '📢 **Важное объявление!**' . "\n\n"
-    . 'Обновление системы запланировано на завтра в 03:00 MSK.';
-
-$sent = 0;
-$failed = 0;
+$exported = 0;
 $marker = null;
 
+echo "Начинаем экспорт участников чата {$chatId}...\n";
+
 do {
-    // Получить страницу чатов
-    $result = $client->chats()->getChats(50, $marker);
+    // Получить страницу участников
+    $result = $client->members()->getMembers($chatId, 50, $marker);
 
-    foreach ($result->getItems() as $chat) {
-        try {
-            $client->messages()->sendMessage([
-                'text'   => $announcement,
-                'format' => 'markdown',
-            ], null, $chat->getChatId());
-
-            $sent++;
-            echo '✅ Отправлено в: ' . $chat->getTitle() . "\n";
-        } catch (MaxApiException $e) {
-            $failed++;
-            echo '❌ Ошибка (' . $chat->getTitle() . '): ' . $e->getMessage() . "\n";
-        }
-
-        // Пауза для соблюдения rate limit
-        usleep(100000); // 100ms
+    foreach ($result->getItems() as $member) {
+        $exported++;
+        echo "✅ Участник: {$member->getName()} (ID: {$member->getUserId()})\n";
+        
+        // Пауза для соблюдения rate limit при сложной обработке
+        usleep(50000); // 50ms
     }
 
     $marker = $result->getMarker();
 } while ($result->hasMore());
 
-echo "\nИтого: отправлено {$sent}, ошибок {$failed}\n";
+echo "\nИтого: выгружено {$exported} участников\n";
 ```
 
 ---

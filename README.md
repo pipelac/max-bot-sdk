@@ -235,18 +235,11 @@ $client->messages()->deleteMessage($messageId);
 
 ### Chats — работа с чатами
 
-```php// Получить список чатов (PaginatedResult<Chat>)
-$result = $client->chats()->getChats(50);
-foreach ($result->getItems() as $chat) {
-    echo $chat->getTitle() . ' (ID: ' . $chat->getChatId() . ')' . PHP_EOL;
-}
+```php// Получить чат по публичной ссылке (алиасу)
+$chat = $client->chats()->getChatByLink('@my_channel');
+echo $chat->getTitle();
 
-// Навигация по страницам
-if ($result->hasMore()) {
-    $nextPage = $client->chats()->getChats(50, $result->getMarker());
-}
-
-// Получить конкретный чат
+// Получить конкретный чат по ID
 $chat = $client->chats()->getChat($chatId);
 echo $chat->getTitle();
 echo $chat->getType();         // 'dialog', 'chat', 'channel'
@@ -404,8 +397,8 @@ http_response_code(200);
 Все API-методы возвращают типизированные объекты вместо сырых массивов:
 
 - `bot()->getMe()` → **User** — информация о боте
-- `chats()->getChats()` → **PaginatedResult\<Chat\>** — список чатов
-- `chats()->getChat($id)` → **Chat** — конкретный чат
+- `chats()->getChatByLink($link)` → **Chat** — получение чата по ссылке (алиасу)
+- `chats()->getChat($id)` → **Chat** — конкретный чат по ID
 - `messages()->sendMessage()` → **Message** — отправленное сообщение
 - `messages()->getMessage($id)` → **Message** — конкретное сообщение
 - `messages()->getMessages()` → **PaginatedResult\<Message\>** — список сообщений
