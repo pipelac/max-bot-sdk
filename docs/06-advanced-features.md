@@ -5,18 +5,18 @@
 Методы, возвращающие списки данных, используют `PaginatedResult`:
 
 ```php
-$result = $client->chats()->getChats(50);
+$result = $client->messages()->getMessages($chatId, 50);
 
 while (true) {
-    foreach ($result->getItems() as $chat) {
-        echo $chat->getTitle() . PHP_EOL;
+    foreach ($result->getItems() as $message) {
+        echo $message->getText() . PHP_EOL;
     }
 
     if (!$result->hasMore()) {
         break;
     }
 
-    $result = $client->chats()->getChats(50, $result->getMarker());
+    $result = $client->messages()->getMessages($chatId, 50, $result->getMarker());
 }
 ```
 

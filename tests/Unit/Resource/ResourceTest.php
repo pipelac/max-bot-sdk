@@ -76,7 +76,19 @@ final class ResourceTest extends TestCase
             'marker' => 'next_page',
         ]));
 
+        $deprecationCaught = false;
+        set_error_handler(function(int $errno, string $errstr) use (&$deprecationCaught) {
+            if ($errno === \E_USER_DEPRECATED) {
+                $deprecationCaught = true;
+                return true;
+            }
+            return false;
+        });
+
         $result = $this->client->chats()->getChats(10);
+        restore_error_handler();
+        
+        self::assertTrue($deprecationCaught, 'Ожидалось предупреждение о депрекации');
         self::assertInstanceOf(PaginatedResult::class, $result);
         $items = $result->getItems();
         self::assertCount(2, $items);
@@ -97,6 +109,24 @@ final class ResourceTest extends TestCase
         self::assertInstanceOf(Chat::class, $chat);
         self::assertSame(123, $chat->getChatId());
         self::assertSame('dialog', $chat->getType());
+    }
+
+    #[Test]
+    public function chatsGetChatByLinkReturnsChatDto(): void
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'chat_id' => 456,
+            'type'    => 'channel',
+            'title'   => 'My Channel',
+        ]));
+        $chat = $this->client->chats()->getChatByLink('@my_channel');
+        self::assertInstanceOf(Chat::class, $chat);
+        self::assertSame(456, $chat->getChatId());
+        self::assertSame('channel', $chat->getType());
+
+        $req = $this->mockHttp->getLastRequest();
+        self::assertSame('GET', $req['method']);
+        self::assertStringContainsString('/chats/@my_channel', $req['url']);
     }
 
     #[Test]

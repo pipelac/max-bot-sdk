@@ -35,7 +35,7 @@ final class Subscriptions extends ResourceAbstract
             $payload['version'] = $version;
         }
         if ($secret !== null) {
-            $payload['secret_key'] = $secret;
+            $payload['secret'] = $secret;
         }
 
         $data = $this->post('/subscriptions', $payload);

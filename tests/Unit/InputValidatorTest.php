@@ -114,6 +114,59 @@ final class InputValidatorTest extends TestCase
     }
 
     #[Test]
+    public function validateChatLinkValid(): void
+    {
+        self::assertSame('my_channel', InputValidator::validateChatLink('my_channel'));
+        self::assertSame('@my-channel', InputValidator::validateChatLink('@my-channel'));
+        self::assertSame('channel123', InputValidator::validateChatLink('channel123'));
+        self::assertSame('@Channel_Name', InputValidator::validateChatLink('@Channel_Name'));
+    }
+
+    #[Test]
+    public function validateChatLinkEmptyThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        $this->expectExceptionMessage('Ссылка на чат не может быть пустой.');
+        InputValidator::validateChatLink('   ');
+    }
+
+    #[Test]
+    public function validateChatLinkInvalidFormatThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        $this->expectExceptionMessage('Неверный формат ссылки на чат');
+        InputValidator::validateChatLink('123channel');
+    }
+
+    #[Test]
+    public function validateChatLinkUrlThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateChatLink('https://max.ru/channel');
+    }
+
+    #[Test]
+    public function validateChatLinkSpaceThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateChatLink('my channel');
+    }
+
+    #[Test]
+    public function validateChatLinkAtMiddleThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateChatLink('my@channel');
+    }
+
+    #[Test]
+    public function validateChatLinkTrailingNewlineThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateChatLink("my_channel\n");
+    }
+
+    #[Test]
     public function validateNotEmptyValid(): void
     {
         $result = InputValidator::validateNotEmpty('hello', 'field');

@@ -30,7 +30,7 @@
     "scripts": {
         "test": "phpunit --display-warnings",
         "analyse": "phpstan analyse",
-        "cs-check": "php-cs-fixer fix --dry-run --diff",
-        "cs-fix": "php-cs-fixer fix"
+        "cs-check": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
+        "cs-fix": "php-cs-fixer fix --allow-risky=yes"
     }
 }

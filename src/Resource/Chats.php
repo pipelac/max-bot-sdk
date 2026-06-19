@@ -18,10 +18,22 @@ use MaxBotSdk\Utils\InputValidator;
 final class Chats extends ResourceAbstract
 {
     /**
+     * @deprecated Начиная с июня 2026 метод GET /chats больше не поддерживается MAX API.
+     * Вместо него для получения списка всех групповых чатов и каналов используйте подписки через Webhook (POST /subscriptions).
+     *
      * @return PaginatedResult<Chat>
      */
     public function getChats(?int $count = null, ?int $marker = null): PaginatedResult
     {
+        static $deprecatedWarned = false;
+        if (!$deprecatedWarned) {
+            trigger_error(
+                'Method MaxBotSdk\Resource\Chats::getChats() is deprecated since June 2026 and API support is ending. Use POST /subscriptions (Subscriptions resource) instead.',
+                \E_USER_DEPRECATED,
+            );
+            $deprecatedWarned = true;
+        }
+
         $query = [];
         if ($count !== null) {
             $query['count'] = $count;
@@ -32,6 +44,14 @@ final class Chats extends ResourceAbstract
 
         $data = $this->get('/chats', $query);
         return PaginatedResult::fromApiResponse($data, 'chats', Chat::class);
+    }
+
+    public function getChatByLink(string $link): Chat
+    {
+        $link = InputValidator::validateChatLink($link);
+        $encodedLink = str_replace('%40', '@', rawurlencode($link));
+        $data = $this->get('/chats/' . $encodedLink);
+        return Chat::fromArray($data);
     }
 
     public function getChat(int $chatId): Chat

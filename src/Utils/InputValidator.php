@@ -69,6 +69,23 @@ final class InputValidator
         return $value;
     }
 
+    public static function validateChatLink(string $link): string
+    {
+        if (trim($link) === '') {
+            throw new MaxValidationException('Ссылка на чат не может быть пустой.');
+        }
+
+        if (\strlen($link) > 255) {
+            throw new MaxValidationException('Длина ссылки превышает допустимый предел.');
+        }
+
+        if (preg_match('/^@?[a-zA-Z]+[a-zA-Z0-9_-]*$/D', $link) !== 1) {
+            throw new MaxValidationException('Неверный формат ссылки на чат. Ожидается алиас, например @my_channel или my-channel.');
+        }
+
+        return $link;
+    }
+
     public static function maskToken(string $token): string
     {
         $length = \strlen($token);

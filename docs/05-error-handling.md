@@ -57,7 +57,7 @@ try {
 use MaxBotSdk\Exception\MaxConnectionException;
 
 try {
-    $chats = $client->chats()->getChats();
+    $chat = $client->chats()->getChatByLink('@channel');
 } catch (MaxConnectionException $e) {
     echo 'Сетевая ошибка: ' . $e->getMessage();
     // Таймаут, DNS-ошибка, отказ в соединении и т.д.

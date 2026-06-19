@@ -53,7 +53,7 @@ final class KeyboardBuilder
             if (\count($row) > $limit) {
                 if ($hasRestrictedType) {
                     throw new MaxValidationException(
-                        'Превышено макс. кнопок в ряду (лимит 3 из-за специфичных типов).'
+                        'Превышено макс. кнопок в ряду (лимит 3 из-за специфичных типов).',
                     );
                 }
                 throw new MaxValidationException(
