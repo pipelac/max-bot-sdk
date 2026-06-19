@@ -76,7 +76,7 @@ class ResourceTest extends TestCase
         ]));
 
         $deprecationCaught = false;
-        set_error_handler(function($errno, $errstr) use (&$deprecationCaught) {
+        set_error_handler(function ($errno, $errstr) use (&$deprecationCaught) {
             if ($errno === \E_USER_DEPRECATED) {
                 $deprecationCaught = true;
                 return true;
@@ -86,7 +86,7 @@ class ResourceTest extends TestCase
 
         $result = $this->client->chats()->getChats(10);
         restore_error_handler();
-        
+
         $this->assertTrue($deprecationCaught, 'Ожидалось предупреждение о депрекации');
         $this->assertInstanceOf(PaginatedResult::class, $result);
         $items = $result->getItems();
