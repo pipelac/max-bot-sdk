@@ -115,4 +115,42 @@ class InputValidatorTest extends TestCase
         $this->expectException(MaxValidationException::class);
         InputValidator::validateNotEmpty(null, 'field');
     }
+
+    public function testValidateChatLinkValid()
+    {
+        $this->assertEquals('my_channel', InputValidator::validateChatLink('my_channel'));
+        $this->assertEquals('@my_channel', InputValidator::validateChatLink('@my_channel'));
+        $this->assertEquals('@channel-123', InputValidator::validateChatLink('@channel-123'));
+        $this->assertEquals('@a', InputValidator::validateChatLink('@a'));
+    }
+
+    public function testValidateChatLinkEmptyThrows()
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateChatLink('   ');
+    }
+
+    public function testValidateChatLinkTooLongThrows()
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateChatLink('@' . str_repeat('a', 255));
+    }
+
+    public function testValidateChatLinkInvalidFormatThrows()
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateChatLink('123channel');
+    }
+
+    public function testValidateChatLinkInvalidCharsThrows()
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateChatLink('@my channel');
+    }
+
+    public function testValidateChatLinkUrlThrows()
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateChatLink('https://max.ru/channel');
+    }
 }

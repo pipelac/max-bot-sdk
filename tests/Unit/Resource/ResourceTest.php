@@ -75,13 +75,41 @@ class ResourceTest extends TestCase
             'marker' => 'next_page',
         ]));
 
+        $deprecationCaught = false;
+        set_error_handler(function($errno, $errstr) use (&$deprecationCaught) {
+            if ($errno === \E_USER_DEPRECATED) {
+                $deprecationCaught = true;
+                return true;
+            }
+            return false;
+        });
+
         $result = $this->client->chats()->getChats(10);
+        restore_error_handler();
+        
+        $this->assertTrue($deprecationCaught, 'Ожидалось предупреждение о депрекации');
         $this->assertInstanceOf(PaginatedResult::class, $result);
         $items = $result->getItems();
         $this->assertCount(2, $items);
         $this->assertInstanceOf(Chat::class, $items[0]);
         $this->assertEquals(1, $items[0]->getChatId());
         $this->assertTrue($result->hasMore());
+    }
+
+    public function testChatsGetChatByLinkReturnsChatDto()
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'chat_id' => 456,
+            'type'    => 'channel',
+            'title'   => 'My Channel',
+        ]));
+        $chat = $this->client->chats()->getChatByLink('@my_channel');
+        $this->assertInstanceOf(Chat::class, $chat);
+        $this->assertEquals(456, $chat->getChatId());
+        
+        $req = $this->mockHttp->getLastRequest();
+        $this->assertEquals('GET', $req['method']);
+        $this->assertStringContainsString('/chats/@my_channel', $req['url']);
     }
 
     public function testChatsGetChatReturnsChatDto()
@@ -619,8 +647,8 @@ class ResourceTest extends TestCase
         $json = isset($req['options']['json']) ? $req['options']['json'] : [];
         $this->assertArrayHasKey('update_types', $json);
         $this->assertArrayHasKey('version', $json);
-        $this->assertArrayHasKey('secret_key', $json);
-        $this->assertEquals('my_secret', $json['secret_key']);
+        $this->assertArrayHasKey('secret', $json);
+        $this->assertEquals('my_secret', $json['secret']);
     }
 
     public function testSubscriptionsGetSubscriptionsEmpty()

@@ -18,6 +18,7 @@ final class Chats extends ResourceAbstract
     /**
      * Получить список чатов бота.
      *
+     * @deprecated Метод устарел с июня 2026. Используйте POST /subscriptions.
      * @param int|null $count  Количество чатов.
      * @param int|null $marker Маркер для пагинации.
      * @return PaginatedResult Коллекция Chat DTO.
@@ -25,6 +26,15 @@ final class Chats extends ResourceAbstract
      */
     public function getChats($count = null, $marker = null)
     {
+        static $deprecatedWarned = false;
+        if (!$deprecatedWarned) {
+            trigger_error(
+                'Method MaxBotSdk\Resource\Chats::getChats() is deprecated since June 2026 and API support is ending. Use POST /subscriptions (Subscriptions resource) instead.',
+                \E_USER_DEPRECATED
+            );
+            $deprecatedWarned = true;
+        }
+
         $query = [];
         if ($count !== null) {
             $query['count'] = (int) $count;
@@ -35,6 +45,22 @@ final class Chats extends ResourceAbstract
 
         $data = $this->get('/chats', $query);
         return PaginatedResult::fromApiResponse($data, 'chats', Chat::class);
+    }
+
+    /**
+     * Получить информацию о чате по публичной ссылке (алиасу).
+     *
+     * @param string $link Ссылка на чат (например, @my_channel).
+     * @return Chat
+     * @throws \MaxBotSdk\Exception\MaxApiException
+     * @throws \MaxBotSdk\Exception\MaxValidationException
+     */
+    public function getChatByLink($link)
+    {
+        $link = InputValidator::validateChatLink($link);
+        $encodedLink = str_replace('%40', '@', rawurlencode($link));
+        $data = $this->get('/chats/' . $encodedLink);
+        return Chat::fromArray($data);
     }
 
     /**

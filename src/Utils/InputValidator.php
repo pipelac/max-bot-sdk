@@ -102,6 +102,30 @@ final class InputValidator
     }
 
     /**
+     * Валидирует ссылку на чат (алиас).
+     *
+     * @param string $link Ссылка для проверки.
+     * @return string Валидная ссылка.
+     * @throws MaxValidationException
+     */
+    public static function validateChatLink($link)
+    {
+        if (trim($link) === '') {
+            throw new MaxValidationException('Ссылка на чат не может быть пустой.');
+        }
+
+        if (\strlen($link) > 255) {
+            throw new MaxValidationException('Длина ссылки превышает допустимый предел.');
+        }
+
+        if (preg_match('/^@?[a-zA-Z]+[a-zA-Z0-9_-]*$/D', $link) !== 1) {
+            throw new MaxValidationException('Неверный формат ссылки на чат. Ожидается алиас, например @my_channel или my-channel.');
+        }
+
+        return $link;
+    }
+
+    /**
      * Валидирует непустую строку.
      *
      * @param string|null $value     Строка для проверки.
