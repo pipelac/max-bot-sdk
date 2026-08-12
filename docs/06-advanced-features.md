@@ -376,7 +376,7 @@ class GuzzleAdapter implements HttpClientInterface
     private $baseUrl;
     private $lastStatusCode = 0;
 
-    public function __construct($token, $baseUrl = 'https://platform-api.max.ru/api')
+    public function __construct($token, $baseUrl = 'https://platform-api2.max.ru')
     {
         $this->baseUrl = $baseUrl;
         $this->guzzle = new GuzzleClient([
@@ -509,4 +509,19 @@ $client->members()->removeAdmin($chatId, $userId);
 // Участие бота
 $myMembership = $client->members()->getMyMembership($chatId);
 $client->members()->leaveChat($chatId);
+```
+
+### Управление командами бота
+
+```php
+// Обновить список команд бота (PATCH /me/commands)
+$result = $client->bot()->patchCommands([
+    ['name' => 'start', 'description' => 'Запустить бота'],
+    ['name' => 'help', 'description' => 'Помощь и инструкции'],
+    ['name' => 'settings', 'description' => 'Настройки'],
+]);
+
+if ($result->isSuccess()) {
+    echo 'Команды успешно обновлены!';
+}
 ```

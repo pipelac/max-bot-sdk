@@ -23,7 +23,7 @@ final class CurlHttpClient implements HttpClientInterface
     const SDK_VERSION = '1.0.0';
 
     /** @var string Базовый URL MAX Bot API. */
-    const BASE_URL = 'https://platform-api.max.ru';
+    const BASE_URL = 'https://platform-api2.max.ru';
 
     /** @var ConfigInterface Конфигурация SDK. */
     private $config;

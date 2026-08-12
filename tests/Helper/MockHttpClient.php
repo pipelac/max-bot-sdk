@@ -110,6 +110,6 @@ class MockHttpClient implements HttpClientInterface
      */
     public function getBaseUrl()
     {
-        return 'https://platform-api.max.ru';
+        return 'https://platform-api2.max.ru';
     }
 }

@@ -61,6 +61,34 @@ class ResourceTest extends TestCase
         $this->assertEquals('GET', $this->mockHttp->getLastRequest()['method']);
     }
 
+    public function testBotPatchCommandsReturnsActionResult()
+    {
+        $this->mockHttp->setResponse(200, (string) json_encode([
+            'success' => true,
+            'message' => 'Commands updated',
+        ]));
+
+        $result = $this->client->bot()->patchCommands([
+            ['name' => 'start', 'description' => 'Запустить бота'],
+            ['name' => 'help', 'description' => 'Помощь'],
+        ]);
+
+        $this->assertInstanceOf(ActionResult::class, $result);
+        $this->assertTrue($result->isSuccess());
+
+        $lastRequest = $this->mockHttp->getLastRequest();
+        $this->assertNotNull($lastRequest);
+        $this->assertEquals('PATCH', $lastRequest['method']);
+        $this->assertEquals('/me/commands', $lastRequest['url']);
+        $this->assertArrayHasKey('json', $lastRequest['options']);
+        $this->assertEquals([
+            'commands' => [
+                ['name' => 'start', 'description' => 'Запустить бота'],
+                ['name' => 'help', 'description' => 'Помощь'],
+            ],
+        ], $lastRequest['options']['json']);
+    }
+
     // =====================================================================
     // Chats
     // =====================================================================

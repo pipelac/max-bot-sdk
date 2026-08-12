@@ -33,13 +33,13 @@ class CurlHttpClientTest extends TestCase
     public function testBuildUrlRelativePath()
     {
         $result = $this->invokePrivate('buildUrl', ['/chats', []]);
-        $this->assertEquals('https://platform-api.max.ru/chats', $result);
+        $this->assertEquals('https://platform-api2.max.ru/chats', $result);
     }
 
     public function testBuildUrlRelativePathWithLeadingSlash()
     {
         $result = $this->invokePrivate('buildUrl', ['chats', []]);
-        $this->assertEquals('https://platform-api.max.ru/chats', $result);
+        $this->assertEquals('https://platform-api2.max.ru/chats', $result);
     }
 
     public function testBuildUrlAbsoluteUrl()
@@ -61,7 +61,7 @@ class CurlHttpClientTest extends TestCase
         ]]);
         $this->assertStringContainsString('count=10', $result);
         $this->assertStringContainsString('marker=42', $result);
-        $this->assertStringStartsWith('https://platform-api.max.ru/chats?', $result);
+        $this->assertStringStartsWith('https://platform-api2.max.ru/chats?', $result);
     }
 
     public function testBuildUrlWithEmptyQuery()
@@ -69,7 +69,7 @@ class CurlHttpClientTest extends TestCase
         $result = $this->invokePrivate('buildUrl', ['/chats', [
             'query' => [],
         ]]);
-        $this->assertEquals('https://platform-api.max.ru/chats', $result);
+        $this->assertEquals('https://platform-api2.max.ru/chats', $result);
     }
 
     public function testBuildUrlWithExistingQueryString()
@@ -272,7 +272,7 @@ class CurlHttpClientTest extends TestCase
 
     public function testGetBaseUrlDefault()
     {
-        $this->assertEquals('https://platform-api.max.ru', $this->client->getBaseUrl());
+        $this->assertEquals('https://platform-api2.max.ru', $this->client->getBaseUrl());
     }
 
     public function testGetBaseUrlCustom()

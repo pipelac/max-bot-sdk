@@ -51,7 +51,7 @@ PHP SDK для создания ботов в мессенджере **MAX** ч�
 
 - PHP ≥ 5.6
 - расширения: `curl`, `json`, `mbstring`
-- доступ до `platform-api.max.ru` (HTTPS)
+- доступ до `platform-api2.max.ru` (HTTPS, требуется установленный корневой сертификат Минцифры)
 
 ## Установка
 
@@ -162,13 +162,20 @@ verify_ssl = true
 
 ## Работа с ресурсами
 
-### Bot — информация о боте
+### Bot — информация о боте и управление настройками
 
-```php// Получить информацию о текущем боте
+```php
+// Получить информацию о текущем боте
 $me = $client->bot()->getMe();
 echo $me->getName();
 echo $me->getUsername();
 echo $me->getUserId();
+
+// Обновить список команд бота (PATCH /me/commands)
+$client->bot()->patchCommands([
+    ['name' => 'start', 'description' => 'Запустить бота'],
+    ['name' => 'help', 'description' => 'Получить справку'],
+]);
 ```
 
 ### Messages — отправка и получение сообщений
