@@ -61,6 +61,35 @@ final class ResourceTest extends TestCase
         self::assertSame('GET', $this->mockHttp->getLastRequest()['method']);
     }
 
+    #[Test]
+    public function botPatchCommandsReturnsActionResult(): void
+    {
+        $this->mockHttp->setResponse(200, (string) json_encode([
+            'success' => true,
+            'message' => 'Commands updated',
+        ]));
+
+        $result = $this->client->bot()->patchCommands([
+            ['name' => 'start', 'description' => 'Запустить бота'],
+            ['name' => 'help', 'description' => 'Помощь'],
+        ]);
+
+        self::assertInstanceOf(ActionResult::class, $result);
+        self::assertTrue($result->isSuccess());
+
+        $lastRequest = $this->mockHttp->getLastRequest();
+        self::assertNotNull($lastRequest);
+        self::assertSame('PATCH', $lastRequest['method']);
+        self::assertSame('/me/commands', $lastRequest['url']);
+        self::assertArrayHasKey('json', $lastRequest['options']);
+        self::assertSame([
+            'commands' => [
+                ['name' => 'start', 'description' => 'Запустить бота'],
+                ['name' => 'help', 'description' => 'Помощь'],
+            ],
+        ], $lastRequest['options']['json']);
+    }
+
     // =====================================================================
     // Chats
     // =====================================================================

@@ -35,14 +35,14 @@ final class CurlHttpClientTest extends TestCase
     public function buildUrlRelativePath(): void
     {
         $result = $this->invokePrivate('buildUrl', ['/chats', []]);
-        self::assertSame('https://platform-api.max.ru/chats', $result);
+        self::assertSame('https://platform-api2.max.ru/chats', $result);
     }
 
     #[Test]
     public function buildUrlRelativePathWithLeadingSlash(): void
     {
         $result = $this->invokePrivate('buildUrl', ['chats', []]);
-        self::assertSame('https://platform-api.max.ru/chats', $result);
+        self::assertSame('https://platform-api2.max.ru/chats', $result);
     }
 
     #[Test]
@@ -67,14 +67,14 @@ final class CurlHttpClientTest extends TestCase
         ]]);
         self::assertStringContainsString('count=10', $result);
         self::assertStringContainsString('marker=42', $result);
-        self::assertStringStartsWith('https://platform-api.max.ru/chats?', $result);
+        self::assertStringStartsWith('https://platform-api2.max.ru/chats?', $result);
     }
 
     #[Test]
     public function buildUrlWithEmptyQuery(): void
     {
         $result = $this->invokePrivate('buildUrl', ['/chats', ['query' => []]]);
-        self::assertSame('https://platform-api.max.ru/chats', $result);
+        self::assertSame('https://platform-api2.max.ru/chats', $result);
     }
 
     #[Test]
@@ -278,7 +278,7 @@ final class CurlHttpClientTest extends TestCase
     #[Test]
     public function getBaseUrlDefault(): void
     {
-        self::assertSame('https://platform-api.max.ru', $this->client->getBaseUrl());
+        self::assertSame('https://platform-api2.max.ru', $this->client->getBaseUrl());
     }
 
     #[Test]

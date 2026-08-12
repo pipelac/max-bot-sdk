@@ -20,7 +20,7 @@ use MaxBotSdk\Utils\InputValidator;
 final class CurlHttpClient implements HttpClientInterface
 {
     public const SDK_VERSION = '2.0.0';
-    public const BASE_URL = 'https://platform-api.max.ru';
+    public const BASE_URL = 'https://platform-api2.max.ru';
 
     private int $lastStatusCode = 0;
     /** @var list<string> */
