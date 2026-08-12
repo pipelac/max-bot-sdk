@@ -199,11 +199,34 @@ if ($update === null) {
     exit;
 }
 
-match ($update->getUpdateType()) {
-    'message_created' => handleMessage($update),
-    'message_callback' => handleCallback($update),
-    default => null,
-};
+if ($update->getUpdateType() === 'message_created') {
+    handleMessage($update);
+} elseif ($update->getUpdateType() === 'message_callback') {
+    handleCallback($update);
+}
 
 http_response_code(200);
 ```
+
+## Выбор базового домена (API Endpoint)
+
+По умолчанию SDK направляет запросы на рекомендованный домен **`https://platform-api2.max.ru`**. 
+
+Различие между доменами:
+- **`https://platform-api2.max.ru`** *(по умолчанию)* — целевой домен MAX Bot API (использует сертификаты Минцифры).
+- **`https://platform-api.max.ru`** — предшествующий домен, продолжающий функционировать через шлюз обратной совместимости серверов MAX.
+
+Если вашему проекту требуется явным образом использовать старый домен `platform-api.max.ru` или кастомный прокси-сервер, укажите его при создании `CurlHttpClient`:
+
+```php
+use MaxBotSdk\ClientFactory;
+use MaxBotSdk\Config;
+use MaxBotSdk\Http\CurlHttpClient;
+
+$config = new Config('YOUR_BOT_TOKEN');
+
+// Явное указание старого домена (platform-api.max.ru):
+$httpClient = new CurlHttpClient($config, null, 'https://platform-api.max.ru');
+$client = ClientFactory::create('YOUR_BOT_TOKEN', null, $httpClient);
+```
+
