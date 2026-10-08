@@ -9,6 +9,8 @@ use MaxBotSdk\DTO\ActionResult;
 use MaxBotSdk\DTO\Attachment;
 use MaxBotSdk\DTO\Chat;
 use MaxBotSdk\DTO\ChatMember;
+use MaxBotSdk\DTO\CommentMessage;
+use MaxBotSdk\DTO\CommentPayload;
 use MaxBotSdk\DTO\Message;
 use MaxBotSdk\DTO\PaginatedResult;
 use MaxBotSdk\DTO\Subscription;
@@ -17,6 +19,8 @@ use MaxBotSdk\DTO\UpdatesResult;
 use MaxBotSdk\DTO\UploadResult;
 use MaxBotSdk\DTO\User;
 use MaxBotSdk\DTO\VideoInfo;
+use MaxBotSdk\Enum\TextFormat;
+use MaxBotSdk\Enum\UpdateType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -36,6 +40,7 @@ final class DtoTest extends TestCase
             UploadResult::fromArray([]),
             VideoInfo::fromArray([]),
             ActionResult::fromArray([]),
+            CommentMessage::fromArray([]),
         ];
 
         foreach ($dtos as $dto) {
@@ -352,9 +357,9 @@ final class DtoTest extends TestCase
         self::assertTrue($result->hasMore());
         self::assertSame(100, $result->getMarker());
         $items = $result->getItems();
-        self::assertCount(2, $items);
-        self::assertInstanceOf(Chat::class, $items[0]);
-        self::assertSame('A', $items[0]->getTitle());
+        $firstItem = $items[0];
+        self::assertInstanceOf(Chat::class, $firstItem);
+        self::assertSame('A', $firstItem->getTitle());
     }
 
     #[Test]
@@ -892,5 +897,145 @@ final class DtoTest extends TestCase
             $types[] = $update->getUpdateType();
         }
         self::assertSame(['message_created', 'bot_started'], $types);
+    }
+
+    // --- CommentMessage ---
+
+    #[Test]
+    public function commentMessageFromArrayFull(): void
+    {
+        $data = [
+            'sender'    => ['user_id' => 123, 'name' => 'Alice'],
+            'recipient' => ['chat_id' => 456, 'chat_type' => 'channel'],
+            'timestamp' => 1700000000000,
+            'link'      => ['type' => 'reply', 'mid' => 'mid.parent_1'],
+            'body'      => [
+                'mid'    => 'mid.comm_999',
+                'seq'    => 5,
+                'text'   => 'Текст комментария',
+                'format' => 'markdown',
+            ],
+        ];
+
+        $comment = CommentMessage::fromArray($data);
+
+        self::assertSame('mid.comm_999', $comment->getCommentId());
+        self::assertSame('Текст комментария', $comment->getText());
+        self::assertSame(TextFormat::Markdown, $comment->getFormat());
+        self::assertSame('markdown', $comment->getFormatString());
+        self::assertSame(5, $comment->getSeq());
+        self::assertNotNull($comment->getSender());
+        self::assertSame(123, $comment->getSender()?->getUserId());
+        self::assertFalse($comment->isChannelPost());
+        self::assertSame(['chat_id' => 456, 'chat_type' => 'channel'], $comment->getRecipient());
+        self::assertSame(456, $comment->getRecipientChatId());
+        self::assertSame(1700000000000, $comment->getTimestamp());
+        self::assertSame(1700000000, $comment->getDateTime()->getTimestamp());
+        self::assertTrue($comment->hasReply());
+        self::assertSame(['type' => 'reply', 'mid' => 'mid.parent_1'], $comment->getLink());
+        self::assertSame($data, $comment->toArray());
+    }
+
+    #[Test]
+    public function commentMessageWrappedInMessageKey(): void
+    {
+        $wrapped = [
+            'message' => [
+                'sender'    => null,
+                'timestamp' => 1600000000000,
+                'body'      => [
+                    'mid'  => 'mid.comm_channel',
+                    'text' => 'Сообщение от канала',
+                ],
+            ],
+        ];
+
+        $comment = CommentMessage::fromArray($wrapped);
+
+        self::assertSame('mid.comm_channel', $comment->getCommentId());
+        self::assertSame('Сообщение от канала', $comment->getText());
+        self::assertNull($comment->getSender());
+        self::assertTrue($comment->isChannelPost());
+        self::assertFalse($comment->hasReply());
+        self::assertNull($comment->getFormat());
+        self::assertSame(['mid' => 'mid.comm_channel', 'text' => 'Сообщение от канала'], $comment->getBody());
+        self::assertNull($comment->getRecipient());
+    }
+
+    // --- CommentPayload ---
+
+    #[Test]
+    public function commentPayloadCreationAndFluentBuilder(): void
+    {
+        $payload = CommentPayload::create('Привет мир!')
+            ->withFormat(TextFormat::Html)
+            ->withReplyTo('mid.parent_123');
+
+        self::assertSame('Привет мир!', $payload->getText());
+        self::assertSame(TextFormat::Html, $payload->getFormat());
+        self::assertSame(['type' => 'reply', 'mid' => 'mid.parent_123'], $payload->getLink());
+
+        $expected = [
+            'text'   => 'Привет мир!',
+            'format' => 'html',
+            'link'   => ['type' => 'reply', 'mid' => 'mid.parent_123'],
+        ];
+
+        self::assertSame($expected, $payload->toArray());
+        self::assertSame($expected, $payload->jsonSerialize());
+    }
+
+    #[Test]
+    public function commentPayloadWithStringFormat(): void
+    {
+        $payload = CommentPayload::create('Text')->withFormat('markdown');
+        self::assertSame(TextFormat::Markdown, $payload->getFormat());
+
+        $nullFormat = $payload->withFormat(null);
+        self::assertNull($nullFormat->getFormat());
+
+        $withLink = CommentPayload::create('Link test')->withLink(['type' => 'reply', 'mid' => 'm99']);
+        self::assertSame(['type' => 'reply', 'mid' => 'm99'], $withLink->getLink());
+    }
+
+    // --- Update with Comment & Admin Permissions ---
+
+    #[Test]
+    public function updateWithCommentAndAdminPermissions(): void
+    {
+        $data = [
+            'update_type'       => 'comment_created',
+            'timestamp'         => 1700000000,
+            'comment'           => [
+                'body' => ['mid' => 'mid.c1', 'text' => 'Новый комментарий'],
+            ],
+            'admin_permissions' => ['read_all_messages' => true, 'write' => true],
+        ];
+
+        $update = Update::fromArray($data);
+
+        self::assertSame(UpdateType::CommentCreated, $update->getType());
+        self::assertTrue($update->isComment());
+        self::assertFalse($update->isDialog());
+        self::assertFalse($update->isBotLifecycle());
+
+        $comment = $update->getComment();
+        self::assertNotNull($comment);
+        self::assertSame('mid.c1', $comment->getCommentId());
+        self::assertSame('Новый комментарий', $comment->getText());
+
+        self::assertSame(['read_all_messages' => true, 'write' => true], $update->getAdminPermissions());
+    }
+
+    #[Test]
+    public function updateDialogAndLifecycleHelpers(): void
+    {
+        $dialogUpdate = Update::fromArray(['update_type' => 'dialog_cleared', 'timestamp' => 100]);
+        self::assertTrue($dialogUpdate->isDialog());
+        self::assertFalse($dialogUpdate->isComment());
+
+        $botUpdate = Update::fromArray(['update_type' => 'bot_stopped', 'timestamp' => 200]);
+        self::assertTrue($botUpdate->isBotLifecycle());
+        self::assertFalse($botUpdate->isComment());
     }
 }

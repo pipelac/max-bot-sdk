@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MaxBotSdk\DTO;
 
+use MaxBotSdk\Enum\UpdateType;
+
 /**
  * Объект обновления (webhook / long-polling).
  *
@@ -42,6 +44,14 @@ final class Update extends AbstractDto
     public function getUpdateType(): string
     {
         return $this->updateType;
+    }
+
+    /**
+     * Получить типизированный тип события (SSOT).
+     */
+    public function getType(): ?UpdateType
+    {
+        return UpdateType::tryFrom($this->updateType);
     }
 
     public function getTimestamp(): int
@@ -110,6 +120,59 @@ final class Update extends AbstractDto
     {
         $userData = self::getArrayOrNull($this->body, 'user');
         return $userData !== null ? User::fromArray($userData) : null;
+    }
+
+    /**
+     * Получить объект комментария из body (для событий comment_created, comment_edited, comment_removed).
+     */
+    public function getComment(): ?CommentMessage
+    {
+        $commentData = self::getArrayOrNull($this->body, 'comment')
+            ?: self::getArrayOrNull($this->body, 'message');
+
+        if ($commentData !== null) {
+            return CommentMessage::fromArray($commentData);
+        }
+
+        return null;
+    }
+
+    /**
+     * Получить данные прав администратора (для события bot_admin_permissions_changed).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getAdminPermissions(): ?array
+    {
+        return self::getArrayOrNull($this->body, 'admin_permissions')
+            ?: self::getArrayOrNull($this->body, 'permissions');
+    }
+
+    /**
+     * Является ли обновление событием комментария.
+     */
+    public function isComment(): bool
+    {
+        return $this->getType()?->isCommentEvent()
+            ?? str_starts_with($this->updateType, 'comment_');
+    }
+
+    /**
+     * Является ли обновление событием диалога пользователя.
+     */
+    public function isDialog(): bool
+    {
+        return $this->getType()?->isDialogEvent()
+            ?? str_starts_with($this->updateType, 'dialog_');
+    }
+
+    /**
+     * Является ли обновление событием жизненного цикла бота.
+     */
+    public function isBotLifecycle(): bool
+    {
+        return $this->getType()?->isBotLifecycleEvent()
+            ?? str_starts_with($this->updateType, 'bot_');
     }
 
     public function toArray(): array

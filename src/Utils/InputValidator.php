@@ -86,6 +86,39 @@ final class InputValidator
         return $link;
     }
 
+    public static function validateMessageId(string $messageId): string
+    {
+        $messageId = trim($messageId);
+        if ($messageId === '') {
+            throw new MaxValidationException('messageId не может быть пустым.');
+        }
+
+        if (preg_match('/^(mid\.)?[a-zA-Z0-9_\-]+$/D', $messageId) !== 1) {
+            throw new MaxValidationException('Неверный формат messageId: ' . $messageId);
+        }
+
+        return $messageId;
+    }
+
+    public static function validateCommentId(string $commentId): string
+    {
+        $commentId = trim($commentId);
+        if ($commentId === '') {
+            throw new MaxValidationException('comment_id не может быть пустым.');
+        }
+
+        return $commentId;
+    }
+
+    public static function validateCommentCount(?int $count): ?int
+    {
+        if ($count !== null && ($count < 1 || $count > 100)) {
+            throw new MaxValidationException('Количество комментариев (count) должно быть в диапазоне от 1 до 100.');
+        }
+
+        return $count;
+    }
+
     public static function maskToken(string $token): string
     {
         $length = \strlen($token);

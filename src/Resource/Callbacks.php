@@ -15,10 +15,16 @@ use MaxBotSdk\Utils\InputValidator;
 final class Callbacks extends ResourceAbstract
 {
     /**
-     * @param array<string, mixed>|null $message Обновлённое сообщение или null.
+     * @param array<string, mixed>|null $message            Обновлённое сообщение или null.
+     * @param string|null               $notification       Текст всплывающего уведомления пользователю.
+     * @param bool|null                 $disableLinkPreview Отключить генерацию превью для ссылок.
      */
-    public function answerCallback(string $callbackId, ?array $message = null, ?string $notification = null): ActionResult
-    {
+    public function answerCallback(
+        string $callbackId,
+        ?array $message = null,
+        ?string $notification = null,
+        ?bool $disableLinkPreview = null,
+    ): ActionResult {
         InputValidator::validateCallbackId($callbackId);
 
         $payload = [];
@@ -29,7 +35,12 @@ final class Callbacks extends ResourceAbstract
             $payload['notification'] = $notification;
         }
 
-        $data = $this->post('/answers', $payload, ['callback_id' => $callbackId]);
+        $query = ['callback_id' => $callbackId];
+        if ($disableLinkPreview !== null) {
+            $query['disable_link_preview'] = $disableLinkPreview ? 'true' : 'false';
+        }
+
+        $data = $this->post('/answers', $payload, $query);
         return ActionResult::fromArray($data);
     }
 }

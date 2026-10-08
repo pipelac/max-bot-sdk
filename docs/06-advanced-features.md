@@ -489,6 +489,12 @@ $me = $client->bot()->getMe();
 ### Управление чатами
 
 ```php
+// Редактировать чат (название, описание)
+$client->chats()->editChat($chatId, [
+    'title'       => 'Новое название чата',
+    'description' => 'Новое описание чата или канала (до 400 символов)',
+]);
+
 // Удалить чат
 $client->chats()->deleteChat($chatId);
 
@@ -516,6 +522,23 @@ $client->members()->removeAdmin($chatId, $userId);
 $myMembership = $client->members()->getMyMembership($chatId);
 $client->members()->leaveChat($chatId);
 ```
+
+> **Внимание:** Прямое добавление пользователей ботом через метод `addMembers()` (`POST /chats/{chatId}/members`) устарело (`@deprecated`) и отключено в официальном API платформы. Для приглашения участников используйте инвайт-ссылки (`chat_link`) или стандартные механизмы вступления.
+
+### Управление комментариями в каналах (Comments API)
+
+Для работы с комментариями к публикациям каналов используется специализированный ресурс `$client->comments()`:
+
+```php
+// Получить комментарии к посту канала
+$comments = $client->comments()->getComments($messageId);
+
+// Опубликовать комментарий
+$client->comments()->addComment($messageId, 'Отличный пост!');
+```
+
+Подробное руководство: [Работа с комментариями в каналах (08-comments.md)](08-comments.md).
+
 
 ### Управление командами бота
 

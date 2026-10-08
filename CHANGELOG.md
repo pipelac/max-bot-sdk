@@ -5,6 +5,37 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 проект следует [семантическому версионированию](https://semver.org/lang/ru/).
 
+## [2.3.0] — 2026-10-08
+
+### Добавлено
+- **Comments API**: Полная поддержка работы с комментариями к публикациям каналов (`/messages/{messageId}/comments` и `/messages/{messageId}/comments/{commentId}`).
+  - `Comments` (`src/Resource/Comments.php`) — ресурс со всеми CRUD-операциями (`getComments()`, `getComment()`, `addComment()`, `editComment()`, `deleteComment()`).
+  - `CommentsResourceInterface` (`src/Contracts/CommentsResourceInterface.php`) — контракт ресурса комментариев (Interface Segregation Principle).
+  - `Client::comments()` — ленивый аксессор ресурса комментариев в главном фасаде.
+  - `CommentMessage` (`src/DTO/CommentMessage.php`) — типизированный DTO комментария (без attachments, с поддержкой body, ссылок, автора канала и конвертации в `DateTimeImmutable`).
+  - `CommentPayload` (`src/DTO/CommentPayload.php`) — Value Object / Fluent Builder для создания и редактирования комментариев (`create()`, `withFormat()`, `withReplyTo()`, `withLink()`).
+  - `TextFormat` (`src/Enum/TextFormat.php`) — Backed String Enum форматов разметки (`Markdown = 'markdown'`, `Html = 'html'`).
+- **UpdateType (расширение до 19 событий)**:
+  - Комментарии: `message_comment_created`, `message_comment_edited`, `message_comment_deleted`.
+  - Жизненный цикл бота: `bot_blocked`, `bot_unblocked`.
+  - Диалоги: `dialog_cleared`, `dialog_removed`, `dialog_muted`, `dialog_unmuted`.
+  - Доменные предикаты: `isCommentEvent()`, `isDialogEvent()`, `isBotLifecycleEvent()`, `isMessageEvent()`, `isMembershipEvent()`.
+- **DTO Update (новые методы)**:
+  - `getType(): ?UpdateType` — получение типизированного Enum события.
+  - `getComment(): ?CommentMessage` — получение объекта комментария.
+  - `getAdminPermissions(): ?array` — права администратора при добавлении бота.
+  - Предикаты `isComment()`, `isDialog()`, `isBotLifecycle()`.
+- **Callbacks**:
+  - `Callbacks::answerCallback()`: добавлен параметр `?bool $disableLinkPreview = null` для отключения превью ссылок.
+- **InputValidator**:
+  - Добавлены валидаторы: `validateMessageId()`, `validateCommentId()`, `validateCommentCount()`.
+- **Документация**:
+  - Создано подробное руководство `docs/08-comments.md` (и `docs/07-comments.md`).
+  - Актуализированы `docs/03-webhooks-and-polling.md`, `docs/06-advanced-features.md`, `README.md`.
+
+### Устарело (Deprecated)
+- `Members::addMembers()`: метод помечен как `@deprecated` (с вызовом `E_USER_DEPRECATED`), так как соответствующий эндпоинт `POST /chats/{chatId}/members` закрыт/ограничен в официальном MAX Bot API.
+
 ## [2.2.0] — 2026-08-12
 
 ### Добавлено

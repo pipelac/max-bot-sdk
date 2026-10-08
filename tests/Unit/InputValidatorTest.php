@@ -179,4 +179,62 @@ final class InputValidatorTest extends TestCase
         $this->expectException(MaxValidationException::class);
         InputValidator::validateNotEmpty(null, 'field');
     }
+
+    #[Test]
+    public function validateMessageIdValid(): void
+    {
+        self::assertSame('mid.123abc_-', InputValidator::validateMessageId('mid.123abc_-'));
+        self::assertSame('123456', InputValidator::validateMessageId('123456'));
+        self::assertSame('custom-msg_id', InputValidator::validateMessageId('custom-msg_id'));
+    }
+
+    #[Test]
+    public function validateMessageIdEmptyThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateMessageId('   ');
+    }
+
+    #[Test]
+    public function validateMessageIdInvalidCharsThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateMessageId('mid.hello world!');
+    }
+
+    #[Test]
+    public function validateCommentIdValid(): void
+    {
+        self::assertSame('mid.comm_123', InputValidator::validateCommentId('mid.comm_123'));
+    }
+
+    #[Test]
+    public function validateCommentIdEmptyThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateCommentId('');
+    }
+
+    #[Test]
+    public function validateCommentCountValid(): void
+    {
+        self::assertNull(InputValidator::validateCommentCount(null));
+        self::assertSame(1, InputValidator::validateCommentCount(1));
+        self::assertSame(50, InputValidator::validateCommentCount(50));
+        self::assertSame(100, InputValidator::validateCommentCount(100));
+    }
+
+    #[Test]
+    public function validateCommentCountZeroThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateCommentCount(0);
+    }
+
+    #[Test]
+    public function validateCommentCountTooLargeThrows(): void
+    {
+        $this->expectException(MaxValidationException::class);
+        InputValidator::validateCommentCount(101);
+    }
 }

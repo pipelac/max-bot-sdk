@@ -9,6 +9,8 @@ use MaxBotSdk\Config;
 use MaxBotSdk\DTO\ActionResult;
 use MaxBotSdk\DTO\Chat;
 use MaxBotSdk\DTO\ChatMember;
+use MaxBotSdk\DTO\CommentMessage;
+use MaxBotSdk\DTO\CommentPayload;
 use MaxBotSdk\DTO\Message;
 use MaxBotSdk\DTO\PaginatedResult;
 use MaxBotSdk\DTO\Subscription;
@@ -17,9 +19,11 @@ use MaxBotSdk\DTO\UpdatesResult;
 use MaxBotSdk\DTO\UploadResult;
 use MaxBotSdk\DTO\User;
 use MaxBotSdk\DTO\VideoInfo;
+use MaxBotSdk\Enum\TextFormat;
 use MaxBotSdk\Enum\UploadType;
 use MaxBotSdk\Exception\MaxValidationException;
 use MaxBotSdk\Http\RetryHandler;
+use MaxBotSdk\Resource\Comments;
 use MaxBotSdk\ResponseDecoder;
 use MaxBotSdk\Tests\Helper\MockHttpClient;
 use PHPUnit\Framework\Attributes\Test;
@@ -253,8 +257,23 @@ final class ResourceTest extends TestCase
     public function membersAddMembersReturnsActionResult(): void
     {
         $this->mockHttp->setResponse(200, '{"success": true}');
-        $result = $this->client->members()->addMembers(123, [1, 2, 3]);
+
+        $deprecations = [];
+        set_error_handler(static function (int $errno, string $errstr) use (&$deprecations): bool {
+            $deprecations[] = [$errno, $errstr];
+            return true;
+        }, \E_USER_DEPRECATED);
+
+        try {
+            $result = $this->client->members()->addMembers(123, [1, 2, 3]);
+        } finally {
+            restore_error_handler();
+        }
+
         self::assertInstanceOf(ActionResult::class, $result);
+        self::assertCount(1, $deprecations);
+        self::assertStringContainsString('addMembers() is deprecated', $deprecations[0][1]);
+
         $req = $this->mockHttp->getLastRequest();
         self::assertSame('POST', $req['method']);
         self::assertStringContainsString('/members', $req['url']);
@@ -511,6 +530,43 @@ final class ResourceTest extends TestCase
     }
 
     #[Test]
+    public function callbacksAnswerCallbackWithDisableLinkPreview(): void
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+        $this->client->callbacks()->answerCallback(
+            'cb_123',
+            ['text' => 'Updated text'],
+            null,
+            true,
+        );
+        $req = $this->mockHttp->getLastRequest();
+        $query = $req['options']['query'] ?? [];
+        self::assertArrayHasKey('disable_link_preview', $query);
+        self::assertSame('true', $query['disable_link_preview']);
+
+        // Test with false
+        $this->client->callbacks()->answerCallback(
+            'cb_123',
+            ['text' => 'Updated text'],
+            null,
+            false,
+        );
+        $req2 = $this->mockHttp->getLastRequest();
+        $query2 = $req2['options']['query'] ?? [];
+        self::assertArrayHasKey('disable_link_preview', $query2);
+        self::assertSame('false', $query2['disable_link_preview']);
+
+        // Test with null (default: key should not be present)
+        $this->client->callbacks()->answerCallback(
+            'cb_123',
+            ['text' => 'Updated text'],
+        );
+        $req3 = $this->mockHttp->getLastRequest();
+        $query3 = $req3['options']['query'] ?? [];
+        self::assertArrayNotHasKey('disable_link_preview', $query3);
+    }
+
+    #[Test]
     public function callbacksEmptyIdThrows(): void
     {
         $this->expectException(MaxValidationException::class);
@@ -550,5 +606,291 @@ final class ResourceTest extends TestCase
         self::assertSame(1080, $info->getHeight());
         self::assertSame(120, $info->getDuration());
         self::assertSame('GET', $this->mockHttp->getLastRequest()['method']);
+    }
+
+    // =====================================================================
+    // Comments
+    // =====================================================================
+
+    #[Test]
+    public function clientCommentsAccessorReturnsResource(): void
+    {
+        $comments = $this->client->comments();
+        self::assertInstanceOf(Comments::class, $comments);
+        self::assertSame($comments, $this->client->comments());
+    }
+
+    #[Test]
+    public function commentsGetCommentsReturnsPaginatedResult(): void
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'comments' => [
+                [
+                    'mid' => 'c_1',
+                    'seq' => 10,
+                    'text' => 'Great news!',
+                    'date' => 1775700000,
+                    'format' => 'markdown',
+                    'chat_id' => 999,
+                    'sender' => ['user_id' => 42, 'name' => 'Bob'],
+                ],
+            ],
+            'marker' => 888,
+        ]));
+
+        $result = $this->client->comments()->getComments(
+            'post_msg_100',
+            20,
+            'before_marker',
+            'after_marker',
+            ['c_1', 'c_2'],
+        );
+
+        self::assertInstanceOf(PaginatedResult::class, $result);
+        self::assertCount(1, $result->getItems());
+        self::assertSame(888, $result->getMarker());
+
+        $comment = $result->getItems()[0];
+        self::assertInstanceOf(CommentMessage::class, $comment);
+        self::assertSame('c_1', $comment->getMid());
+        self::assertSame(10, $comment->getSeq());
+        self::assertSame('Great news!', $comment->getText());
+        self::assertSame('markdown', $comment->getFormatString());
+        self::assertSame(TextFormat::Markdown, $comment->getFormat());
+        self::assertSame(999, $comment->getChatId());
+        self::assertNotNull($comment->getSender());
+        self::assertSame(42, $comment->getSender()->getUserId());
+
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame('GET', $lastReq['method']);
+        self::assertStringContainsString('/messages/post_msg_100/comments', $lastReq['url']);
+        self::assertSame([
+            'count' => 20,
+            'before' => 'before_marker',
+            'after' => 'after_marker',
+            'comment_ids' => 'c_1,c_2',
+        ], $lastReq['options']['query']);
+    }
+
+    #[Test]
+    public function commentsGetCommentsWithDefaults(): void
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'comments' => [],
+        ]));
+
+        $result = $this->client->comments()->getComments('post_msg_100');
+
+        self::assertInstanceOf(PaginatedResult::class, $result);
+        self::assertCount(0, $result->getItems());
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame([], $lastReq['options']['query'] ?? []);
+    }
+
+    #[Test]
+    public function commentsGetCommentReturnsCommentMessage(): void
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'message' => [
+                'mid' => 'c_42',
+                'seq' => 1,
+                'text' => 'Single comment message',
+                'date' => 1775700500,
+            ],
+        ]));
+
+        $comment = $this->client->comments()->getComment('post_msg_100', 'c_42');
+
+        self::assertInstanceOf(CommentMessage::class, $comment);
+        self::assertSame('c_42', $comment->getMid());
+        self::assertSame('Single comment message', $comment->getText());
+
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame('GET', $lastReq['method']);
+        self::assertStringContainsString('/messages/post_msg_100/comments/c_42', $lastReq['url']);
+    }
+
+    #[Test]
+    public function commentsAddCommentWithStringReturnsCommentMessage(): void
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'message' => [
+                'mid' => 'c_created_1',
+                'seq' => 5,
+                'text' => 'New reply text',
+                'format' => 'markdown',
+            ],
+        ]));
+
+        $comment = $this->client->comments()->addComment(
+            'post_msg_100',
+            'New reply text',
+            TextFormat::Markdown,
+            ['type' => 'reply', 'mid' => 'c_parent_0'],
+        );
+
+        self::assertInstanceOf(CommentMessage::class, $comment);
+        self::assertSame('c_created_1', $comment->getMid());
+
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame('POST', $lastReq['method']);
+        self::assertStringContainsString('/messages/post_msg_100/comments', $lastReq['url']);
+        self::assertSame([
+            'text' => 'New reply text',
+            'format' => 'markdown',
+            'link' => ['type' => 'reply', 'mid' => 'c_parent_0'],
+        ], $lastReq['options']['json']);
+    }
+
+    #[Test]
+    public function commentsAddCommentWithPayloadReturnsCommentMessage(): void
+    {
+        $this->mockHttp->setResponse(200, json_encode([
+            'message' => [
+                'mid' => 'c_created_2',
+                'seq' => 6,
+                'text' => 'Created via builder',
+                'format' => 'html',
+            ],
+        ]));
+
+        $payload = CommentPayload::create('Created via builder')
+            ->withFormat(TextFormat::Html)
+            ->withReplyTo('c_parent_1');
+
+        $comment = $this->client->comments()->addComment('post_msg_100', $payload);
+
+        self::assertInstanceOf(CommentMessage::class, $comment);
+        self::assertSame('c_created_2', $comment->getMid());
+
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame('POST', $lastReq['method']);
+        self::assertSame([
+            'text' => 'Created via builder',
+            'format' => 'html',
+            'link' => ['type' => 'reply', 'mid' => 'c_parent_1'],
+        ], $lastReq['options']['json']);
+    }
+
+    #[Test]
+    public function commentsEditCommentWithStringReturnsActionResult(): void
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+
+        $result = $this->client->comments()->editComment(
+            'post_msg_100',
+            'c_edit_1',
+            'Updated comment content',
+            'markdown',
+        );
+
+        self::assertInstanceOf(ActionResult::class, $result);
+        self::assertTrue($result->isSuccess());
+
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame('PUT', $lastReq['method']);
+        self::assertStringContainsString('/messages/post_msg_100/comments', $lastReq['url']);
+        self::assertSame(['comment_id' => 'c_edit_1'], $lastReq['options']['query']);
+        self::assertSame([
+            'text' => 'Updated comment content',
+            'format' => 'markdown',
+        ], $lastReq['options']['json']);
+    }
+
+    #[Test]
+    public function commentsEditCommentWithPayloadReturnsActionResult(): void
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+
+        $payload = CommentPayload::create('Updated via payload')
+            ->withFormat(TextFormat::Markdown);
+
+        $result = $this->client->comments()->editComment(
+            'post_msg_100',
+            'c_edit_2',
+            $payload,
+        );
+
+        self::assertInstanceOf(ActionResult::class, $result);
+        self::assertTrue($result->isSuccess());
+
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame('PUT', $lastReq['method']);
+        self::assertSame(['comment_id' => 'c_edit_2'], $lastReq['options']['query']);
+        self::assertSame([
+            'text' => 'Updated via payload',
+            'format' => 'markdown',
+        ], $lastReq['options']['json']);
+    }
+
+    #[Test]
+    public function commentsDeleteCommentReturnsActionResult(): void
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+
+        $result = $this->client->comments()->deleteComment('post_msg_100', 'c_del_1');
+
+        self::assertInstanceOf(ActionResult::class, $result);
+        self::assertTrue($result->isSuccess());
+
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame('DELETE', $lastReq['method']);
+        self::assertStringContainsString('/messages/post_msg_100/comments', $lastReq['url']);
+        self::assertSame(['comment_id' => 'c_del_1'], $lastReq['options']['query']);
+    }
+
+    #[Test]
+    public function commentsValidationExceptions(): void
+    {
+        $comments = $this->client->comments();
+
+        try {
+            $comments->getComments('');
+            self::fail('Expected MaxValidationException on empty messageId');
+        } catch (MaxValidationException) {
+            self::assertTrue(true);
+        }
+
+        try {
+            $comments->getComments('post_1', 0);
+            self::fail('Expected MaxValidationException on count < 1');
+        } catch (MaxValidationException) {
+            self::assertTrue(true);
+        }
+
+        try {
+            $comments->getComments('post_1', 101);
+            self::fail('Expected MaxValidationException on count > 100');
+        } catch (MaxValidationException) {
+            self::assertTrue(true);
+        }
+
+        try {
+            $comments->getComment('post_1', '   ');
+            self::fail('Expected MaxValidationException on whitespace commentId');
+        } catch (MaxValidationException) {
+            self::assertTrue(true);
+        }
+
+        try {
+            $comments->addComment('post_1', '');
+            self::fail('Expected MaxValidationException on empty comment text');
+        } catch (MaxValidationException) {
+            self::assertTrue(true);
+        }
+
+        try {
+            $comments->editComment('post_1', '', 'valid text');
+            self::fail('Expected MaxValidationException on empty commentId');
+        } catch (MaxValidationException) {
+            self::assertTrue(true);
+        }
+
+        try {
+            $comments->deleteComment('post_1', '');
+            self::fail('Expected MaxValidationException on empty commentId');
+        } catch (MaxValidationException) {
+            self::assertTrue(true);
+        }
     }
 }

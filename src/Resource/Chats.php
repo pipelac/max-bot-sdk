@@ -62,7 +62,11 @@ final class Chats extends ResourceAbstract
     }
 
     /**
-     * @param array<string, mixed> $chatData
+     * Изменить информацию о групповом чате или канале (PATCH /chats/{chatId}).
+     *
+     * @param int                  $chatId   ID чата.
+     * @param array<string, mixed> $chatData Поля для обновления (title, icon, pin, notify, description).
+     *                                       Поле 'description' (string, 0..16000 символов; пустая строка для сброса).
      */
     public function editChat(int $chatId, array $chatData): Chat
     {

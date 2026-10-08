@@ -169,20 +169,59 @@ foreach ($result->getUpdates() as $update) {
 }
 ```
 
-## Типы обновлений (update_types)
+## Типы обновлений (UpdateType)
 
-- `message_created` — новое сообщение
-- `message_callback` — нажатие inline-кнопки
-- `message_edited` — сообщение отредактировано
-- `message_removed` — сообщение удалено
-- `bot_started` — пользователь начал диалог с ботом
-- `bot_added` — бот добавлен в чат
-- `bot_removed` — бот удалён из чата
-- `user_added` — пользователь добавлен в чат
-- `user_removed` — пользователь удалён из чата
-- `chat_title_changed` — изменён заголовок чата
+В SDK все типы событий представлены строгим Backed Enum `MaxBotSdk\Enum\UpdateType`. Всего поддерживается 19 типов событий, сгруппированных по доменным областям:
+
+### Сообщения:
+- `message_created` (`UpdateType::MessageCreated`) — новое сообщение в чате
+- `message_callback` (`UpdateType::MessageCallback`) — нажатие callback-кнопки
+- `message_edited` (`UpdateType::MessageEdited`) — сообщение отредактировано
+- `message_removed` (`UpdateType::MessageRemoved`) — сообщение удалено
+
+### Комментарии в каналах (Comments API):
+- `message_comment_created` (`UpdateType::MessageCommentCreated`) — опубликован новый комментарий
+- `message_comment_edited` (`UpdateType::MessageCommentEdited`) — комментарий отредактирован
+- `message_comment_deleted` (`UpdateType::MessageCommentDeleted`) — комментарий удален
+
+### Жизненный цикл бота:
+- `bot_started` (`UpdateType::BotStarted`) — пользователь запустил диалог с ботом
+- `bot_added` (`UpdateType::BotAdded`) — бот добавлен в чат или канал
+- `bot_removed` (`UpdateType::BotRemoved`) — бот удален из чата или канала
+- `bot_blocked` (`UpdateType::BotBlocked`) — пользователь заблокировал бота
+- `bot_unblocked` (`UpdateType::BotUnblocked`) — пользователь разблокировал бота
+
+### Участники и чаты:
+- `user_added` (`UpdateType::UserAdded`) — пользователь добавлен в чат
+- `user_removed` (`UpdateType::UserRemoved`) — пользователь покинул чат или был удален
+- `chat_title_changed` (`UpdateType::ChatTitleChanged`) — заголовок чата изменён
+- `dialog_cleared` (`UpdateType::DialogCleared`) — диалог очищен
+- `dialog_removed` (`UpdateType::DialogRemoved`) — диалог удален
+- `dialog_muted` (`UpdateType::DialogMuted`) — уведомления в диалоге отключены
+- `dialog_unmuted` (`UpdateType::DialogUnmuted`) — уведомления в диалоге включены
+
+### Удобные методы проверки в DTO Update:
+```php
+// Получение строго типизированного Enum
+$type = $update->getType(); // ?UpdateType
+
+// Семантические предикаты
+if ($update->isComment()) {
+    $comment = $update->getComment(); // ?CommentMessage
+}
+
+if ($update->isDialog()) {
+    // Событие связано с состоянием диалога
+}
+
+if ($update->isBotLifecycle()) {
+    // bot_started, bot_added, bot_removed, bot_blocked, bot_unblocked
+}
+```
 
 ## Следующие шаги
 
 - [Загрузка файлов](04-file-uploads.md)
 - [Обработка ошибок](05-error-handling.md)
+- [Работа с комментариями (Comments API)](08-comments.md)
+

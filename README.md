@@ -2,12 +2,12 @@
 
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.1.0-orange.svg)](https://github.com/pipelac/max-bot-sdk/releases/tag/v2.1.0)
+[![Version](https://img.shields.io/badge/version-2.3.0-orange.svg)](https://github.com/pipelac/max-bot-sdk/releases/tag/v2.3.0)
 [![CI](https://github.com/pipelac/max-bot-sdk/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/pipelac/max-bot-sdk/actions)
 
 PHP SDK для создания ботов в мессенджере **MAX** через официальный [MAX Bot API](https://dev.max.ru/docs-api).
 
-**Версия:** 2.1.0 | **PHP:** ≥ 8.1 | **Лицензия:** MIT
+**Версия:** 2.3.0 | **PHP:** ≥ 8.1 | **Лицензия:** MIT
 
 > **Ветвление версий:** эта ветка (`master`) — v2.x для PHP 8.1+.  
 > Для PHP 5.6+ используйте [ветку `1.x`](https://github.com/pipelac/max-bot-sdk/tree/1.x).
@@ -26,6 +26,7 @@ PHP SDK для создания ботов в мессенджере **MAX** ч�
 - 📞 Голосовые и видеозвонки
 - 📢 Каналы и сообщества
 - 🤖 Платформа ботов (Bot API)
+- 💬 Комментарии к публикациям каналов
 - 🔐 Шифрование переписок, хранение данных на территории России
 - 🏛️ Интеграция с государственными сервисами
 
@@ -41,8 +42,9 @@ PHP SDK для создания ботов в мессенджере **MAX** ч�
 
 ## Что умеет этот SDK
 
-- 🏗️ **Модульная архитектура** — 7 ресурсов (Bot, Chats, Messages, Members, Subscriptions, Uploads, Callbacks)
-- 📦 **Типизированные DTO** — `User`, `Chat`, `Message`, `Update`, `PaginatedResult` и др. вместо сырых массивов
+- 🏗️ **Модульная архитектура** — 8 ресурсов (Bot, Chats, Messages, Comments, Members, Subscriptions, Uploads, Callbacks)
+- 💬 **Comments API** — полный CRUD для комментариев в каналах с поддержкой `CommentPayload` builder и `TextFormat`
+- 📦 **Типизированные DTO** — `User`, `Chat`, `Message`, `CommentMessage`, `Update`, `PaginatedResult` и др. вместо сырых массивов
 - 📄 **Пагинация** — маркерный обход списков с `PaginatedResult` (`hasMore()`, `getMarker()`)
 - 🔄 **Автоматический retry** — exponential backoff для 429/5xx ошибок с настраиваемым числом попыток
 - 🚦 **Rate Limiting** — контроль скорости запросов (1–100 req/sec)
@@ -467,6 +469,11 @@ function handleCallback(\MaxBotSdk\DTO\Update $update, \MaxBotSdk\Client $client
 - `messages()->sendMessage()` → **Message** — отправленное сообщение
 - `messages()->getMessage($id)` → **Message** — конкретное сообщение
 - `messages()->getMessages()` → **PaginatedResult\<Message\>** — список сообщений
+- `comments()->getComments($mid)` → **PaginatedResult\<CommentMessage\>** — комментарии к посту канала
+- `comments()->getComment($mid, $cid)` → **CommentMessage** — конкретный комментарий
+- `comments()->addComment($mid, ...)` → **CommentMessage** — опубликованный комментарий
+- `comments()->editComment($mid, $cid, ...)` → **ActionResult** — результат редактирования
+- `comments()->deleteComment($mid, $cid)` → **ActionResult** — результат удаления
 - `members()->getMembers($id)` → **PaginatedResult\<ChatMember\>** — участники чата
 - `subscriptions()->getSubscriptions()` → **Subscription[]** — подписки
 - `subscriptions()->getUpdates()` → **UpdatesResult** — обновления long polling
@@ -551,19 +558,19 @@ Max/
 │   ├── Config.php              # Конфигурация
 │   ├── ConfigBuilder.php       # Fluent-построитель конфига
 │   ├── ResponseDecoder.php     # Декодер JSON-ответов
-│   ├── Contracts/              # Интерфейсы
+│   ├── Contracts/              # Интерфейсы (CommentsResourceInterface и др.)
 │   ├── DTO/                    # Data Transfer Objects
 │   │   ├── AbstractDto.php
-│   │   ├── User.php, Chat.php, Message.php, ...
+│   │   ├── User.php, Chat.php, Message.php, CommentMessage.php, CommentPayload.php...
 │   │   ├── PaginatedResult.php
 │   │   └── UpdatesResult.php
 │   ├── Enum/                   # Backed string enums
-│   │   ├── HttpMethod.php, UploadType.php
+│   │   ├── HttpMethod.php, UploadType.php, TextFormat.php
 │   │   ├── LogLevel.php, UpdateType.php
 │   ├── Exception/              # Иерархия исключений
 │   ├── Http/                   # HTTP-слой (CurlHttpClient, RetryHandler)
-│   ├── Resource/               # 7 API-ресурсов
-│   │   ├── Bot.php, Chats.php, Messages.php, Members.php
+│   ├── Resource/               # 8 API-ресурсов
+│   │   ├── Bot.php, Chats.php, Messages.php, Comments.php, Members.php
 │   │   ├── Subscriptions.php, Uploads.php, Callbacks.php
 │   │   └── ResourceAbstract.php
 │   └── Utils/                  # Утилиты
@@ -606,6 +613,7 @@ composer cs-fix
 - [Загрузка файлов](docs/04-file-uploads.md)
 - [Обработка ошибок](docs/05-error-handling.md)
 - [Расширенные возможности](docs/06-advanced-features.md)
+- [Работа с комментариями (Comments API)](docs/08-comments.md)
 - [Примеры использования](docs/07-examples.md)
 - [CHANGELOG](CHANGELOG.md)
 - [CONTRIBUTING](CONTRIBUTING.md)

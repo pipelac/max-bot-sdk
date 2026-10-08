@@ -15,6 +15,7 @@ use MaxBotSdk\Http\RetryHandler;
 use MaxBotSdk\Resource\Bot;
 use MaxBotSdk\Resource\Callbacks;
 use MaxBotSdk\Resource\Chats;
+use MaxBotSdk\Resource\Comments;
 use MaxBotSdk\Resource\Members;
 use MaxBotSdk\Resource\Messages;
 use MaxBotSdk\Resource\Subscriptions;
@@ -155,6 +156,11 @@ final class Client implements ClientInterface
     public function callbacks(): Callbacks
     {
         return $this->getResource(Callbacks::class);
+    }
+
+    public function comments(): Comments
+    {
+        return $this->getResource(Comments::class);
     }
 
     // ─── Приватные методы ────────────────────────────────────────

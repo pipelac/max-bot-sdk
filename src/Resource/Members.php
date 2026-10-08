@@ -34,10 +34,22 @@ final class Members extends ResourceAbstract
     }
 
     /**
+     * @deprecated Метод POST /chats/{chatId}/members ограничен с 9 сентября 2026 и полностью удалён из MAX Bot API с 30 сентября 2026.
+     * Добавление участников ботом больше не поддерживается; используйте ссылки-приглашения (invite links).
+     *
      * @param list<int> $userIds
      */
     public function addMembers(int $chatId, array $userIds): ActionResult
     {
+        static $deprecatedWarned = false;
+        if (!$deprecatedWarned) {
+            trigger_error(
+                'Method MaxBotSdk\Resource\Members::addMembers() is deprecated since September 2026 and removed in MAX Bot API. Use chat invite links instead.',
+                \E_USER_DEPRECATED,
+            );
+            $deprecatedWarned = true;
+        }
+
         $chatId = $this->validateId($chatId, 'Chat ID');
         $data = $this->post('/chats/' . $chatId . '/members', ['user_ids' => $userIds]);
         return ActionResult::fromArray($data);
