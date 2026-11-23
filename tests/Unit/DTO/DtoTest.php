@@ -1038,4 +1038,280 @@ final class DtoTest extends TestCase
         self::assertTrue($botUpdate->isBotLifecycle());
         self::assertFalse($botUpdate->isComment());
     }
+
+    // =====================================================================
+    // v2.4.0 — OpenAPI v0.0.34 & November 2026 API Updates
+    // =====================================================================
+
+    #[Test]
+    public function actionResultWithErrorCode(): void
+    {
+        $result = ActionResult::fromArray([
+            'success' => false,
+            'code'    => 'chat.denied',
+            'message' => 'Access denied',
+        ]);
+
+        self::assertFalse($result->isSuccess());
+        self::assertTrue($result->hasError());
+        self::assertSame('chat.denied', $result->getCode());
+        self::assertSame('Access denied', $result->getMessage());
+        self::assertSame([
+            'success' => false,
+            'message' => 'Access denied',
+            'code'    => 'chat.denied',
+        ], $result->toArray());
+    }
+
+    #[Test]
+    public function actionResultSuccessHasNullCode(): void
+    {
+        $result = ActionResult::success();
+
+        self::assertTrue($result->isSuccess());
+        self::assertFalse($result->hasError());
+        self::assertNull($result->getCode());
+    }
+
+    #[Test]
+    public function userFromOpenApiFirstAndLastName(): void
+    {
+        $user = User::fromArray([
+            'user_id'         => 10,
+            'first_name'      => 'Иван',
+            'last_name'       => 'Иванов',
+            'username'        => 'ivan',
+            'is_bot'          => false,
+            'full_avatar_url' => 'https://cdn.max.ru/full.jpg',
+            'commands'        => [
+                ['name' => 'start', 'description' => 'Запуск'],
+            ],
+        ]);
+
+        self::assertSame(10, $user->getUserId());
+        self::assertSame('Иван', $user->getFirstName());
+        self::assertSame('Иванов', $user->getLastName());
+        self::assertSame('Иван Иванов', $user->getName());
+        self::assertSame('https://cdn.max.ru/full.jpg', $user->getFullAvatarUrl());
+        self::assertSame([['name' => 'start', 'description' => 'Запуск']], $user->getCommands());
+
+        $single = User::fromArray([
+            'user_id'    => 11,
+            'first_name' => 'Анна',
+            'is_bot'     => false,
+        ]);
+        self::assertSame('Анна', $single->getName());
+        self::assertSame('Анна', $single->getFirstName());
+        self::assertNull($single->getLastName());
+    }
+
+    #[Test]
+    public function chatMemberFromOpenApiFields(): void
+    {
+        $member = ChatMember::fromArray([
+            'user_id'          => 55,
+            'first_name'       => 'Пётр',
+            'last_name'        => 'Петров',
+            'full_avatar_url'  => 'https://cdn.max.ru/full_p.jpg',
+            'last_access_time' => 1760000000000,
+            'is_owner'         => false,
+            'is_admin'         => true,
+            'join_time'        => 1750000000000,
+            'permissions'      => ['write', 'pin_message'],
+            'alias'            => 'Модератор',
+        ]);
+
+        self::assertSame('Пётр Петров', $member->getName());
+        self::assertSame('Пётр', $member->getFirstName());
+        self::assertSame('Петров', $member->getLastName());
+        self::assertSame('https://cdn.max.ru/full_p.jpg', $member->getFullAvatarUrl());
+        self::assertSame(1760000000000, $member->getLastAccessTime());
+        self::assertSame('Модератор', $member->getAlias());
+    }
+
+    #[Test]
+    public function videoInfoFromOpenApiUrlsObject(): void
+    {
+        $info = VideoInfo::fromArray([
+            'token'    => 'vid_openapi',
+            'urls'     => [
+                'mp4_720'  => 'https://cdn.max.ru/720.mp4',
+                'mp4_1080' => 'https://cdn.max.ru/1080.mp4',
+                'hls'      => 'https://cdn.max.ru/stream.m3u8',
+            ],
+            'width'    => 1920,
+            'height'   => 1080,
+            'duration' => 95,
+        ]);
+
+        self::assertSame('https://cdn.max.ru/1080.mp4', $info->getUrl());
+        self::assertSame('https://cdn.max.ru/720.mp4', $info->getUrlByQuality('mp4_720'));
+        self::assertSame('https://cdn.max.ru/stream.m3u8', $info->getUrlByQuality('hls'));
+        self::assertNull($info->getUrlByQuality('mp4_480'));
+        self::assertCount(3, $info->getUrls() ?? []);
+    }
+
+    #[Test]
+    public function attachmentPreservesOpenApiTopLevelFields(): void
+    {
+        $video = Attachment::fromArray([
+            'type'       => 'video',
+            'payload'    => ['token' => 'vid_tok', 'url' => 'https://cdn.max.ru/v.mp4'],
+            'width'      => 1280,
+            'height'     => 720,
+            'duration'   => 45,
+            'video_type' => 'video_message',
+            'thumbnail'  => ['url' => 'https://cdn.max.ru/t.jpg'],
+        ]);
+
+        self::assertSame(1280, $video->getWidth());
+        self::assertSame(720, $video->getHeight());
+        self::assertSame(45, $video->getDuration());
+        self::assertSame('video_message', $video->getVideoType());
+        self::assertSame(['url' => 'https://cdn.max.ru/t.jpg'], $video->getThumbnail());
+        self::assertSame('video_message', $video->getAttribute('video_type'));
+        self::assertSame(45, $video->toArray()['duration']);
+
+        $file = Attachment::fromArray([
+            'type'     => 'file',
+            'payload'  => ['token' => 'f_tok'],
+            'filename' => 'report.pdf',
+            'size'     => 204800,
+        ]);
+        self::assertSame('report.pdf', $file->getFilename());
+        self::assertSame(204800, $file->getSize());
+
+        $location = Attachment::fromArray([
+            'type'      => 'location',
+            'latitude'  => 55.7558,
+            'longitude' => 37.6173,
+        ]);
+        self::assertSame(55.7558, $location->getLatitude());
+        self::assertSame(37.6173, $location->getLongitude());
+
+        $audio = Attachment::fromArray([
+            'type'          => 'audio',
+            'payload'       => ['token' => 'a_tok'],
+            'transcription' => 'Привет, мир',
+        ]);
+        self::assertSame('Привет, мир', $audio->getTranscription());
+
+        $share = Attachment::fromArray([
+            'type'        => 'share',
+            'payload'     => ['url' => 'https://example.com'],
+            'title'       => 'Example',
+            'description' => 'Desc',
+            'image_url'   => 'https://example.com/og.png',
+        ]);
+        self::assertSame('Example', $share->getTitle());
+        self::assertSame('Desc', $share->getDescription());
+        self::assertSame('https://example.com/og.png', $share->getImageUrl());
+    }
+
+    #[Test]
+    public function subscriptionWithSimpleQueryResultResponse(): void
+    {
+        $sub = Subscription::fromArray([
+            'success' => false,
+            'code'    => 'webhook.invalid_url',
+            'message' => 'Invalid HTTPS URL',
+        ]);
+
+        self::assertFalse($sub->isSuccess());
+        self::assertSame('webhook.invalid_url', $sub->getCode());
+        self::assertSame('Invalid HTTPS URL', $sub->getMessage());
+    }
+
+    #[Test]
+    public function updateBotAddedWithoutUserAndAdminPermissionsChanged(): void
+    {
+        // Ноябрь 2026: bot_added больше не содержит поле user
+        $botAdded = Update::fromArray([
+            'update_type' => 'bot_added',
+            'timestamp'   => 1763000000000,
+            'chat_id'     => -100123,
+            'is_channel'  => true,
+        ]);
+
+        self::assertSame(UpdateType::BotAdded, $botAdded->getType());
+        self::assertSame(-100123, $botAdded->getChatId());
+        self::assertNull($botAdded->getUser());
+        self::assertTrue($botAdded->isChannel());
+
+        // Октябрь 2026: bot_admin_permissions_changed
+        $permUpdate = Update::fromArray([
+            'update_type' => 'bot_admin_permissions_changed',
+            'timestamp'   => 1763000001000,
+            'chat_id'     => -100123,
+            'user_id'     => 777,
+            'bot_id'      => 888,
+            'is_channel'  => true,
+            'is_admin'    => true,
+            'permissions' => ['read_all_messages', 'write'],
+        ]);
+
+        self::assertSame(UpdateType::BotAdminPermissionsChanged, $permUpdate->getType());
+        self::assertTrue($permUpdate->isBotLifecycle());
+        self::assertSame(888, $permUpdate->getBotId());
+        self::assertTrue($permUpdate->isAdmin());
+        self::assertTrue($permUpdate->isChannel());
+        self::assertSame(['read_all_messages', 'write'], $permUpdate->getAdminPermissions());
+
+        // comment_removed, dialog_muted, bot_started дополнительные поля
+        $commentRemoved = Update::fromArray([
+            'update_type' => 'comment_removed',
+            'timestamp'   => 1763000002000,
+            'chat_id'     => -100123,
+            'message_id'  => 'mid.c1',
+            'post_id'     => 'mid.p1',
+            'user_id'     => 42,
+        ]);
+        self::assertSame('mid.p1', $commentRemoved->getPostId());
+
+        $dialogMuted = Update::fromArray([
+            'update_type' => 'dialog_muted',
+            'timestamp'   => 1763000003000,
+            'chat_id'     => 500,
+            'muted_until' => 1763999999000,
+            'user_locale' => 'ru',
+        ]);
+        self::assertSame(1763999999000, $dialogMuted->getMutedUntil());
+        self::assertSame('ru', $dialogMuted->getUserLocale());
+
+        $botStarted = Update::fromArray([
+            'update_type' => 'bot_started',
+            'timestamp'   => 1763000004000,
+            'chat_id'     => 500,
+            'payload'     => 'ref_campaign_42',
+            'user_locale' => 'ru',
+        ]);
+        self::assertSame('ref_campaign_42', $botStarted->getPayload());
+    }
+
+    #[Test]
+    public function messageOpenApiFields(): void
+    {
+        $msg = Message::fromArray([
+            'sender'    => ['user_id' => 1, 'first_name' => 'Bot', 'is_bot' => true],
+            'recipient' => ['chat_id' => 100],
+            'timestamp' => 1763000000000,
+            'url'       => 'https://max.ru/c/100/1',
+            'link'      => ['type' => 'reply', 'message' => ['mid' => 'mid.orig']],
+            'body'      => [
+                'mid'    => 'mid.new',
+                'seq'    => 42,
+                'text'   => 'Hello world',
+                'markup' => [
+                    ['type' => 'strong', 'from' => 0, 'length' => 5],
+                ],
+            ],
+        ]);
+
+        self::assertSame('mid.new', $msg->getMessageId());
+        self::assertSame(42, $msg->getSeq());
+        self::assertSame('https://max.ru/c/100/1', $msg->getUrl());
+        self::assertNull($msg->getLink());
+        self::assertSame(['type' => 'reply', 'message' => ['mid' => 'mid.orig']], $msg->getLinkData());
+        self::assertSame([['type' => 'strong', 'from' => 0, 'length' => 5]], $msg->getMarkup());
+    }
 }

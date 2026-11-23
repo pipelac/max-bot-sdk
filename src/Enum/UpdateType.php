@@ -56,12 +56,16 @@ enum UpdateType: string
     }
 
     /**
-     * Относится ли событие к жизненному циклу бота (старт/остановка/добавление/удаление).
+     * Относится ли событие к жизненному циклу бота (старт/остановка/добавление/удаление/права администратора).
      */
     public function isBotLifecycleEvent(): bool
     {
         return match ($this) {
-            self::BotStarted, self::BotStopped, self::BotAdded, self::BotRemoved => true,
+            self::BotStarted,
+            self::BotStopped,
+            self::BotAdded,
+            self::BotRemoved,
+            self::BotAdminPermissionsChanged => true,
             default => false,
         };
     }

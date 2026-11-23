@@ -2,18 +2,12 @@
 
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.3.0-orange.svg)](https://github.com/pipelac/max-bot-sdk/releases/tag/v2.3.0)
+[![Version](https://img.shields.io/badge/version-2.4.0-orange.svg)](https://github.com/pipelac/max-bot-sdk/releases/tag/v2.4.0)
 [![CI](https://github.com/pipelac/max-bot-sdk/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/pipelac/max-bot-sdk/actions)
 
-PHP SDK для создания ботов в мессенджере **MAX** через официальный [MAX Bot API](https://dev.max.ru/docs-api).
+PHP SDK для создания ботов в мессенджере **MAX** через официальный [MAX Bot API](https://dev.max.ru/docs-api) (OpenAPI v0.0.34).
 
-**Версия:** 2.3.0 | **PHP:** ≥ 8.1 | **Лицензия:** MIT
-
-> **Ветвление версий:** эта ветка (`master`) — v2.x для PHP 8.1+.  
-> Для PHP 5.6+ используйте [ветку `1.x`](https://github.com/pipelac/max-bot-sdk/tree/1.x).
-
-- **`master` (v2.x)** — PHP ≥ 8.1, активная разработка
-- **[`1.x`](https://github.com/pipelac/max-bot-sdk/tree/1.x) (v1.x)** — PHP ≥ 5.6, активная разработка
+**Версия:** 2.4.0 | **PHP:** ≥ 8.1 | **Лицензия:** MIT
 
 ---
 
@@ -213,11 +207,13 @@ $client->bot()->patchCommands([
 ### Messages — отправка и получение сообщений
 
 ```php
-// Отправить текстовое сообщение в чат
+// Отправить сообщение в чат (или напрямую пользователю через $userId)
 $msg = $client->messages()->sendMessage(
     ['text' => 'Привет!'],
-    null,     // notify
-    $chatId   // ID чата
+    true,     // notify (bool)
+    $chatId,  // ID чата
+    null,     // ID пользователя (альтернатива $chatId)
+    false,    // disableLinkPreview
 );
 
 // Быстрая отправка текста (shortcut)
@@ -317,8 +313,20 @@ $client->members()->removeMember($chatId, $userId);
 // Получить список админов
 $admins = $client->members()->getAdmins($chatId);
 
-// Назначить админа
-$client->members()->addAdmin($chatId, $userId);
+// Назначить админа с правами (ChatAdminsList)
+use MaxBotSdk\Enum\ChatAdminPermission;
+
+$client->members()->addAdmin(
+    $chatId,
+    $userId,
+    [ChatAdminPermission::ReadAllMessages, ChatAdminPermission::Write],
+    'Модератор',
+);
+
+// Или массовое назначение администраторов
+$client->members()->setAdmins($chatId, [
+    ['user_id' => $userId, 'permissions' => [ChatAdminPermission::Write, ChatAdminPermission::PinMessage]],
+]);
 ```
 
 ### Subscriptions — подписки на обновления
@@ -565,8 +573,8 @@ Max/
 │   │   ├── PaginatedResult.php
 │   │   └── UpdatesResult.php
 │   ├── Enum/                   # Backed string enums
-│   │   ├── HttpMethod.php, UploadType.php, TextFormat.php
-│   │   ├── LogLevel.php, UpdateType.php
+│   │   ├── ChatAdminPermission.php, HttpMethod.php, LogLevel.php
+│   │   ├── SenderAction.php, TextFormat.php, UpdateType.php, UploadType.php
 │   ├── Exception/              # Иерархия исключений
 │   ├── Http/                   # HTTP-слой (CurlHttpClient, RetryHandler)
 │   ├── Resource/               # 8 API-ресурсов

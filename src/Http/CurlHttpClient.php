@@ -19,7 +19,8 @@ use MaxBotSdk\Utils\InputValidator;
  */
 final class CurlHttpClient implements HttpClientInterface
 {
-    public const SDK_VERSION = '2.0.0';
+    public const SDK_VERSION = '2.4.0';
+    public const CLIENT_NAME = 'pipelac/max-bot-sdk';
     public const BASE_URL = 'https://platform-api2.max.ru';
 
     private int $lastStatusCode = 0;
@@ -146,6 +147,9 @@ final class CurlHttpClient implements HttpClientInterface
         $headers = [
             'Authorization: ' . $this->config->getToken(),
             'User-Agent: MaxBotSDK/' . self::SDK_VERSION . ' PHP/' . PHP_VERSION . ' cURL/' . $curlVersion['version'],
+            'X-Max-Client-Name: ' . self::CLIENT_NAME,
+            'X-Max-Client-Version: ' . self::SDK_VERSION,
+            'X-Max-Client-Runtime: php' . PHP_VERSION,
         ];
 
         if (isset($options['headers']) && \is_array($options['headers'])) {

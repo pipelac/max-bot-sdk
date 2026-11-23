@@ -33,6 +33,35 @@ try {
 }
 ```
 
+## Ошибки в ответах HTTP 200 (`SimpleQueryResult`: `success`, `code`, `message`)
+
+Начиная с ноября 2026 (OpenAPI v0.0.34), часть методов MAX Bot API (например, `POST /subscriptions`, `DELETE /subscriptions`, `DELETE /messages`, `PUT /chats/{chatId}/pin` и др.) при ошибке могут возвращать HTTP `200 OK` с телом:
+
+```json
+{
+  "success": false,
+  "code": "chat.denied",
+  "message": "Error description"
+}
+```
+
+Рекомендуется определять тип ошибки по машиночитаемому полю **`code`**, а не по тексту `message`:
+
+```php
+$result = $client->subscriptions()->unsubscribe('https://your-domain.com/max-webhook');
+
+if ($result->hasError()) { // или !$result->isSuccess()
+    $errorCode = $result->getCode();     // ?string (например, 'not.found', 'chat.denied')
+    $errorText = $result->getMessage();  // ?string
+}
+
+// Аналогично для POST /subscriptions:
+$sub = $client->subscriptions()->subscribe('https://your-domain.com/max-webhook');
+if (!$sub->isSuccess()) {
+    error_log('Ошибка подписки [' . ($sub->getCode() ?? 'unknown') . ']: ' . ($sub->getMessage() ?? ''));
+}
+```
+
 ## Обработка ошибок конфигурации
 
 ```php

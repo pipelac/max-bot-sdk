@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace MaxBotSdk\Tests\Unit\Enum;
 
+use MaxBotSdk\Enum\ChatAdminPermission;
 use MaxBotSdk\Enum\HttpMethod;
 use MaxBotSdk\Enum\LogLevel;
+use MaxBotSdk\Enum\SenderAction;
 use MaxBotSdk\Enum\TextFormat;
 use MaxBotSdk\Enum\UpdateType;
 use MaxBotSdk\Enum\UploadType;
@@ -170,6 +172,7 @@ final class EnumTest extends TestCase
         self::assertTrue(UpdateType::BotStopped->isBotLifecycleEvent());
         self::assertTrue(UpdateType::BotAdded->isBotLifecycleEvent());
         self::assertTrue(UpdateType::BotRemoved->isBotLifecycleEvent());
+        self::assertTrue(UpdateType::BotAdminPermissionsChanged->isBotLifecycleEvent());
         self::assertFalse(UpdateType::UserAdded->isBotLifecycleEvent());
 
         // Messages
@@ -215,5 +218,40 @@ final class EnumTest extends TestCase
         self::assertSame(TextFormat::Markdown, TextFormat::from('markdown'));
         self::assertSame(TextFormat::Html, TextFormat::from('html'));
         self::assertNull(TextFormat::tryFrom('bbcode'));
+    }
+
+    // ─── ChatAdminPermission ────────────────────────────────────
+
+    #[Test]
+    public function chatAdminPermissionCases(): void
+    {
+        $cases = ChatAdminPermission::cases();
+        self::assertCount(11, $cases);
+        self::assertSame('read_all_messages', ChatAdminPermission::ReadAllMessages->value);
+        self::assertSame('add_remove_members', ChatAdminPermission::AddRemoveMembers->value);
+        self::assertSame('add_admins', ChatAdminPermission::AddAdmins->value);
+        self::assertSame('change_chat_info', ChatAdminPermission::ChangeChatInfo->value);
+        self::assertSame('pin_message', ChatAdminPermission::PinMessage->value);
+        self::assertSame('edit_link', ChatAdminPermission::EditLink->value);
+        self::assertSame('write', ChatAdminPermission::Write->value);
+        self::assertSame('edit', ChatAdminPermission::Edit->value);
+        self::assertSame('delete', ChatAdminPermission::Delete->value);
+        self::assertSame('can_call', ChatAdminPermission::CanCall->value);
+        self::assertSame('view_stats', ChatAdminPermission::ViewStats->value);
+    }
+
+    // ─── SenderAction ───────────────────────────────────────────
+
+    #[Test]
+    public function senderActionCases(): void
+    {
+        $cases = SenderAction::cases();
+        self::assertCount(6, $cases);
+        self::assertSame('typing_on', SenderAction::TypingOn->value);
+        self::assertSame('sending_photo', SenderAction::SendingPhoto->value);
+        self::assertSame('sending_video', SenderAction::SendingVideo->value);
+        self::assertSame('sending_audio', SenderAction::SendingAudio->value);
+        self::assertSame('sending_file', SenderAction::SendingFile->value);
+        self::assertSame('mark_seen', SenderAction::MarkSeen->value);
     }
 }

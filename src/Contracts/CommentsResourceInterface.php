@@ -22,16 +22,16 @@ interface CommentsResourceInterface extends ResourceInterface
      *
      * @param string             $messageId  ID поста в канале.
      * @param int|null           $count      Количество комментариев (от 1 до 100, по умолчанию 50).
-     * @param string|null        $before     Маркер пагинации: получить комментарии до указанного.
-     * @param string|null        $after      Маркер пагинации: получить комментарии после указанного.
+     * @param int|string|null    $before     Unix timestamp (мс) или маркер: получить комментарии до указанного.
+     * @param int|string|null    $after      Unix timestamp (мс) или маркер: получить комментарии после указанного.
      * @param list<string>|null  $commentIds Список конкретных идентификаторов комментариев.
      * @return PaginatedResult<CommentMessage>
      */
     public function getComments(
         string $messageId,
         ?int $count = null,
-        ?string $before = null,
-        ?string $after = null,
+        int|string|null $before = null,
+        int|string|null $after = null,
         ?array $commentIds = null,
     ): PaginatedResult;
 
@@ -46,16 +46,18 @@ interface CommentsResourceInterface extends ResourceInterface
     /**
      * Отправить комментарий к посту в канале.
      *
-     * @param string                 $messageId ID поста в канале.
-     * @param string|CommentPayload  $comment   Текст комментария или готовый объект CommentPayload.
-     * @param TextFormat|string|null $format    Формат разметки (используется, если $comment - строка).
-     * @param array<string, mixed>|null $link   Ссылка для ответа/цитирования.
+     * @param string                    $messageId          ID поста в канале.
+     * @param string|CommentPayload     $comment            Текст комментария или готовый объект CommentPayload.
+     * @param TextFormat|string|null    $format             Формат разметки (используется, если $comment - строка).
+     * @param array<string, mixed>|null $link               Ссылка для ответа/цитирования.
+     * @param bool|null                 $disableLinkPreview Отключить генерацию превью для ссылок.
      */
     public function addComment(
         string $messageId,
         string|CommentPayload $comment,
         TextFormat|string|null $format = null,
         ?array $link = null,
+        ?bool $disableLinkPreview = null,
     ): CommentMessage;
 
     /**

@@ -115,11 +115,84 @@ final class Update extends AbstractDto
 
     /**
      * Получить данные пользователя из body.
+     *
+     * Обратите внимание: начиная с ноября 2026 в событии `bot_added` поле `user`
+     * больше не возвращается MAX Bot API, поэтому для `bot_added` метод вернёт `null`.
      */
     public function getUser(): ?User
     {
         $userData = self::getArrayOrNull($this->body, 'user');
         return $userData !== null ? User::fromArray($userData) : null;
+    }
+
+    /**
+     * Получить ID бота из события (например, для bot_admin_permissions_changed).
+     *
+     * @since 2.4.0
+     */
+    public function getBotId(): ?int
+    {
+        return self::getIntOrNull($this->body, 'bot_id');
+    }
+
+    /**
+     * Является ли бот администратором (для bot_admin_permissions_changed).
+     *
+     * @since 2.4.0
+     */
+    public function isAdmin(): ?bool
+    {
+        return self::getBoolOrNull($this->body, 'is_admin');
+    }
+
+    /**
+     * Произошло ли событие в канале (bot_added, bot_removed, user_added, user_removed, bot_admin_permissions_changed).
+     *
+     * @since 2.4.0
+     */
+    public function isChannel(): ?bool
+    {
+        return self::getBoolOrNull($this->body, 'is_channel');
+    }
+
+    /**
+     * Получить ID родительского поста (для события comment_removed).
+     *
+     * @since 2.4.0
+     */
+    public function getPostId(): ?string
+    {
+        return self::getStringOrNull($this->body, 'post_id');
+    }
+
+    /**
+     * Получить время окончания отключения уведомлений (Unix ms, для события dialog_muted).
+     *
+     * @since 2.4.0
+     */
+    public function getMutedUntil(): ?int
+    {
+        return self::getIntOrNull($this->body, 'muted_until');
+    }
+
+    /**
+     * Получить локаль пользователя (IETF BCP 47, например 'ru').
+     *
+     * @since 2.4.0
+     */
+    public function getUserLocale(): ?string
+    {
+        return self::getStringOrNull($this->body, 'user_locale');
+    }
+
+    /**
+     * Получить deep-link payload (для события bot_started).
+     *
+     * @since 2.4.0
+     */
+    public function getPayload(): ?string
+    {
+        return self::getStringOrNull($this->body, 'payload');
     }
 
     /**

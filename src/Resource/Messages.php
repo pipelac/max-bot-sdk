@@ -18,16 +18,30 @@ use MaxBotSdk\Utils\KeyboardBuilder;
 final class Messages extends ResourceAbstract
 {
     /**
-     * Отправить сообщение в чат.
+     * Отправить сообщение в чат или пользователю (POST /messages).
      *
-     * @param array<string, mixed>      $body   Тело сообщения.
-     * @param array<string, mixed>|null $notify Настройки уведомления.
+     * @param array<string, mixed>           $body               Тело сообщения (NewMessageBody).
+     * @param bool|array<string, mixed>|null $notify             Флаг уведомления участников (bool по OpenAPI; array оставлен для обратной совместимости).
+     * @param int|null                       $chatId             ID чата или канала.
+     * @param int|null                       $userId             ID пользователя для отправки в личный диалог.
+     * @param bool|null                      $disableLinkPreview Отключить генерацию превью ссылок.
      */
-    public function sendMessage(array $body, ?array $notify = null, ?int $chatId = null): Message
-    {
+    public function sendMessage(
+        array $body,
+        bool|array|null $notify = null,
+        ?int $chatId = null,
+        ?int $userId = null,
+        ?bool $disableLinkPreview = null,
+    ): Message {
         $query = [];
         if ($chatId !== null) {
             $query['chat_id'] = $this->validateId($chatId, 'Chat ID');
+        }
+        if ($userId !== null) {
+            $query['user_id'] = $this->validateId($userId, 'User ID');
+        }
+        if ($disableLinkPreview !== null) {
+            $query['disable_link_preview'] = $disableLinkPreview ? 'true' : 'false';
         }
 
         $payload = $body;
@@ -66,13 +80,30 @@ final class Messages extends ResourceAbstract
     }
 
     /**
+     * Получить список сообщений (GET /messages).
+     *
+     * @param int|null          $chatId     ID чата (необязателен при указании $messageIds).
+     * @param int|null          $count      Количество сообщений (1..100, по умолчанию 50).
+     * @param int|null          $from       Время начала диапазона (Unix timestamp).
+     * @param int|null          $to         Время окончания диапазона (Unix timestamp).
+     * @param list<string>|null $messageIds Список ID сообщений для точечной выборки.
+     * @param int|null          $before     Получить сообщения до указанного Unix timestamp (мс).
+     * @param int|null          $after      Получить сообщения после указанного Unix timestamp (мс).
      * @return PaginatedResult<Message>
      */
-    public function getMessages(int $chatId, ?int $count = null, ?int $from = null, ?int $to = null): PaginatedResult
-    {
-        $chatId = $this->validateId($chatId, 'Chat ID');
-        $query = ['chat_id' => $chatId];
-
+    public function getMessages(
+        ?int $chatId = null,
+        ?int $count = null,
+        ?int $from = null,
+        ?int $to = null,
+        ?array $messageIds = null,
+        ?int $before = null,
+        ?int $after = null,
+    ): PaginatedResult {
+        $query = [];
+        if ($chatId !== null) {
+            $query['chat_id'] = $this->validateId($chatId, 'Chat ID');
+        }
         if ($count !== null) {
             $query['count'] = $count;
         }
@@ -81,6 +112,15 @@ final class Messages extends ResourceAbstract
         }
         if ($to !== null) {
             $query['to'] = $to;
+        }
+        if ($messageIds !== null && $messageIds !== []) {
+            $query['message_ids'] = implode(',', $messageIds);
+        }
+        if ($before !== null) {
+            $query['before'] = $before;
+        }
+        if ($after !== null) {
+            $query['after'] = $after;
         }
 
         $data = $this->get('/messages', $query);

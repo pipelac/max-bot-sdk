@@ -1,6 +1,6 @@
 {
     "name": "pipelac/max-bot-sdk",
-    "description": "PHP SDK для MAX Bot API (platform-api.max.ru)",
+    "description": "PHP SDK для MAX Bot API (platform-api2.max.ru)",
     "type": "library",
     "license": "MIT",
     "require": {

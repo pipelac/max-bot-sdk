@@ -30,9 +30,10 @@ final class Uploads extends ResourceAbstract
     /**
      * Загрузить файл по полученному URL.
      *
+     * @param string|null $fallbackToken Предварительный токен из ответа POST /uploads (для video/audio, когда CDN возвращает не-JSON).
      * @throws MaxFileException
      */
-    public function uploadFileToUrl(string $url, string $filePath): UploadResult
+    public function uploadFileToUrl(string $url, string $filePath, ?string $fallbackToken = null): UploadResult
     {
         InputValidator::validateNotEmpty($url, 'Upload URL');
 
@@ -60,25 +61,34 @@ final class Uploads extends ResourceAbstract
             );
         }
 
+        $statusCode = $response['status_code'] ?? 200;
         $body = $response['body'] ?? '';
         $decoded = json_decode($body, true);
+
         if (!\is_array($decoded)) {
+            if ($statusCode >= 200 && $statusCode < 300 && $fallbackToken !== null && $fallbackToken !== '') {
+                return UploadResult::fromToken($fallbackToken);
+            }
             throw new MaxFileException('Некорректный ответ сервера при загрузке файла: ' . $body);
         }
 
-        $token = $decoded['token'] ?? '';
+        $token = isset($decoded['token']) && \is_string($decoded['token']) ? $decoded['token'] : '';
         if ($token === '') {
             // MAX API often nests tokens: {"photos": {"file_id": {"token": "..."}}}
             foreach ($decoded as $group) {
                 if (\is_array($group)) {
                     foreach ($group as $item) {
-                        if (\is_array($item) && isset($item['token'])) {
+                        if (\is_array($item) && isset($item['token']) && \is_string($item['token'])) {
                             $token = $item['token'];
                             break 2;
                         }
                     }
                 }
             }
+        }
+
+        if ($token === '' && $fallbackToken !== null && $fallbackToken !== '') {
+            $token = $fallbackToken;
         }
 
         $result = UploadResult::fromToken($token);
@@ -92,6 +102,9 @@ final class Uploads extends ResourceAbstract
     /**
      * Загрузить файл и получить token (шаги 1+2).
      *
+     * Поддерживает возврат предварительно выданного `token` из `POST /uploads`
+     * для `UploadType::Video` и `UploadType::Audio` (OpenAPI `UploadEndpoint`).
+     *
      * @throws MaxFileException
      */
     public function uploadFile(UploadType $type, string $filePath): string
@@ -102,10 +115,10 @@ final class Uploads extends ResourceAbstract
             throw new MaxFileException('Не удалось получить URL для загрузки.');
         }
 
-        $uploadResult = $this->uploadFileToUrl($url, $filePath);
+        $preToken = $urlResult->getToken();
+        $uploadResult = $this->uploadFileToUrl($url, $filePath, $preToken !== '' ? $preToken : null);
         $token = $uploadResult->getToken();
         if ($token === '') {
-            // Добавим вывод оригинального ответа
             $responseArray = $uploadResult->toArray();
             throw new MaxFileException('Token не получен после загрузки файла. Ответил так: ' . json_encode($responseArray));
         }

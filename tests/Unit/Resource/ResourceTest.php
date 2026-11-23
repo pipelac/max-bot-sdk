@@ -19,6 +19,8 @@ use MaxBotSdk\DTO\UpdatesResult;
 use MaxBotSdk\DTO\UploadResult;
 use MaxBotSdk\DTO\User;
 use MaxBotSdk\DTO\VideoInfo;
+use MaxBotSdk\Enum\ChatAdminPermission;
+use MaxBotSdk\Enum\SenderAction;
 use MaxBotSdk\Enum\TextFormat;
 use MaxBotSdk\Enum\UploadType;
 use MaxBotSdk\Exception\MaxValidationException;
@@ -892,5 +894,231 @@ final class ResourceTest extends TestCase
         } catch (MaxValidationException) {
             self::assertTrue(true);
         }
+    }
+
+    // =====================================================================
+    // v2.4.0 — OpenAPI v0.0.34 & November 2026 Resource Updates
+    // =====================================================================
+
+    #[Test]
+    public function commentsGetCommentsParsesOpenApiMessagesKeyAndIntMarkers(): void
+    {
+        $this->mockHttp->setResponse(200, (string) json_encode([
+            'messages' => [
+                [
+                    'timestamp' => 1763000000000,
+                    'sender'    => ['user_id' => 7, 'first_name' => 'Ольга', 'is_bot' => false],
+                    'body'      => ['mid' => 'mid.comm_1', 'seq' => 3, 'text' => 'Отличный пост!'],
+                ],
+            ],
+        ]));
+
+        $result = $this->client->comments()->getComments('mid.post_1', 25, 1763000009000, 1763000000000);
+
+        self::assertCount(1, $result->getItems());
+        self::assertSame('mid.comm_1', $result->getItems()[0]->getCommentId());
+        self::assertSame('Отличный пост!', $result->getItems()[0]->getText());
+
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame([
+            'count'  => 25,
+            'before' => 1763000009000,
+            'after'  => 1763000000000,
+        ], $lastReq['options']['query']);
+    }
+
+    #[Test]
+    public function commentsAddCommentWithDisableLinkPreview(): void
+    {
+        $this->mockHttp->setResponse(200, (string) json_encode([
+            'message' => [
+                'body'      => ['mid' => 'mid.c_preview', 'text' => 'https://example.com'],
+                'timestamp' => 1763000000000,
+            ],
+        ]));
+
+        $this->client->comments()->addComment(
+            'mid.post_1',
+            'https://example.com',
+            TextFormat::Markdown,
+            null,
+            true,
+        );
+
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame('POST', $lastReq['method']);
+        self::assertSame(['disable_link_preview' => 'true'], $lastReq['options']['query']);
+    }
+
+    #[Test]
+    public function messagesSendMessageWithUserIdBoolNotifyAndDisableLinkPreview(): void
+    {
+        $this->mockHttp->setResponse(200, (string) json_encode([
+            'message' => ['body' => ['mid' => 'mid.dm_1', 'text' => 'Привет лично!']],
+        ]));
+
+        $msg = $this->client->messages()->sendMessage(
+            ['text' => 'Привет лично!'],
+            false,
+            null,
+            987654,
+            true,
+        );
+
+        self::assertSame('mid.dm_1', $msg->getMessageId());
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame('POST', $lastReq['method']);
+        self::assertSame([
+            'user_id'              => 987654,
+            'disable_link_preview' => 'true',
+        ], $lastReq['options']['query']);
+        self::assertSame([
+            'text'   => 'Привет лично!',
+            'notify' => false,
+        ], $lastReq['options']['json']);
+    }
+
+    #[Test]
+    public function messagesGetMessagesWithMessageIdsBeforeAfter(): void
+    {
+        $this->mockHttp->setResponse(200, (string) json_encode([
+            'messages' => [
+                ['body' => ['mid' => 'm1', 'text' => 'One']],
+                ['body' => ['mid' => 'm2', 'text' => 'Two']],
+            ],
+        ]));
+
+        $result = $this->client->messages()->getMessages(
+            null,
+            20,
+            null,
+            null,
+            ['m1', 'm2'],
+            1763000099000,
+            1763000000000,
+        );
+
+        self::assertCount(2, $result->getItems());
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame([
+            'count'       => 20,
+            'message_ids' => 'm1,m2',
+            'before'      => 1763000099000,
+            'after'       => 1763000000000,
+        ], $lastReq['options']['query']);
+    }
+
+    #[Test]
+    public function membersSetAdminsAndAddAdminUseOpenApiChatAdminsList(): void
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+
+        $result = $this->client->members()->addAdmin(
+            123,
+            456,
+            [ChatAdminPermission::Write, 'pin_message'],
+            'Старший модератор',
+        );
+
+        self::assertTrue($result->isSuccess());
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame('POST', $lastReq['method']);
+        self::assertSame('/chats/123/members/admins', $lastReq['url']);
+        self::assertSame([
+            'admins' => [
+                [
+                    'user_id'     => 456,
+                    'permissions' => ['write', 'pin_message'],
+                    'alias'       => 'Старший модератор',
+                ],
+            ],
+        ], $lastReq['options']['json']);
+
+        $this->mockHttp->setResponse(200, '{"success": true}');
+        $this->client->members()->setAdmins(123, [
+            ['user_id' => 11, 'permissions' => [ChatAdminPermission::ReadAllMessages]],
+            ['user_id' => 22, 'permissions' => ['delete'], 'alias' => 'Модератор'],
+        ]);
+
+        $req2 = $this->mockHttp->getLastRequest();
+        self::assertSame([
+            'admins' => [
+                ['user_id' => 11, 'permissions' => ['read_all_messages']],
+                ['user_id' => 22, 'permissions' => ['delete'], 'alias' => 'Модератор'],
+            ],
+        ], $req2['options']['json']);
+    }
+
+    #[Test]
+    public function membersGetMembersWithUserIds(): void
+    {
+        $this->mockHttp->setResponse(200, (string) json_encode([
+            'members' => [
+                ['user_id' => 10, 'first_name' => 'A'],
+                ['user_id' => 20, 'first_name' => 'B'],
+            ],
+        ]));
+
+        $result = $this->client->members()->getMembers(123, 50, null, [10, 20]);
+
+        self::assertCount(2, $result->getItems());
+        $lastReq = $this->mockHttp->getLastRequest();
+        self::assertSame([
+            'count'    => 50,
+            'user_ids' => '10,20',
+        ], $lastReq['options']['query']);
+    }
+
+    #[Test]
+    public function chatsPinMessageWithNotifyAndSendActionEnum(): void
+    {
+        $this->mockHttp->setResponse(200, '{"success": true}');
+        $this->client->chats()->pinMessage(123, 'mid_pin', false);
+
+        $pinReq = $this->mockHttp->getLastRequest();
+        self::assertSame(['message_id' => 'mid_pin', 'notify' => false], $pinReq['options']['json']);
+
+        $this->mockHttp->setResponse(200, '{"success": true}');
+        $this->client->chats()->sendAction(123, SenderAction::TypingOn);
+
+        $actionReq = $this->mockHttp->getLastRequest();
+        self::assertSame(['action' => 'typing_on'], $actionReq['options']['json']);
+    }
+
+    #[Test]
+    public function uploadsUploadFileUsesStepOneTokenFallbackForVideo(): void
+    {
+        $tmpFile = tempnam(sys_get_temp_dir(), 'max_vid_');
+        self::assertNotFalse($tmpFile);
+        file_put_contents($tmpFile, 'fake-video-bytes');
+
+        try {
+            $this->mockHttp
+                ->setResponse(200, (string) json_encode([
+                    'url'   => 'https://vu.mycdn.me/upload.do',
+                    'token' => 'pre_issued_video_token',
+                ]))
+                ->setResponse(200, '<retval>1</retval>');
+
+            $token = $this->client->uploads()->uploadFile(UploadType::Video, $tmpFile);
+            self::assertSame('pre_issued_video_token', $token);
+        } finally {
+            @unlink($tmpFile);
+        }
+    }
+
+    #[Test]
+    public function subscriptionsSubscribeReturnsErrorCodeFromSimpleQueryResult(): void
+    {
+        $this->mockHttp->setResponse(200, (string) json_encode([
+            'success' => false,
+            'code'    => 'subscription.limit_exceeded',
+            'message' => 'Too many subscriptions',
+        ]));
+
+        $result = $this->client->subscriptions()->subscribe('https://example.com/hook');
+        self::assertFalse($result->isSuccess());
+        self::assertSame('subscription.limit_exceeded', $result->getCode());
+        self::assertSame('Too many subscriptions', $result->getMessage());
     }
 }

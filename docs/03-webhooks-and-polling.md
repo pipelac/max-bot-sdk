@@ -180,24 +180,24 @@ foreach ($result->getUpdates() as $update) {
 - `message_removed` (`UpdateType::MessageRemoved`) — сообщение удалено
 
 ### Комментарии в каналах (Comments API):
-- `message_comment_created` (`UpdateType::MessageCommentCreated`) — опубликован новый комментарий
-- `message_comment_edited` (`UpdateType::MessageCommentEdited`) — комментарий отредактирован
-- `message_comment_deleted` (`UpdateType::MessageCommentDeleted`) — комментарий удален
+- `comment_created` (`UpdateType::CommentCreated`) — опубликован новый комментарий
+- `comment_edited` (`UpdateType::CommentEdited`) — комментарий отредактирован
+- `comment_removed` (`UpdateType::CommentRemoved`) — комментарий удалён (`$update->getPostId()`)
 
 ### Жизненный цикл бота:
-- `bot_started` (`UpdateType::BotStarted`) — пользователь запустил диалог с ботом
-- `bot_added` (`UpdateType::BotAdded`) — бот добавлен в чат или канал
-- `bot_removed` (`UpdateType::BotRemoved`) — бот удален из чата или канала
-- `bot_blocked` (`UpdateType::BotBlocked`) — пользователь заблокировал бота
-- `bot_unblocked` (`UpdateType::BotUnblocked`) — пользователь разблокировал бота
+- `bot_started` (`UpdateType::BotStarted`) — пользователь запустил диалог с ботом (`$update->getPayload()`, `$update->getUserLocale()`)
+- `bot_stopped` (`UpdateType::BotStopped`) — пользователь остановил / заблокировал бота
+- `bot_added` (`UpdateType::BotAdded`) — бот добавлен в чат или канал *(начиная с ноября 2026 поле `user` не возвращается API — `$update->getUser()` вернёт `null`)*
+- `bot_removed` (`UpdateType::BotRemoved`) — бот удалён из чата или канала
+- `bot_admin_permissions_changed` (`UpdateType::BotAdminPermissionsChanged`) — изменены права бота-администратора (`$update->getBotId()`, `$update->isAdmin()`, `$update->isChannel()`, `$update->getAdminPermissions()`)
 
 ### Участники и чаты:
 - `user_added` (`UpdateType::UserAdded`) — пользователь добавлен в чат
-- `user_removed` (`UpdateType::UserRemoved`) — пользователь покинул чат или был удален
+- `user_removed` (`UpdateType::UserRemoved`) — пользователь покинул чат или был удалён
 - `chat_title_changed` (`UpdateType::ChatTitleChanged`) — заголовок чата изменён
 - `dialog_cleared` (`UpdateType::DialogCleared`) — диалог очищен
-- `dialog_removed` (`UpdateType::DialogRemoved`) — диалог удален
-- `dialog_muted` (`UpdateType::DialogMuted`) — уведомления в диалоге отключены
+- `dialog_removed` (`UpdateType::DialogRemoved`) — диалог удалён
+- `dialog_muted` (`UpdateType::DialogMuted`) — уведомления в диалоге отключены (`$update->getMutedUntil()`)
 - `dialog_unmuted` (`UpdateType::DialogUnmuted`) — уведомления в диалоге включены
 
 ### Удобные методы проверки в DTO Update:
@@ -215,7 +215,12 @@ if ($update->isDialog()) {
 }
 
 if ($update->isBotLifecycle()) {
-    // bot_started, bot_added, bot_removed, bot_blocked, bot_unblocked
+    // bot_started, bot_stopped, bot_added, bot_removed, bot_admin_permissions_changed
+    if ($type === UpdateType::BotAdminPermissionsChanged) {
+        $botId = $update->getBotId();
+        $isAdmin = $update->isAdmin();
+        $permissions = $update->getAdminPermissions();
+    }
 }
 ```
 

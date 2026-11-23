@@ -12,6 +12,7 @@ namespace MaxBotSdk\DTO;
 final class Message extends AbstractDto
 {
     private readonly string $messageId;
+    private readonly ?int $seq;
     private readonly ?string $text;
     private readonly ?string $format;
     private readonly ?User $sender;
@@ -19,8 +20,13 @@ final class Message extends AbstractDto
     private readonly ?array $recipient;
     /** @var list<Attachment> */
     private readonly array $attachments;
+    /** @var list<array<string, mixed>>|null */
+    private readonly ?array $markup;
     private readonly ?int $timestamp;
     private readonly ?string $link;
+    /** @var array<string, mixed>|null */
+    private readonly ?array $linkData;
+    private readonly ?string $url;
     /** @var array<string, mixed>|null */
     private readonly ?array $stat;
 
@@ -31,6 +37,7 @@ final class Message extends AbstractDto
     {
         // messageId может прийти как 'message_id' или 'mid'
         $this->messageId = self::getString($data, 'message_id') ?: self::getString($data, 'mid');
+        $this->seq = self::getIntOrNull($data, 'seq');
         $this->text = self::getStringOrNull($data, 'text');
         $this->format = self::getStringOrNull($data, 'format');
 
@@ -41,6 +48,8 @@ final class Message extends AbstractDto
         $this->recipient = self::getArrayOrNull($data, 'recipient');
         $this->timestamp = self::getIntOrNull($data, 'timestamp');
         $this->link = self::getStringOrNull($data, 'link');
+        $this->linkData = self::getArrayOrNull($data, 'link');
+        $this->url = self::getStringOrNull($data, 'url');
         $this->stat = self::getArrayOrNull($data, 'stat');
 
         // Парсим вложения
@@ -52,16 +61,30 @@ final class Message extends AbstractDto
             }
         }
         $this->attachments = $attachments;
+
+        $rawMarkup = self::getArrayOrNull($data, 'markup');
+        if ($rawMarkup !== null) {
+            $markup = [];
+            foreach ($rawMarkup as $item) {
+                if (\is_array($item)) {
+                    /** @var array<string, mixed> $item */
+                    $markup[] = $item;
+                }
+            }
+            $this->markup = $markup;
+        } else {
+            $this->markup = null;
+        }
     }
 
     public static function fromArray(array $data): static
     {
         $messageData = isset($data['message']) && \is_array($data['message']) ? $data['message'] : $data;
 
-        // Достаем текст, вложения и mid из 'body', если они там есть
+        // Достаем текст, вложения, mid, seq и markup из 'body', если они там есть
         if (isset($messageData['body']) && \is_array($messageData['body'])) {
             $innerBody = $messageData['body'];
-            $fieldsToExtract = ['mid', 'text', 'format', 'attachments'];
+            $fieldsToExtract = ['mid', 'seq', 'text', 'format', 'attachments', 'markup'];
             foreach ($fieldsToExtract as $field) {
                 if (isset($innerBody[$field]) && !isset($messageData[$field])) {
                     $messageData[$field] = $innerBody[$field];
@@ -71,7 +94,7 @@ final class Message extends AbstractDto
 
         // Переносим поля из верхнего уровня, если $data имел 'message'
         if (isset($data['message']) && \is_array($data['message'])) {
-            $outerFields = ['message_id', 'timestamp', 'sender', 'recipient', 'link', 'stat'];
+            $outerFields = ['message_id', 'timestamp', 'sender', 'recipient', 'link', 'url', 'stat'];
             foreach ($outerFields as $field) {
                 if (!isset($messageData[$field]) && isset($data[$field])) {
                     $messageData[$field] = $data[$field];
@@ -85,6 +108,16 @@ final class Message extends AbstractDto
     public function getMessageId(): string
     {
         return $this->messageId;
+    }
+
+    /**
+     * Порядковый номер сообщения в чате (MessageBody.seq).
+     *
+     * @since 2.4.0
+     */
+    public function getSeq(): ?int
+    {
+        return $this->seq;
     }
 
     public function getText(): ?string
@@ -118,6 +151,17 @@ final class Message extends AbstractDto
         return $this->attachments;
     }
 
+    /**
+     * Элементы разметки текста (MessageBody.markup).
+     *
+     * @return list<array<string, mixed>>|null
+     * @since 2.4.0
+     */
+    public function getMarkup(): ?array
+    {
+        return $this->markup;
+    }
+
     public function getTimestamp(): ?int
     {
         return $this->timestamp;
@@ -126,6 +170,27 @@ final class Message extends AbstractDto
     public function getLink(): ?string
     {
         return $this->link;
+    }
+
+    /**
+     * Структурированный объект LinkedMessage (reply / forward), если `link` пришёл как объект.
+     *
+     * @return array<string, mixed>|null
+     * @since 2.4.0
+     */
+    public function getLinkData(): ?array
+    {
+        return $this->linkData;
+    }
+
+    /**
+     * Публичный URL сообщения в канале/чате (Message.url).
+     *
+     * @since 2.4.0
+     */
+    public function getUrl(): ?string
+    {
+        return $this->url;
     }
 
     /**
@@ -140,6 +205,7 @@ final class Message extends AbstractDto
     {
         return [
             'message_id'  => $this->messageId,
+            'seq'         => $this->seq,
             'text'        => $this->text,
             'format'      => $this->format,
             'sender'      => $this->sender?->toArray(),
@@ -148,8 +214,10 @@ final class Message extends AbstractDto
                 static fn(Attachment $a): array => $a->toArray(),
                 $this->attachments,
             ),
+            'markup'      => $this->markup,
             'timestamp'   => $this->timestamp,
-            'link'        => $this->link,
+            'link'        => $this->linkData ?? $this->link,
+            'url'         => $this->url,
             'stat'        => $this->stat,
         ];
     }

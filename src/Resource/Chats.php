@@ -8,6 +8,7 @@ use MaxBotSdk\DTO\ActionResult;
 use MaxBotSdk\DTO\Chat;
 use MaxBotSdk\DTO\Message;
 use MaxBotSdk\DTO\PaginatedResult;
+use MaxBotSdk\Enum\SenderAction;
 use MaxBotSdk\Utils\InputValidator;
 
 /**
@@ -46,6 +47,12 @@ final class Chats extends ResourceAbstract
         return PaginatedResult::fromApiResponse($data, 'chats', Chat::class);
     }
 
+    /**
+     * Получить чат по публичной ссылке (алиасу).
+     *
+     * Примечание: эндпоинт `GET /chats/{chatLink}` отсутствует в актуальной OpenAPI-схеме v0.0.34;
+     * используйте `getChat(int $chatId)` с числовым идентификатором из событий Webhook.
+     */
     public function getChatByLink(string $link): Chat
     {
         $link = InputValidator::validateChatLink($link);
@@ -75,6 +82,11 @@ final class Chats extends ResourceAbstract
         return Chat::fromArray($data);
     }
 
+    /**
+     * Удалить чат (DELETE /chats/{chatId}).
+     *
+     * Примечание: эндпоинт отсутствует в актуальной OpenAPI-схеме MAX Bot API v0.0.34.
+     */
     public function deleteChat(int $chatId): ActionResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
@@ -82,19 +94,29 @@ final class Chats extends ResourceAbstract
         return ActionResult::fromArray($data);
     }
 
-    public function sendAction(int $chatId, string $action): ActionResult
+    public function sendAction(int $chatId, SenderAction|string $action): ActionResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
-        InputValidator::validateNotEmpty($action, 'Action');
-        $data = $this->post('/chats/' . $chatId . '/actions', ['action' => $action]);
+        $actionValue = $action instanceof SenderAction ? $action->value : $action;
+        InputValidator::validateNotEmpty($actionValue, 'Action');
+        $data = $this->post('/chats/' . $chatId . '/actions', ['action' => $actionValue]);
         return ActionResult::fromArray($data);
     }
 
-    public function pinMessage(int $chatId, string $messageId): ActionResult
+    /**
+     * Закрепить сообщение в чате (PUT /chats/{chatId}/pin, PinMessageBody).
+     *
+     * @param bool|null $notify Отправлять ли уведомление участникам чата.
+     */
+    public function pinMessage(int $chatId, string $messageId, ?bool $notify = null): ActionResult
     {
         $chatId = $this->validateId($chatId, 'Chat ID');
         InputValidator::validateNotEmpty($messageId, 'Message ID');
-        $data = $this->put('/chats/' . $chatId . '/pin', ['message_id' => $messageId]);
+        $payload = ['message_id' => $messageId];
+        if ($notify !== null) {
+            $payload['notify'] = $notify;
+        }
+        $data = $this->put('/chats/' . $chatId . '/pin', $payload);
         return ActionResult::fromArray($data);
     }
 

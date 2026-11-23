@@ -108,6 +108,16 @@ final class CurlHttpClientTest extends TestCase
     }
 
     #[Test]
+    public function buildHeadersIncludesTelemetryAndCurrentSdkVersion(): void
+    {
+        self::assertSame('2.4.0', CurlHttpClient::SDK_VERSION);
+        $headers = $this->invokePrivate('buildHeaders', ['GET', []]);
+        self::assertContains('X-Max-Client-Name: pipelac/max-bot-sdk', $headers);
+        self::assertContains('X-Max-Client-Version: 2.4.0', $headers);
+        self::assertContains('X-Max-Client-Runtime: php' . PHP_VERSION, $headers);
+    }
+
+    #[Test]
     public function buildHeadersJsonContentType(): void
     {
         $headers = $this->invokePrivate('buildHeaders', ['POST', [

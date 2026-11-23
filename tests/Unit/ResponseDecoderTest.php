@@ -130,6 +130,7 @@ final class ResponseDecoderTest extends TestCase
             self::assertSame(500, $e->getStatusCode());
             self::assertSame('Internal error', $e->getDescription());
             self::assertSame('SERVER_ERR', $e->getErrorCode());
+            self::assertStringContainsString('Внутренняя ошибка сервера', $e->getMessage());
         }
     }
 
@@ -142,6 +143,7 @@ final class ResponseDecoderTest extends TestCase
         } catch (MaxApiException $e) {
             self::assertSame(403, $e->getStatusCode());
             self::assertSame('Forbidden', $e->getDescription());
+            self::assertStringContainsString('Доступ запрещён', $e->getMessage());
         }
     }
 }

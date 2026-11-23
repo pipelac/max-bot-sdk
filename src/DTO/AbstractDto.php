@@ -67,6 +67,22 @@ abstract class AbstractDto
 
     /**
      * @param array<string, mixed> $data
+     */
+    protected static function getBoolOrNull(array $data, string $key): ?bool
+    {
+        return isset($data[$key]) ? (bool) $data[$key] : null;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    protected static function getFloatOrNull(array $data, string $key): ?float
+    {
+        return isset($data[$key]) && is_numeric($data[$key]) ? (float) $data[$key] : null;
+    }
+
+    /**
+     * @param array<string, mixed> $data
      * @return array<string, mixed>
      */
     protected static function getArray(array $data, string $key): array

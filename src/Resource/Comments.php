@@ -32,8 +32,8 @@ final class Comments extends ResourceAbstract implements CommentsResourceInterfa
     public function getComments(
         string $messageId,
         ?int $count = null,
-        ?string $before = null,
-        ?string $after = null,
+        int|string|null $before = null,
+        int|string|null $after = null,
         ?array $commentIds = null,
     ): PaginatedResult {
         $messageId = InputValidator::validateMessageId($messageId);
@@ -43,10 +43,14 @@ final class Comments extends ResourceAbstract implements CommentsResourceInterfa
         if ($count !== null) {
             $query['count'] = $count;
         }
-        if ($before !== null && trim($before) !== '') {
+        if (\is_int($before)) {
+            $query['before'] = $before;
+        } elseif (\is_string($before) && trim($before) !== '') {
             $query['before'] = trim($before);
         }
-        if ($after !== null && trim($after) !== '') {
+        if (\is_int($after)) {
+            $query['after'] = $after;
+        } elseif (\is_string($after) && trim($after) !== '') {
             $query['after'] = trim($after);
         }
         if ($commentIds !== null && $commentIds !== []) {
@@ -56,7 +60,11 @@ final class Comments extends ResourceAbstract implements CommentsResourceInterfa
         $endpoint = \sprintf(self::PATH_COMMENTS, $messageId);
         $data = $this->get($endpoint, $query);
 
-        return PaginatedResult::fromApiResponse($data, 'comments', CommentMessage::class);
+        // По OpenAPI v0.0.34 (CommentMessageList) список возвращается в ключе 'messages'
+        // (с fallback на 'comments' для обратной совместимости)
+        $itemsKey = isset($data['messages']) && \is_array($data['messages']) ? 'messages' : 'comments';
+
+        return PaginatedResult::fromApiResponse($data, $itemsKey, CommentMessage::class);
     }
 
     public function getComment(string $messageId, string $commentId): CommentMessage
@@ -75,12 +83,18 @@ final class Comments extends ResourceAbstract implements CommentsResourceInterfa
         string|CommentPayload $comment,
         TextFormat|string|null $format = null,
         ?array $link = null,
+        ?bool $disableLinkPreview = null,
     ): CommentMessage {
         $messageId = InputValidator::validateMessageId($messageId);
         $payload = $this->resolvePayload($comment, $format, $link);
 
+        $query = [];
+        if ($disableLinkPreview !== null) {
+            $query['disable_link_preview'] = $disableLinkPreview ? 'true' : 'false';
+        }
+
         $endpoint = \sprintf(self::PATH_COMMENTS, $messageId);
-        $data = $this->post($endpoint, $payload);
+        $data = $this->post($endpoint, $payload, $query);
 
         return CommentMessage::fromArray($data);
     }

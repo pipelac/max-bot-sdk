@@ -10,19 +10,19 @@ MAX Bot API предоставляет возможность ботам чит�
 
 ## Архитектура работы с комментариями
 
-В SDK за комментарии отвечает ресурс `$client->comments()`, реализующий интерфейс [CommentsResourceInterface](file:///c:/Users/bzd/Desktop/Projects/Max%20SDK/Max-v2/src/Contracts/CommentsResourceInterface.php).
+В SDK за комментарии отвечает ресурс `$client->comments()`, реализующий интерфейс [CommentsResourceInterface](../src/Contracts/CommentsResourceInterface.php).
 
 ### Ключевые компоненты:
-- [Comments](file:///c:/Users/bzd/Desktop/Projects/Max%20SDK/Max-v2/src/Resource/Comments.php) — ресурс API со всеми CRUD-методами.
-- [CommentMessage](file:///c:/Users/bzd/Desktop/Projects/Max%20SDK/Max-v2/src/DTO/CommentMessage.php) — неизменяемый типизированный DTO комментария. В отличие от стандартного `Message`, комментарии не содержат вложений (`attachments`) и не поддерживают пересылку (`link.type = forward`).
-- [CommentPayload](file:///c:/Users/bzd/Desktop/Projects/Max%20SDK/Max-v2/src/DTO/CommentPayload.php) — Fluent Value Object / Builder для конструирования тела комментария (`NewCommentBody`).
-- [TextFormat](file:///c:/Users/bzd/Desktop/Projects/Max%20SDK/Max-v2/src/Enum/TextFormat.php) — Backed Enum для форматов разметки текста (`TextFormat::Markdown`, `TextFormat::Html`).
+- [Comments](../src/Resource/Comments.php) — ресурс API со всеми CRUD-методами.
+- [CommentMessage](../src/DTO/CommentMessage.php) — неизменяемый типизированный DTO комментария. В отличие от стандартного `Message`, комментарии не содержат вложений (`attachments`) и не поддерживают пересылку (`link.type = forward`).
+- [CommentPayload](../src/DTO/CommentPayload.php) — Fluent Value Object / Builder для конструирования тела комментария (`NewCommentBody`).
+- [TextFormat](../src/Enum/TextFormat.php) — Backed Enum для форматов разметки текста (`TextFormat::Markdown`, `TextFormat::Html`).
 
 ---
 
 ## Получение списка комментариев
 
-Метод `getComments()` возвращает [PaginatedResult](file:///c:/Users/bzd/Desktop/Projects/Max%20SDK/Max-v2/src/DTO/PaginatedResult.php) со списком объектов `CommentMessage`.
+Метод `getComments()` возвращает [PaginatedResult](../src/DTO/PaginatedResult.php) со списком объектов `CommentMessage`.
 
 ```php
 use MaxBotSdk\ClientFactory;
@@ -48,10 +48,10 @@ foreach ($result->getItems() as $comment) {
 ```php
 $result = $client->comments()->getComments(
     messageId: 'message_id_12345',
-    count: 20,                // 1..100 (по умолчанию 50)
-    before: 'marker_before',  // получить комментарии до указанного маркера
-    after: 'marker_after',    // получить комментарии после маркера
-    commentIds: ['c_1', 'c_2'] // фильтр по конкретным ID комментариев
+    count: 20,                  // 1..100 (по умолчанию 50)
+    before: 1763000099000,      // Unix timestamp (мс) или маркер: комментарии до указанной метки
+    after: 1763000000000,       // Unix timestamp (мс) или маркер: комментарии после указанной метки
+    commentIds: ['c_1', 'c_2']  // фильтр по конкретным ID комментариев
 );
 ```
 
@@ -86,12 +86,13 @@ $comment = $client->comments()->addComment(
     'Отличная публикация!'
 );
 
-// С Markdown-разметкой и ответом на предыдущий комментарий
+// С Markdown-разметкой, ответом на предыдущий комментарий и отключённым превью ссылок
 $comment = $client->comments()->addComment(
     'message_id_12345',
-    'Спасибо за **обратную связь**!',
+    'Спасибо за **обратную связь**! См. https://example.com',
     TextFormat::Markdown,
-    ['type' => 'reply', 'mid' => 'comment_id_999']
+    ['type' => 'reply', 'mid' => 'comment_id_999'],
+    true // disableLinkPreview
 );
 ```
 
@@ -153,9 +154,9 @@ if ($result->isSuccess()) {
 ## Обработка событий комментариев через Webhook
 
 При подключении webhook или long polling события комментариев приходят в следующих типах `UpdateType`:
-- `UpdateType::MessageCommentCreated` (`message_comment_created`) — опубликован новый комментарий.
-- `UpdateType::MessageCommentEdited` (`message_comment_edited`) — комментарий был отредактирован.
-- `UpdateType::MessageCommentDeleted` (`message_comment_deleted`) — комментарий удален.
+- `UpdateType::CommentCreated` (`comment_created`) — опубликован новый комментарий.
+- `UpdateType::CommentEdited` (`comment_edited`) — комментарий был отредактирован.
+- `UpdateType::CommentRemoved` (`comment_removed`) — комментарий удалён (ID родительского поста доступен через `$update->getPostId()`).
 
 ### Пример обработчика Webhook:
 
@@ -192,16 +193,16 @@ if ($update->isComment()) {
 
 // Строгий switch по типу события с использованием Enum
 switch ($update->getType()) {
-    case UpdateType::MessageCommentCreated:
+    case UpdateType::CommentCreated:
         // Новый комментарий
         break;
 
-    case UpdateType::MessageCommentEdited:
+    case UpdateType::CommentEdited:
         // Комментарий изменён
         break;
 
-    case UpdateType::MessageCommentDeleted:
-        // Комментарий удалён
+    case UpdateType::CommentRemoved:
+        // Комментарий удалён ($update->getPostId(), $update->getMessageId())
         break;
 
     default:

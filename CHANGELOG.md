@@ -5,6 +5,46 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.0.0/),
 проект следует [семантическому версионированию](https://semver.org/lang/ru/).
 
+## [2.4.0] — 2026-11-23
+
+Релиз синхронизации с актуальной спецификацией **MAX Bot API OpenAPI v0.0.34** (ноябрь 2026) и прекращения поддержки устаревшей ветки PHP 5.6+.
+
+### Добавлено
+- **Унификация обработки ошибок (`SimpleQueryResult.code`, ноябрь 2026):**
+  - `ActionResult::getCode(): ?string` и `ActionResult::hasError(): bool` для чтения машиночитаемого кода ошибки `code` (в том числе из ответов HTTP `200` с `success: false`).
+  - `Subscription::isSuccess(): bool`, `Subscription::getCode(): ?string`, `Subscription::getMessage(): ?string` для корректной обработки ответов `POST /subscriptions` в формате `SimpleQueryResult`.
+  - `ResponseDecoder`: добавлены описания статусов `403` («Доступ запрещён») и `500` («Внутренняя ошибка сервера»).
+- **Новые Backed String Enums (OpenAPI v0.0.34):**
+  - `ChatAdminPermission` (`src/Enum/ChatAdminPermission.php`) — все 11 официальных прав администратора чата/канала.
+  - `SenderAction` (`src/Enum/SenderAction.php`) — все 6 действий бота в чате (`typing_on`, `sending_photo`, `sending_video`, `sending_audio`, `sending_file`, `mark_seen`).
+- **Расширение DTO `Update` (октябрь–ноябрь 2026):**
+  - Новые типизированные геттеры: `getBotId()`, `isAdmin()`, `isChannel()`, `getPostId()`, `getMutedUntil()`, `getUserLocale()`, `getPayload()`.
+  - `UpdateType::BotAdminPermissionsChanged` включён в `UpdateType::isBotLifecycleEvent()`.
+  - Задокументировано изменение ноября 2026: в событии `bot_added` API больше не возвращает поле `user` (`Update::getUser()` возвращает `null`).
+- **Расширение ресурсов под OpenAPI v0.0.34:**
+  - `Members::setAdmins(int $chatId, array $admins)` — массовое назначение администраторов (`ChatAdminsList`).
+  - `Members::getMembers()`: добавлен параметр `?array $userIds` для фильтрации участников.
+  - `Messages::sendMessage()`: добавлены параметры `?int $userId` (отправка в личный диалог) и `?bool $disableLinkPreview`, а `$notify` расширен до `bool|array|null`.
+  - `Messages::getMessages()`: `$chatId` стал опциональным (`?int`), добавлены параметры `$messageIds`, `$before`, `$after`.
+  - `Comments::addComment()`: добавлен параметр `?bool $disableLinkPreview = null`; в `Comments::getComments()` параметры `$before` / `$after` расширены до `int|string|null`.
+  - `Chats::pinMessage()`: добавлен опциональный параметр `?bool $notify = null`; `Chats::sendAction()` принимает `SenderAction|string`.
+- **Телеметрия HTTP-клиента (`CurlHttpClient`):**
+  - Обновлена константа `SDK_VERSION = '2.4.0'`.
+  - Добавлены заголовки `X-Max-Client-Name`, `X-Max-Client-Version`, `X-Max-Client-Runtime` (по аналогии с официальными TS/Go SDK MAX).
+
+### Исправлено
+- **`Comments::getComments()`**: исправлен ключ разбора списка комментариев с `'comments'` на `'messages'` согласно `CommentMessageList` в OpenAPI v0.0.34 (сохранён fallback на `'comments'` для обратной совместимости).
+- **`Members::addAdmin()`**: исправлен формат тела запроса `POST /chats/{chatId}/members/admins` на `ChatAdminsList` (`{"admins": [{"user_id": ..., "permissions": [...], "alias"?: ...}]}`).
+- **`User` и `ChatMember` DTO**: поддержаны поля `first_name`, `last_name` (с автоматическим формированием `getName()`), `full_avatar_url`, `commands` (для `User`) и `last_access_time`, `alias` (для `ChatMember`).
+- **`VideoInfo` DTO (`GET /videos/{videoToken}`)**: поддержан объект `urls` (`mp4_1080`..`mp4_144`, `hls`) с методами `getUrls()` и `getUrlByQuality()` и автоматическим fallback в `getUrl()`.
+- **`Attachment` DTO**: сохраняются все поля верхнего уровня вложений (`filename`, `size`, `width`, `height`, `duration`, `video_type`, `thumbnail`, `latitude`, `longitude`, `transcription`, `title`, `description`, `image_url`) + добавлен `getAttribute()`.
+- **`Message` DTO**: добавлены `getSeq()`, `getUrl()`, `getMarkup()`, `getLinkData()` (для структурированного `LinkedMessage`) с сохранением обратной совместимости `getLink()`.
+- **`Uploads::uploadFile()`**: поддержан предварительный `token` из ответа шага 1 (`POST /uploads` для видео/аудио), если CDN на шаге 2 возвращает не-JSON (например XML).
+- **Документация**: исправлены названия событий в `docs/03-webhooks-and-polling.md`, `docs/08-comments.md` и `CHANGELOG.md` (v2.3.0), заменены локальные `file:///` ссылки в `docs/07-comments.md` и `docs/08-comments.md`, обновлён домен в `composer.json` на `platform-api2.max.ru`.
+
+### Удалено
+- **Ветка `1.x` (поддержка PHP 5.6+):** полностью удалена из локального проекта, GitHub, GitLab, `README.md` и CI-триггеров (`.github/workflows/ci.yml`). Актуальная поддерживаемая линейка SDK — **PHP ≥ 8.1 (`master`, v2.x)**.
+
 ## [2.3.0] — 2026-10-08
 
 ### Добавлено
@@ -16,8 +56,8 @@
   - `CommentPayload` (`src/DTO/CommentPayload.php`) — Value Object / Fluent Builder для создания и редактирования комментариев (`create()`, `withFormat()`, `withReplyTo()`, `withLink()`).
   - `TextFormat` (`src/Enum/TextFormat.php`) — Backed String Enum форматов разметки (`Markdown = 'markdown'`, `Html = 'html'`).
 - **UpdateType (расширение до 19 событий)**:
-  - Комментарии: `message_comment_created`, `message_comment_edited`, `message_comment_deleted`.
-  - Жизненный цикл бота: `bot_blocked`, `bot_unblocked`.
+  - Комментарии: `comment_created`, `comment_edited`, `comment_removed`.
+  - Жизненный цикл бота: `bot_stopped`, `bot_admin_permissions_changed`.
   - Диалоги: `dialog_cleared`, `dialog_removed`, `dialog_muted`, `dialog_unmuted`.
   - Доменные предикаты: `isCommentEvent()`, `isDialogEvent()`, `isBotLifecycleEvent()`, `isMessageEvent()`, `isMembershipEvent()`.
 - **DTO Update (новые методы)**:

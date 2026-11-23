@@ -38,8 +38,8 @@
 
 ## 3. Типизация и PHPDoc
 
-- [x] Type hints на всех параметрах (для PHP 5.6 — через PHPDoc)
-  > Все классы используют type-hints для интерфейсов + PHPDoc `@param` для scalar.
+- [x] Type hints на всех параметрах (PHP 8.1+ strict types + PHPDoc)
+  > Все классы используют строгую типизацию (`declare(strict_types=1)`) и PHPDoc.
 - [x] `@return` типы на всех методах
   > Проверено: `Client`, `Config`, `ConfigBuilder`, `CurlHttpClient`, все DTO, все Resources.
 - [x] `@throws` с FQCN (Fully Qualified Class Name)
